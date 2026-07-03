@@ -1,0 +1,5 @@
+.vscode
+.settings
+yarn.lock
+/ws
+wavez-frontend.user.js
