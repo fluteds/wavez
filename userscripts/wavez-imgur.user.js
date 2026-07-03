@@ -3,6 +3,8 @@
 // @namespace    https://wavez.fm/
 // @icon         https://wavez.fm/favicon.ico
 // @version      1.7
+// @updateURL    https://github.com/fluteds/userscripts/raw/main/wavez/wavez-imgur.user.js
+// @downloadURL  https://github.com/fluteds/userscripts/raw/main/wavez/wavez-imgur.user.js
 // @description  Replace Imgur links, backgrounds and CSS url() badges (e.g. niceatc/nicewoot) with Rimgo safely. Avoids "Content not viewable in your region" placeholders.
 // @match        https://wavez.fm/*
 // @match        https://*.wavez.fm/*
