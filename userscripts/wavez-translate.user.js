@@ -3,8 +3,6 @@
 // @namespace    https://wavez.fm/
 // @icon         https://wavez.fm/favicon.ico
 // @version      1.5
-// @updateURL    https://github.com/fluteds/userscripts/raw/main/wavez/wavez-translate.user.js
-// @downloadURL  https://github.com/fluteds/userscripts/raw/main/wavez/wavez-translate.user.js
 // @description  Translate wavez.fm chat and system messages into English (or any language) inline.
 // @match        https://wavez.fm/*
 // @run-at       document-idle
@@ -34,7 +32,7 @@ var MAX_INFLIGHT = 4;
 (function () {
   "use strict";
 
-  // Chat bodies have a wavez text class we can target directly. System callouts don't, so anchor off the icon class and grab the paragraph next to it.
+  // Chat message bodies carry a wavez-specific token, a stable hook across theme changes. System callouts (e.g. "Agente X moveu...") have no such token on text itself, so we anchor off the only wavez class in the callout the icon, and grab the paragraph beside it.
   var MSG_SELECTOR =
     '[class*="wavezfm-chat-text-size"], .wavezfm-centered-icon + div > p';
 
@@ -83,7 +81,8 @@ var MAX_INFLIGHT = 4;
         });
         return;
       }
-      // No GM API (e.g. raw injection): the endpoint sends CORS *, so plain fetch works in most setups.
+      // No GM API (e.g. raw injection): the endpoint sends CORS *, so plain
+      // fetch works in most setups.
       fetch(url)
         .then(function (r) {
           return r.text();

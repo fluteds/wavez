@@ -3,8 +3,6 @@
 // @namespace    https://wavez.fm/
 // @icon         https://wavez.fm/favicon.ico
 // @version      1.1
-// @updateURL    https://github.com/fluteds/userscripts/raw/main/wavez/wavez-open-in-spotify.user.js
-// @downloadURL  https://github.com/fluteds/userscripts/raw/main/wavez/wavez-open-in-spotify.user.js
 // @description  Adds an "Open in Spotfify" button next to the currently playing song to search for it on Spotify.
 // @match        https://wavez.fm/*
 // @match        https://wavez.fm/~/*
@@ -80,7 +78,7 @@
 
   setInterval(addButton, 500);
 
-  // Quick check on the title cleaner: load with #wz-spotify-test.
+  // ponytail: self-check for the title cleaner - run with #wz-spotify-test.
   if (location.hash === '#wz-spotify-test') {
     const cases = [
       ['Groove Is In The Heart (Official Video)', 'Groove Is In The Heart'],
@@ -88,10 +86,10 @@
       ['Track (Official Music Video) [HD]', 'Track'],
       ['Title (Lyrics)', 'Title'],
       ['Da Funk (Remastered)', 'Da Funk'],
-      ['Power (feat. Dwele)', 'Power (feat. Dwele)'], // keep real parens
+      ['Power (feat. Dwele)', 'Power (feat. Dwele)'], // real parens kept
     ];
     cases.forEach(([raw, want]) =>
       console.assert(stripNoise(raw) === want, 'stripNoise:', raw, '->', stripNoise(raw), 'want', want));
-    console.log('[wz-spotify] tests passed');
+    console.log('[wz-spotify] self-check passed');
   }
 })();

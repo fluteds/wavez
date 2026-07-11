@@ -3,8 +3,6 @@
 // @namespace    https://wavez.fm/
 // @icon         https://wavez.fm/favicon.ico
 // @version      1.3
-// @updateURL    https://github.com/fluteds/userscripts/raw/main/wavez/wavez-sidebar.user.js
-// @downloadURL  https://github.com/fluteds/userscripts/raw/main/wavez/wavez-sidebar.user.js
 // @description  Adds a collapsible chat button to the chat section, with an unread dot when collapsed.
 // @match        https://wavez.fm/*
 // @grant        none
@@ -157,10 +155,12 @@
 
     const api = window.WavezFM;
     if (api && api.version === '1') {
-      // Bridge only fires on real chat messages, so no false positives.
+      // Bridge fires only on real chat messages - no false positives from
+      // unrelated rail DOM churn.
       api.room.subscribe('chat_message', markUnread);
     } else {
-      // Fallback when the bridge isn't there: treat any node added to the rail as a new message.
+      // ponytail: fallback for raw injection / pre-bridge pages. Any node added
+      // to the rail counts as a new message.
       new MutationObserver((records) => {
         if (records.some((r) => r.addedNodes.length)) markUnread();
       }).observe(rail, { childList: true, subtree: true });

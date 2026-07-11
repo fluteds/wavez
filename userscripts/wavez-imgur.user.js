@@ -3,8 +3,6 @@
 // @namespace    https://wavez.fm/
 // @icon         https://wavez.fm/favicon.ico
 // @version      1.7
-// @updateURL    https://github.com/fluteds/userscripts/raw/main/wavez/wavez-imgur.user.js
-// @downloadURL  https://github.com/fluteds/userscripts/raw/main/wavez/wavez-imgur.user.js
 // @description  Replace Imgur links, backgrounds and CSS url() badges (e.g. niceatc/nicewoot) with Rimgo safely. Avoids "Content not viewable in your region" placeholders.
 // @match        https://wavez.fm/*
 // @match        https://*.wavez.fm/*
@@ -42,7 +40,9 @@
     }
   }
 
-  // niceatc/nicewoot renders its badge from a CSS rule injected as a <style> block (e.g. --nw-badge-img: url("https://i.imgur.com/...png")), not from an element attribute - so the stylesheet text needs rewriting too.
+  // niceatc/nicewoot renders its badge from a CSS rule injected as a <style>
+  // block (e.g. --nw-badge-img: url("https://i.imgur.com/...png")), not from an
+  // element attribute - so the stylesheet text needs rewriting too.
   function fixStyleEl(el) {
     if (!el || el.tagName !== 'STYLE') return;
 
@@ -53,7 +53,8 @@
     if (next !== css) el.textContent = next;
   }
 
-  // Rules built with insertRule() (no <style> text node) only live in the CSSOM, so rewrite them in place. Recurse into @media/@layer/@supports groups.
+  // Rules built with insertRule() (no <style> text node) only live in the CSSOM,
+  // so rewrite them in place. Recurse into @media/@layer/@supports groups.
   function fixRules(parent) {
     let rules;
     try {
@@ -93,6 +94,7 @@
     try {
       if (root.styleSheets) sheets = sheets.concat(Array.from(root.styleSheets));
     } catch (e) { /* ignore */ }
+    // Constructed sheets attached via adoptedStyleSheets.
     try {
       if (root.adoptedStyleSheets) sheets = sheets.concat(Array.from(root.adoptedStyleSheets));
     } catch (e) { /* ignore */ }
@@ -106,6 +108,12 @@
     fixSheets(root);
   }
 
+  // --- Cross-origin CSS (e.g. niceatc/nicewoot badge sheet) ----------------
+  // The badge image lives in a remote stylesheet the browser won't let us read
+  // via the CSSOM (sheet.cssRules throws cross-origin). So refetch it ourselves,
+  // rewrite imgur -> rimgo in the raw CSS, inject the result as a local <style>,
+  // and disable the original <link> so the imgur-referencing version stops
+  // applying. Needs @grant GM_xmlhttpRequest + @connect for the host.
   const REMOTE_CSS_HOST = 'niceatc';
   const remoteCss = new Map(); // href -> 'pending' | 'done' | 'clean' | 'failed'
 
@@ -121,12 +129,12 @@
 
     let url;
     try { url = new URL(href, location.href); } catch (e) { return; }
-    if (url.origin === location.origin) return; // same-origin sheets are readable via the CSSOM
-    if (!url.hostname.includes(REMOTE_CSS_HOST)) return;
+    if (url.origin === location.origin) return;          // same-origin = readable elsewhere
+    if (!url.hostname.includes(REMOTE_CSS_HOST)) return; // only the niceatc sheet
 
     const state = remoteCss.get(href);
-    if (state === 'done') { link.disabled = true; return; }
-    if (state) return;
+    if (state === 'done') { link.disabled = true; return; } // keep replacements disabled
+    if (state) return;                                      // pending / clean / failed
 
     const fetcher = gmFetch();
     if (!fetcher) return; // no cross-origin read available (script needs @grant)
