@@ -9,19 +9,17 @@
     <meta property="og:title" content="Wavez Tools">
     <meta property="og:description" content="A collection of quality of life tools for wavez.fm.">
     <meta property="og:url" content="https://fluteds.github.io/wavez">
-    <meta name="theme-color" content="#0f0e1c">
+    <meta name="theme-color" content="#008080">
     <style>
         :root {
-            --paper: #0f0e1c;
-            --card: #17152b;
-            --ink: #ece9f7;
-            --muted: #8b86a6;
-            --rule: #2a2747;
-            --accent: #7c5cff;
-            --accent2: #4d9fff;
-            --hl: rgba(124, 92, 255, 0.42);
-            --tape: rgba(124, 92, 255, 0.22);
-            color-scheme: dark;
+            --desk: #008080;
+            --face: #c0c7c8;
+            --hi: #ffffff;
+            --lo: #868a8e;
+            --dark: #000000;
+            --title: #000080;
+            --title2: #1084d0;
+            --text: #000;
         }
 
         * {
@@ -30,432 +28,300 @@
 
         body {
             margin: 0;
-            padding: clamp(3rem, 9vw, 6rem) 1.5rem 6rem;
-            background-color: var(--paper);
-            /* faint paper grain */
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
-            color: var(--ink);
-            font-family: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            padding: clamp(1rem, 4vw, 3rem) 1rem 3.5rem;
+            background: var(--desk);
+            font: 400 13px/1.35 "MS Sans Serif", Tahoma, Verdana, sans-serif;
+            color: var(--text);
+            -webkit-font-smoothing: none;
         }
 
-        ::selection {
-            background: var(--accent);
+        /* ---------- 95 bevels ---------- */
+        .out {
+            border: 2px solid;
+            border-color: var(--hi) var(--dark) var(--dark) var(--hi);
+            box-shadow: inset 1px 1px 0 var(--face), inset -1px -1px 0 var(--lo);
+            background: var(--face);
+        }
+
+        .in {
+            border: 2px solid;
+            border-color: var(--lo) var(--hi) var(--hi) var(--lo);
+            box-shadow: inset 1px 1px 0 var(--dark);
+            background: #fff;
+        }
+
+        /* ---------- window ---------- */
+        .win {
+            width: min(100%, 34rem);
+            margin: 0 auto;
+            padding: 3px;
+        }
+
+        .titlebar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 2px 2px 3px;
+            background: linear-gradient(90deg, var(--title), var(--title2));
             color: #fff;
         }
 
-        .wrap {
-            position: relative;
-            max-width: 36rem;
-            margin: 0 auto;
+        .titlebar h1 {
+            margin: 0;
+            flex: 1;
+            font-size: 12px;
+            font-weight: 700;
         }
 
-        /* stray ink ring, like the page has been sat on a desk */
-        .stain {
-            position: absolute;
-            width: 7rem;
-            height: 5.2rem;
-            border: 2px solid rgba(124, 92, 255, 0.16);
-            border-radius: 50%;
-            filter: url(#rough);
-            pointer-events: none;
-            z-index: -1;
+        .icon {
+            width: 14px;
+            height: 14px;
+            flex: none;
+            display: grid;
+            place-items: center;
+            font-size: 10px;
+            background: #fff;
+            color: var(--title);
+            border: 1px solid var(--lo);
         }
 
-        .stain.one {
-            top: 1rem;
-            right: -1rem;
-            transform: rotate(-18deg);
+        .tbtn {
+            width: 16px;
+            height: 14px;
+            flex: none;
+            display: grid;
+            place-items: center;
+            font: 700 9px/1 "MS Sans Serif", Tahoma, sans-serif;
+            color: #000;
+            background: var(--face);
+            border: 1px solid;
+            border-color: var(--hi) var(--dark) var(--dark) var(--hi);
+            box-shadow: inset 1px 1px 0 var(--face), inset -1px -1px 0 var(--lo);
         }
 
-        .stain.two {
-            bottom: 6rem;
-            left: -2rem;
-            width: 5rem;
-            height: 4rem;
-            transform: rotate(24deg);
+        /* menu bar */
+        .menubar {
+            display: flex;
+            gap: 2px;
+            padding: 2px 1px;
+            font-size: 12px;
         }
 
-        a {
-            color: inherit;
+        .menubar span {
+            padding: 1px 6px;
+        }
+
+        .menubar span:hover {
+            background: var(--title);
+            color: #fff;
+        }
+
+        .menubar u {
+            text-decoration: underline;
+        }
+
+        /* the notepad page itself */
+        .pad {
+            margin-top: 1px;
+            padding: 4px 6px;
+            min-height: 22rem;
+            overflow-x: auto;
+            font: 400 13px/1.5 ui-monospace, "Lucida Console", Consolas, monospace;
+            color: #000;
+            white-space: pre;
+        }
+
+        .pad a {
+            color: #0000ee;
+        }
+
+        .pad a:visited {
+            color: #551a8b;
+        }
+
+        .pad a:hover {
+            background: var(--title);
+            color: #fff;
             text-decoration: none;
         }
 
-        /* --- header --- */
-        header {
-            position: relative;
-            margin-bottom: clamp(2.5rem, 8vw, 4rem);
-            transform: rotate(-1.2deg);
+        /* blinking caret at the end of the file */
+        .caret {
+            display: inline-block;
+            width: 7px;
+            background: #000;
+            animation: blink 1s steps(1) infinite;
         }
 
-        h1 {
-            margin: 0;
-            font-size: clamp(2.4rem, 11vw, 5rem);
-            line-height: 0.95;
-            font-weight: 800;
-            letter-spacing: -0.045em;
-            text-wrap: balance;
+        @keyframes blink {
+            50% { background: transparent; }
         }
 
-        /* highlighter swipe */
-        .hl {
-            position: relative;
-            white-space: nowrap;
-        }
-
-        .hl::before {
-            content: "";
-            position: absolute;
-            z-index: -1;
-            inset: 0.12em -0.18em 0.08em -0.18em;
-            background: var(--hl);
-            border-radius: 0.7em 0.4em 0.9em 0.3em;
-            transform: rotate(-1.6deg);
-            filter: url(#rough);
-        }
-
-        .arrow,
-        .star,
-        .underline {
-            filter: url(#rough);
-        }
-
-        /* doodle underline under the whole title */
-        .underline {
-            display: block;
-            width: 12rem;
-            max-width: 72%;
-            margin: 0.3rem 0 0 1.5rem;
-            color: var(--accent2);
-        }
-
-        .tagline {
-            margin: 1.1rem 0 0;
-            font-size: clamp(0.95rem, 2.5vw, 1.15rem);
-            color: var(--muted);
-            font-weight: 500;
-            font-style: italic;
-        }
-
-        /* little corner star */
-        .star {
-            position: absolute;
-            top: -1.6rem;
-            right: 0.5rem;
-            width: 2.2rem;
-            color: var(--accent);
-            transform: rotate(8deg);
-        }
-
-        /* --- taped card --- */
-        .card {
-            position: relative;
-            background: var(--card);
-            padding: 1.7rem 1.6rem;
-            border-radius: 8px 14px 10px 16px;
-            box-shadow: 0 12px 26px -14px rgba(0, 0, 0, 0.7);
-            transform: rotate(-0.8deg);
-        }
-
-        /* hand-drawn frame, sketched slightly off the card edge */
-        .card::after {
-            content: "";
-            position: absolute;
-            inset: 5px 7px 8px 5px;
-            border: 1.5px dashed var(--accent2);
-            border-radius: 14px 8px 16px 10px;
-            opacity: 0.55;
-            pointer-events: none;
-            filter: url(#rough);
-        }
-
-        /* washi tape, stuck at a corner */
-        .card::before {
-            content: "";
-            position: absolute;
-            top: -0.6rem;
-            left: -0.9rem;
-            width: 5rem;
-            height: 1.5rem;
-            background: var(--tape);
-            border-left: 1px dashed rgba(255, 255, 255, 0.45);
-            border-right: 1px dashed rgba(255, 255, 255, 0.45);
-            transform: rotate(-28deg);
-            filter: url(#rough);
-        }
-
-        .about {
-            margin: 0 0 clamp(2.5rem, 8vw, 4rem);
-            font-size: 0.98rem;
-            line-height: 1.75;
-        }
-
-        .about p {
-            margin: 0 0 0.9rem;
-        }
-
-        .about p:last-child {
-            margin-bottom: 0;
-            color: var(--muted);
-        }
-
-        .about strong {
-            color: var(--accent);
-            font-weight: 600;
-        }
-
-        /* --- note (torn margin strip) --- */
-        .note {
-            margin: 0 0 1.75rem;
-            font-size: 0.9rem;
-            color: var(--muted);
-            transform: rotate(-0.8deg);
-            padding-left: 1.75rem;
-        }
-
-        .note::before {
-            content: "✎";
-            position: absolute;
-            margin-left: -1.75rem;
-            color: var(--accent);
-            font-style: normal;
-        }
-
-        .note a {
-            color: var(--ink);
-            text-decoration: underline wavy var(--accent);
-            text-underline-offset: 3px;
-        }
-
-        /* --- tools as pasted notes --- */
-        .list {
+        /* status bar */
+        .status {
             display: flex;
-            flex-direction: column;
-            gap: 1.1rem;
+            gap: 3px;
+            margin-top: 3px;
         }
 
-        .list a {
-            position: relative;
+        .status span {
+            padding: 2px 5px;
+            font-size: 11px;
+            border: 1px solid;
+            border-color: var(--lo) var(--hi) var(--hi) var(--lo);
+        }
+
+        .status span:first-child {
+            flex: 1;
+        }
+
+        /* ---------- taskbar ---------- */
+        .taskbar {
+            position: fixed;
+            inset: auto 0 0 0;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            padding: 1rem 1.25rem;
-            background: var(--card);
-            border-radius: 10px 6px 12px 7px;
-            box-shadow: 0 10px 20px -14px rgba(0, 0, 0, 0.7);
-            transition: transform 0.16s ease, box-shadow 0.16s ease;
+            gap: 4px;
+            padding: 2px 3px;
+            border-top: 2px solid var(--hi);
+            background: var(--face);
+            z-index: 10;
         }
 
-        /* sketched frame on each note */
-        .list a::after {
-            content: "";
-            position: absolute;
-            inset: 4px 6px 6px 4px;
-            border: 1.5px dashed var(--rule);
-            border-radius: 8px 12px 6px 10px;
-            opacity: 0.7;
-            pointer-events: none;
-            filter: url(#rough);
-        }
-
-        /* pasted in crooked, each one its own angle + nudge */
-        .list a:nth-child(1) { transform: rotate(-1.7deg); }
-        .list a:nth-child(2) { transform: rotate(1.4deg) translateX(9px); }
-        .list a:nth-child(3) { transform: rotate(-0.6deg) translateX(-7px); }
-        .list a:nth-child(4) { transform: rotate(2deg) translateX(5px); }
-        .list a:nth-child(5) { transform: rotate(-1.3deg) translateX(-4px); }
-
-        /* a scrap of tape on each note, mixed corners */
-        .list a::before {
-            content: "";
-            position: absolute;
-            top: -0.5rem;
-            left: 1.2rem;
-            width: 3rem;
-            height: 1.05rem;
-            background: var(--tape);
-            transform: rotate(-7deg);
-            filter: url(#rough);
-        }
-
-        .list a:nth-child(2)::before,
-        .list a:nth-child(4)::before {
-            left: auto;
-            right: 1.2rem;
-            transform: rotate(6deg);
-        }
-
-        .list a:nth-child(3)::before {
-            left: 40%;
-            transform: rotate(3deg);
-        }
-
-        .list a:hover,
-        .list a:focus-visible {
-            transform: rotate(-0.3deg) translateY(-4px) scale(1.02);
-            box-shadow: 0 18px 30px -14px rgba(0, 0, 0, 0.8);
-            outline: none;
-        }
-
-        .list a:hover::after,
-        .list a:focus-visible::after {
-            border-color: var(--accent);
-            opacity: 1;
-        }
-
-        .note-body {
+        .start {
             display: flex;
-            flex-direction: column;
-            gap: 0.2rem;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px 2px 3px;
+            font-weight: 700;
+            font-size: 12px;
         }
 
-        .list .name {
-            font-size: 1.15rem;
-            font-weight: 600;
+        .start:active {
+            border-color: var(--dark) var(--hi) var(--hi) var(--dark);
         }
 
-        .list .desc {
-            font-size: 0.85rem;
-            color: var(--muted);
-            line-height: 1.45;
+        .flag {
+            display: grid;
+            grid-template-columns: 6px 6px;
+            grid-template-rows: 6px 6px;
+            gap: 1px;
+            transform: skewY(-6deg);
         }
 
-        .list .arrow {
-            width: 2rem;
-            color: var(--accent);
-            flex: none;
-            transition: transform 0.2s ease;
+        .flag i:nth-child(1) { background: #f00; }
+        .flag i:nth-child(2) { background: #0a0; }
+        .flag i:nth-child(3) { background: #00a8f0; }
+        .flag i:nth-child(4) { background: #fc0; }
+
+        .task {
+            padding: 2px 8px;
+            font-size: 12px;
+            max-width: 12rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            border-color: var(--dark) var(--hi) var(--hi) var(--dark);
+            box-shadow: inset 1px 1px 0 var(--lo), inset -1px -1px 0 var(--face);
         }
 
-        .list a:hover .arrow,
-        .list a:focus-visible .arrow {
-            transform: translateX(5px);
+        .tray {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 8px;
+            font-size: 12px;
+            border: 1px solid;
+            border-color: var(--lo) var(--hi) var(--hi) var(--lo);
         }
 
-        .list a:focus-visible {
-            box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--accent);
-        }
-
-        /* --- footer --- */
-        footer {
-            margin-top: clamp(3rem, 9vw, 4.5rem);
-            font-size: 0.85rem;
-            line-height: 1.7;
-            color: var(--muted);
-            transform: rotate(0.5deg);
-            text-align: center;
-        }
-
-        footer p {
-            margin: 0;
-        }
-
-        footer a {
-            color: var(--ink);
-            text-decoration: underline wavy var(--accent);
-            text-underline-offset: 3px;
-        }
-
-        footer a:focus-visible {
-            outline: 2px solid var(--accent);
-            outline-offset: 3px;
+        @media (max-width: 30rem) {
+            .pad { font-size: 12px; }
+            .menubar { font-size: 11px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
-            * {
-                transition: none !important;
-            }
+            .caret { animation: none; }
         }
     </style>
 </head>
 
 <body>
-    <!-- reusable doodles -->
-    <svg width="0" height="0" aria-hidden="true" style="position:absolute">
-        <filter id="rough">
-            <feTurbulence type="turbulence" baseFrequency="0.022" numOctaves="2" seed="7" result="t" />
-            <feDisplacementMap in="SourceGraphic" in2="t" scale="3" />
-        </filter>
-        <symbol id="arrow" viewBox="0 0 40 24">
-            <path d="M2 12 C 14 10, 26 10, 34 12" fill="none" stroke="currentColor" stroke-width="2.4"
-                stroke-linecap="round" />
-            <path d="M27 5 L 36 12 L 27 19" fill="none" stroke="currentColor" stroke-width="2.4"
-                stroke-linecap="round" stroke-linejoin="round" />
-        </symbol>
-        <symbol id="squiggle" viewBox="0 0 180 12">
-            <path d="M2 7 C 20 1, 35 11, 55 6 S 90 1, 110 6 S 150 11, 178 5" fill="none" stroke="currentColor"
-                stroke-width="2.6" stroke-linecap="round" />
-        </symbol>
-        <symbol id="star" viewBox="0 0 40 40">
-            <path d="M20 2 L20 38 M2 20 L38 20 M7 7 L33 33 M33 7 L7 33" stroke="currentColor" stroke-width="2.4"
-                stroke-linecap="round" />
-        </symbol>
-    </svg>
 
-    <div class="wrap">
-        <span class="stain one" aria-hidden="true"></span>
-        <span class="stain two" aria-hidden="true"></span>
-        <header>
-            <svg class="star" viewBox="0 0 40 40" aria-hidden="true">
-                <use href="#star" />
-            </svg>
-            <h1>Wavez <span class="hl">Tools.</span></h1>
-            <svg class="underline" viewBox="0 0 180 12" aria-hidden="true">
-                <use href="#squiggle" />
-            </svg>
-            <p class="tagline">Quality of life tools for wavez.fm</p>
-        </header>
-
-        <div class="card about">
-            <p>I spend a lot of time on <strong>wavez.fm</strong> and kept bumping into the same small annoyances, chat I couldn't collapse, songs I wanted on Spotify, images that wouldn't load in my region. So I "fixed" them, one script at a time. Nothing official, just tweaks that make my nights in the rooms nicer. Open source, so fork it and make it yours.</p>
+    <div class="win out">
+        <div class="titlebar">
+            <span class="icon" aria-hidden="true">📄</span>
+            <h1>readme.txt &#8212; Notepad</h1>
+            <span class="tbtn" aria-hidden="true">_</span>
+            <span class="tbtn" aria-hidden="true">□</span>
+            <span class="tbtn" aria-hidden="true">✕</span>
         </div>
 
-        <p class="note">Needs <a href="https://www.tampermonkey.net" target="_blank" rel="noopener">Tampermonkey</a> or your userscript manager of choice.</p>
-
-        <div class="list">
-            <a href="userscripts/wavez-translate.user.js">
-                <span class="note-body">
-                    <span class="name">Translate</span>
-                    <span class="desc">Translate chat and system messages inline.</span>
-                </span>
-                <svg class="arrow" viewBox="0 0 40 24" aria-hidden="true"><use href="#arrow" /></svg>
-            </a>
-            <a href="userscripts/wavez-open-in-spotify.user.js">
-                <span class="note-body">
-                    <span class="name">Open in Spotify</span>
-                    <span class="desc">Searches the currently playing song on Spotify.</span>
-                </span>
-                <svg class="arrow" viewBox="0 0 40 24" aria-hidden="true"><use href="#arrow" /></svg>
-            </a>
-            <a href="userscripts/wavez-sidebar.user.js">
-                <span class="note-body">
-                    <span class="name">Chat Toggle</span>
-                    <span class="desc">Collapsible chat rail with an unread dot.</span>
-                </span>
-                <svg class="arrow" viewBox="0 0 40 24" aria-hidden="true"><use href="#arrow" /></svg>
-            </a>
-            <a href="userscripts/wavez-imgur.user.js">
-                <span class="note-body">
-                    <span class="name">Imgur Fix</span>
-                    <span class="desc">Reroute region-blocked Imgur images through Rimgo.</span>
-                </span>
-                <svg class="arrow" viewBox="0 0 40 24" aria-hidden="true"><use href="#arrow" /></svg>
-            </a>
-            <a href="userscripts/wavez-auto-woot.user.js">
-                <span class="note-body">
-                    <span class="name">Auto Woot</span>
-                    <span class="desc">Woots every new track automatically.</span>
-                </span>
-                <svg class="arrow" viewBox="0 0 40 24" aria-hidden="true"><use href="#arrow" /></svg>
-            </a>
+        <div class="menubar" aria-hidden="true">
+            <span><u>F</u>ile</span>
+            <span><u>E</u>dit</span>
+            <span><u>S</u>earch</span>
+            <span><u>H</u>elp</span>
         </div>
 
-        <footer>
-            <p>Open source on <a href="https://github.com/fluteds/wavez">GitHub&nbsp;↗</a>. Not affiliated with <a href="https://wavez.fm">wavez.fm</a>.</p>
-        </footer>
+        <div class="pad in">WAVEZ TOOLS
+===========
+
+Quality of life tools for wavez.fm.
+
+I've spent a lot of nights in the rooms and the same small 
+annoyances kept turning up. Chat I couldn't collapse. Songs I 
+wanted on Spotify. Images that wouldn't load in my region. 
+So I fixed them, one script at a time. Nothing official.
+
+
+INSTALL
+-------
+
+1. Get <a href="https://www.tampermonkey.net" target="_blank" rel="noopener">Tampermonkey</a> (or any userscript manager).
+2. Click a script below. They self-update after that.
+
+
+SCRIPTS                                             VER
+-------                                             ---
+
+<a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-translate.user.js">translate.user.js</a> ........ chat, inline ......... 1.5
+<a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-open-in-spotify.user.js">open-in-spotify.user.js</a> .. find the song ........ 1.1
+<a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-sidebar.user.js">chat-toggle.user.js</a> ...... collapsible rail ..... 1.3
+<a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-imgur.user.js">imgur-fix.user.js</a> ........ unbreak imgur ........ 1.7
+<a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js">auto-woot.user.js</a> ........ woot everything ...... 1.0
+
+
+Source: <a href="https://github.com/fluteds/wavez">github.com/fluteds/wavez</a>
+Not affiliated with <a href="https://wavez.fm">wavez.fm</a>.
+<span class="caret" aria-hidden="true">&nbsp;</span></div>
+
+        <div class="status">
+            <span>5 scripts, 0 excuses</span>
+            <span>Ln 1, Col 1</span>
+        </div>
     </div>
+
+    <div class="taskbar">
+        <button class="start out" type="button">
+            <span class="flag" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            Start
+        </button>
+        <span class="task out">📄 readme.txt — Notepad</span>
+        <span class="tray"><span aria-hidden="true">🔊</span><time id="clock">12:00</time></span>
+    </div>
+
+    <script>
+        // ponytail: the only JS on the page. a frozen taskbar clock looks broken.
+        const clock = document.getElementById("clock");
+        const tick = () => clock.textContent = new Date()
+            .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+        tick();
+        setInterval(tick, 10000);
+    </script>
+
 </body>
 
 </html>

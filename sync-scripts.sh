@@ -1,11 +1,11 @@
 #!/usr/bin/env sh
-# Refresh the published userscripts in ./userscripts from the source repo.
-# The published set = whatever already lives in ./userscripts, so adding a
-# script is a one-time drop-in here. Scripts with no counterpart in the source
-# repo (e.g. wavez-auto-woot, authored here) are left untouched.
+# Refresh the published userscripts in ./userscripts from the source repo,
+# stamping each one with update/download URLs that point back at this repo.
 set -e
 cd "$(dirname "$0")"
 src=../userscripts/wavez
+raw=https://github.com/fluteds/wavez/raw/main/userscripts
+author=fluteds
 
 n=0
 for dest in userscripts/*.user.js; do
@@ -16,5 +16,16 @@ for dest in userscripts/*.user.js; do
   else
     echo "  keep (no source): $name"
   fi
+
+  # stamp author, and point update/download URLs at this repo
+  awk -v url="$raw/$name" -v author="$author" '
+    /^\/\/ @(author|updateURL|downloadURL)/ { next }
+    { print }
+    /^\/\/ @namespace/ { printf "// @author       %s\n", author }
+    /^\/\/ @version/ {
+      printf "// @updateURL    %s\n", url
+      printf "// @downloadURL  %s\n", url
+    }
+  ' "$dest" > "$dest.tmp" && mv "$dest.tmp" "$dest"
 done
 echo "synced $n script(s) from $src"

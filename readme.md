@@ -8,11 +8,11 @@ Userscripts that add features to wavez.fm. Needs [Tampermonkey](https://www.tamp
 
 | Addon | What it does | |
 | --- | --- | --- |
-| Translate | Translate chat and system messages inline. | [Install](https://github.com/fluteds/userscripts/raw/main/wavez/wavez-translate.user.js) |
-| Open in Spotify | Find the currently playing song on Spotify. | [Install](https://github.com/fluteds/userscripts/raw/main/wavez/wavez-open-in-spotify.user.js) |
-| Chat Toggle | Collapsible chat rail with an unread dot. | [Install](https://github.com/fluteds/userscripts/raw/main/wavez/wavez-sidebar.user.js) |
-| Imgur Fix | Reroute region-blocked Imgur images through Rimgo. | [Install](https://github.com/fluteds/userscripts/raw/main/wavez/wavez-imgur.user.js) |
-| Auto Woot | Woots every new track automatically. | [Install](https://github.com/fluteds/userscripts/raw/main/wavez/wavez-auto-woot.user.js) |
+| Translate | Translate chat and system messages inline. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-translate.user.js) |
+| Open in Spotify | Find the currently playing song on Spotify. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-open-in-spotify.user.js) |
+| Chat Toggle | Collapsible chat rail with an unread dot. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-sidebar.user.js) |
+| Imgur Fix | Reroute region-blocked Imgur images through Rimgo. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-imgur.user.js) |
+| Auto Woot | Woots every new track automatically. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js) |
 
 ## Installing
 

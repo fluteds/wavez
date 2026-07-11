@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Wavez Auto Woot
 // @namespace    https://wavez.fm/
+// @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
 // @version      1.0
-// @updateURL    https://github.com/fluteds/userscripts/raw/main/wavez/wavez-auto-woot.user.js
-// @downloadURL  https://github.com/fluteds/userscripts/raw/main/wavez/wavez-auto-woot.user.js
+// @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js
+// @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js
 // @description  Woots every new track automatically via the WavezFM bridge.
 // @match        https://wavez.fm/*
 // @grant        none
