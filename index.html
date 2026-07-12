@@ -9,488 +9,318 @@
     <meta property="og:title" content="Wavez Tools">
     <meta property="og:description" content="A collection of quality of life tools for wavez.fm.">
     <meta property="og:url" content="https://fluteds.github.io/wavez">
-    <meta name="theme-color" content="#008080">
+    <meta name="theme-color" content="#080808">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&family=Sora:wght@400;600;700&display=swap">
     <style>
         :root {
-            --desk: #008080;
-            --face: #c0c7c8;
-            --hi: #ffffff;
-            --lo: #868a8e;
-            --dark: #000000;
-            --title: #000080;
-            --title2: #1084d0;
-            --text: #000;
+            --bg-primary: #080808;
+            --bg-secondary: #0f0f0f;
+            --bg-elevated: #151515;
+            --bg-hover: #1b1b1b;
+            --border: #262626;
+            --border-light: #1e1e1e;
+            --text-primary: #f4f6f8;
+            --text-secondary: #c2c8d1;
+            --text-muted: #8b92a0;
+            --accent: #42a5dc;
+            --accent-soft: #42a5dc26;
+            --accent-glow: #42a5dc33;
+            --radius: .5rem;
+            --panel: linear-gradient(155deg, var(--bg-elevated), var(--bg-secondary));
+            --sans: "Manrope", "SF Pro Text", "Segoe UI", "Helvetica Neue", sans-serif;
+            --display: "Sora", "SF Pro Display", "Helvetica Neue", sans-serif;
         }
 
-        * {
-            box-sizing: border-box;
-        }
-
-        /* 95 cursors, drawn pixel by pixel and inlined. hotspots: arrow tip, fingertip. */
-        html {
-            cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAATCAYAAACk9eypAAAAVklEQVR42q3SQQrAIAxE0bn/pb90IUgakwn4wU2bV7AqSWgYU8TXBLFzEWcOItYhsirErRuiKkN0RYTTibqhuP7nYG96f8UC4WX9l5KHLXh7KUdXPw4vP3pDywfsU6kAAAAASUVORK5CYII=") 0 0, default;
-        }
-
-        a {
-            cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAR0lEQVR42mNgwA7+QzFZ4D8MkGvIMDSAZINQDMBiGPkG4PMWsgReA7AZguFMQgCnAcQCbN4YeAOINgRfVFJsAANaysOFUQAABlONgSbD4psAAAAASUVORK5CYII=") 5 0, pointer;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
             min-height: 100vh;
-            padding: clamp(1rem, 4vw, 3rem) 1rem 3.5rem;
-            background: var(--desk);
-            font: 400 13px/1.35 "MS Sans Serif", Tahoma, Verdana, sans-serif;
-            color: var(--text);
-            -webkit-font-smoothing: none;
+            padding: clamp(2rem, 6vw, 5rem) 1.25rem 4rem;
+            font: 400 15px/1.625 var(--sans);
+            color: var(--text-secondary);
+            background: radial-gradient(circle at top, var(--accent-glow), transparent 32%), linear-gradient(180deg, var(--bg-primary), var(--bg-secondary)) fixed;
+            background-color: var(--bg-primary);
         }
 
-        /* ---------- 95 bevels ---------- */
-        .out {
-            border: 2px solid;
-            border-color: var(--hi) var(--dark) var(--dark) var(--hi);
-            box-shadow: inset 1px 1px 0 var(--face), inset -1px -1px 0 var(--lo);
-            background: var(--face);
-        }
-
-        .in {
-            border: 2px solid;
-            border-color: var(--lo) var(--hi) var(--hi) var(--lo);
-            box-shadow: inset 1px 1px 0 var(--dark);
-            background: #fff;
-        }
-
-        /* ---------- desktop icons ---------- */
-        .desktop {
-            position: fixed;
-            top: 1rem;
-            left: 1rem;
-            display: grid;
-            gap: 1rem;
-            z-index: 5;
-        }
-
-        .dicon {
-            display: grid;
-            justify-items: center;
-            gap: 3px;
-            width: 5rem;
-            padding: 3px;
-            font-size: 11px;
-            color: #fff;
-            text-align: center;
-            text-decoration: none;
-            text-shadow: 1px 1px 0 var(--dark);
-        }
-
-        .dicon span {
-            font-size: 28px;
-            line-height: 1;
-            text-shadow: none;
-        }
-
-        .dicon:focus-visible,
-        .dicon:hover em {
-            outline: 1px dotted #fff;
-        }
-
-        .dicon em {
-            font-style: normal;
-            padding: 0 2px;
-        }
-
-        .dicon:hover em {
-            background: var(--title);
-        }
-
-        /* the desktop is decoration; below this the window needs the whole screen */
-        @media (max-width: 60rem) {
-            .desktop { display: none; }
-        }
-
-        /* ---------- window ---------- */
-        .win {
-            width: min(100%, 40rem);
+        main {
+            width: min(100%, 44rem);
             margin: 0 auto;
-            padding: 3px;
+            display: grid;
+            gap: 1.25rem;
         }
 
-        .titlebar {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 2px 2px 3px;
-            background: linear-gradient(90deg, var(--title), var(--title2));
-            color: #fff;
+        header {
+            margin-bottom: .75rem;
+            text-align: center;
         }
 
-        .titlebar h1 {
+        h1 {
             margin: 0;
-            flex: 1;
-            font-size: 12px;
+            font-family: var(--display);
+            font-size: clamp(2rem, 7vw, 2.75rem);
             font-weight: 700;
+            letter-spacing: -.02em;
+            color: var(--text-primary);
         }
 
-        .icon {
-            width: 14px;
-            height: 14px;
-            flex: none;
+        h1 span { color: var(--accent); }
+
+        header p {
+            margin: .5rem 0 0;
+            color: var(--text-muted);
+        }
+
+        .logo {
+            width: clamp(9rem, 30vw, 12rem);
+            height: auto;
+            margin-bottom: 1.25rem;
+            fill: var(--text-primary);
+            opacity: .9;
+            filter: drop-shadow(0 0 32px var(--accent-glow));
+        }
+
+        section {
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--panel);
+        }
+
+        h2 {
+            margin: 0 0 .75rem;
+            font-family: var(--display);
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        p { margin: 0; }
+
+        a {
+            color: var(--accent);
+            text-underline-offset: 2px;
+        }
+
+        ol {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        ol li + li { margin-top: .35rem; }
+
+        .hint {
+            margin: -.25rem 0 1rem;
+            color: var(--text-muted);
+            font-size: .9rem;
+        }
+
+        ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
             display: grid;
-            place-items: center;
-            font-size: 10px;
-            background: #fff;
-            color: var(--title);
-            border: 1px solid var(--lo);
+            gap: .5rem;
         }
 
-        .tbtn {
-            width: 16px;
-            height: 14px;
-            flex: none;
-            display: grid;
-            place-items: center;
-            font: 700 9px/1 "MS Sans Serif", Tahoma, sans-serif;
-            color: #000;
-            background: var(--face);
-            border: 1px solid;
-            border-color: var(--hi) var(--dark) var(--dark) var(--hi);
-            box-shadow: inset 1px 1px 0 var(--face), inset -1px -1px 0 var(--lo);
-        }
-
-        /* menu bar */
-        .menubar {
+        ul a {
             display: flex;
-            gap: 2px;
-            padding: 2px 1px;
-            font-size: 12px;
-        }
-
-        .menubar span {
-            padding: 1px 6px;
-        }
-
-        .menubar span:hover {
-            background: var(--title);
-            color: #fff;
-        }
-
-        .menubar u {
-            text-decoration: underline;
-        }
-
-        /* the notepad page itself */
-        .pad {
-            margin-top: 1px;
-            padding: 4px 6px;
-            min-height: 22rem;
-            overflow-x: auto;
-            font: 400 13px/1.5 ui-monospace, "Lucida Console", Consolas, monospace;
-            color: #000;
-            white-space: pre;
-        }
-
-        /* prose wraps to the window; the rest stays pre for the ASCII table */
-        .wrap {
-            display: block;
-            white-space: pre-wrap;
-        }
-
-        .pad a {
-            color: #0000ee;
-        }
-
-        .pad a:visited {
-            color: #551a8b;
-        }
-
-        .pad a:hover {
-            background: var(--title);
-            color: #fff;
+            align-items: center;
+            gap: .875rem;
+            padding: .75rem .875rem;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             text-decoration: none;
+            transition: background .15s, border-color .15s;
         }
 
-        /* blinking caret at the end of the file */
-        .caret {
-            display: inline-block;
-            width: 7px;
-            background: #000;
-            animation: blink 1s steps(1) infinite;
+        ul a:hover,
+        ul a:focus-visible {
+            background: var(--bg-hover);
+            border-color: var(--accent);
+            outline: none;
         }
 
-        @keyframes blink {
-            50% { background: transparent; }
-        }
+        ul a:focus-visible { box-shadow: 0 0 0 3px var(--accent-soft); }
 
-        /* status bar */
-        .status {
-            display: flex;
-            gap: 3px;
-            margin-top: 3px;
-        }
-
-        .status span {
-            padding: 2px 5px;
-            font-size: 11px;
-            border: 1px solid;
-            border-color: var(--lo) var(--hi) var(--hi) var(--lo);
-        }
-
-        .status span:first-child {
-            flex: 1;
-        }
-
-        /* ---------- taskbar ---------- */
-        .taskbar {
-            position: fixed;
-            inset: auto 0 0 0;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 3px;
-            border-top: 2px solid var(--hi);
-            background: var(--face);
-            z-index: 10;
-        }
-
-        .start {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 6px 2px 3px;
-            font-weight: 700;
-            font-size: 12px;
-        }
-
-        .start:active {
-            border-color: var(--dark) var(--hi) var(--hi) var(--dark);
-        }
-
-        .flag {
+        ul span {
+            flex: none;
             display: grid;
-            grid-template-columns: 6px 6px;
-            grid-template-rows: 6px 6px;
-            gap: 1px;
-            transform: skewY(-6deg);
+            place-items: center;
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: var(--radius);
+            background: var(--accent-soft);
+            color: var(--accent);
         }
 
-        .flag i:nth-child(1) { background: #f00; }
-        .flag i:nth-child(2) { background: #0a0; }
-        .flag i:nth-child(3) { background: #00a8f0; }
-        .flag i:nth-child(4) { background: #fc0; }
-
-        .task {
-            padding: 2px 8px;
-            font-size: 12px;
-            max-width: 12rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            border-color: var(--dark) var(--hi) var(--hi) var(--dark);
-            box-shadow: inset 1px 1px 0 var(--lo), inset -1px -1px 0 var(--face);
-        }
-
-        .tray {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 2px 8px;
-            font-size: 12px;
-            border: 1px solid;
-            border-color: var(--lo) var(--hi) var(--hi) var(--lo);
-        }
-
-        /* ---------- media player ---------- */
-        /* parked top-right on the desktop; drops back into the flow when there's no room */
-        .player {
-            width: min(100%, 18rem);
-            margin: 1rem auto 0;
-            padding: 3px;
-        }
-
-        @media (min-width: 60rem) {
-            .player {
-                position: fixed;
-                top: 1rem;
-                right: 1rem;
-                margin: 0;
-                z-index: 5;
-            }
-        }
-
-        .lcd {
-            margin-top: 1px;
-            padding: 5px 7px;
-            overflow: hidden;
-            background: #000;
-            color: #0f0;
-            font: 400 12px/1.4 ui-monospace, "Lucida Console", Consolas, monospace;
-        }
-
-        .lcd b {
-            display: block;
-            white-space: nowrap;
-            font-weight: 400;
-            /* ponytail: css marquee. no JS, and it stops for reduced-motion below. */
-            animation: scroll 14s linear infinite;
-        }
-
-        @keyframes scroll {
-            from { transform: translateX(100%); }
-            to { transform: translateX(-100%); }
-        }
-
-        .transport {
-            display: flex;
-            align-items: center;
-            gap: 3px;
-            padding: 4px 3px 2px;
-        }
-
-        .transport button,
-        .transport a {
-            width: 26px;
+        .i {
+            width: 20px;
             height: 20px;
-            display: grid;
-            place-items: center;
-            font-size: 10px;
-            color: #000;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        ul b {
+            display: block;
+            font-weight: 600;
+            font-size: .95rem;
+        }
+
+        ul small {
+            display: block;
+            color: var(--text-muted);
+            font-size: .85rem;
+        }
+
+        .cta {
+            display: block;
+            width: fit-content;
+            margin: .5rem auto 0;
+            padding: .7rem 1.75rem;
+            border-radius: var(--radius);
+            background: var(--accent);
+            color: var(--bg-primary);
+            font-weight: 600;
             text-decoration: none;
+            box-shadow: 0 0 24px -4px var(--accent-glow);
+            transition: filter .15s;
         }
 
-        .transport button:active,
-        .transport a:active {
-            border-color: var(--dark) var(--hi) var(--hi) var(--dark);
-            box-shadow: inset 1px 1px 0 var(--lo);
+        .cta:hover { filter: brightness(1.1); }
+
+        .promo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 1.5rem;
+            border: 1px solid var(--accent-soft);
+            border-radius: var(--radius);
+            background: linear-gradient(155deg, var(--accent-soft), var(--bg-secondary) 60%);
+            text-decoration: none;
+            transition: border-color .15s;
         }
 
-        .transport input {
-            width: 7rem;
-            margin-left: auto;
-            accent-color: var(--title);
+        .promo:hover { border-color: var(--accent); }
+
+        .promo > svg:first-child {
+            flex: none;
+            width: 28px;
+            height: 28px;
+            color: var(--accent);
         }
 
-        @media (max-width: 30rem) {
-            .pad { font-size: 12px; }
-            .menubar { font-size: 11px; }
+        .promo div { flex: 1; }
+
+        .promo h2 { margin: 0; }
+
+        .promo p {
+            color: var(--text-muted);
+            font-size: .9rem;
+        }
+
+        .promo .arrow {
+            flex: none;
+            width: 18px;
+            height: 18px;
+            color: var(--accent);
+            transition: transform .2s;
+        }
+
+        .promo:hover .arrow { transform: translateX(4px); }
+
+        footer {
+            width: min(100%, 44rem);
+            margin: 2.5rem auto 0;
+            text-align: center;
+            font-size: .875rem;
+            color: var(--text-muted);
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .lcd b { animation: none; }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .caret { animation: none; }
+            ul a, .cta, .promo, .promo .arrow { transition: none; }
         }
     </style>
 </head>
 
 <body>
 
-    <nav class="desktop">
-        <a class="dicon" href="https://wavez.fm">
-            <span aria-hidden="true">🌊</span><em>wavez.fm</em>
+    <svg hidden xmlns="http://www.w3.org/2000/svg">
+        <symbol id="language" viewBox="0 0 24 24"><path d="M9 6.371c0 4.418 -2.239 6.629 -5 6.629" /><path d="M4 6.371h7" /><path d="M5 9c0 2.144 2.252 3.908 6 4" /><path d="M12 20l4 -9l4 9" /><path d="M19.1 18h-6.2" /><path d="M6.694 3l.793 .582" /></symbol>
+        <symbol id="spotify" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M8 11.973c2.5 -1.473 5.5 -.973 7.5 .527" /><path d="M9 15c1.5 -1 4 -1 5 .5" /><path d="M7 9c2 -1 6 -2 10 .5" /></symbol>
+        <symbol id="sidebar" viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12" /><path d="M15 4l0 16" /></symbol>
+        <symbol id="photo" viewBox="0 0 24 24"><path d="M15 8h.01" /><path d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12" /><path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5" /><path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3" /></symbol>
+        <symbol id="thumb-up" viewBox="0 0 24 24"><path d="M7 11v8a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1v-7a1 1 0 0 1 1 -1h3a4 4 0 0 0 4 -4v-1a2 2 0 0 1 4 0v5h3a2 2 0 0 1 2 2l-1 5a2 3 0 0 1 -2 2h-7a3 3 0 0 1 -3 -3" /></symbol>
+        <symbol id="playlist-add" viewBox="0 0 24 24"><path d="M19 8h-14" /><path d="M5 12h9" /><path d="M11 16h-6" /><path d="M15 16h6" /><path d="M18 13v6" /></symbol>
+        <symbol id="package" viewBox="0 0 24 24"><path d="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5" /><path d="M12 12l8 -4.5" /><path d="M12 12l0 9" /><path d="M12 12l-8 -4.5" /><path d="M16 5.25l-8 4.5" /></symbol>
+        <symbol id="arrow-right" viewBox="0 0 24 24"><path d="M5 12l14 0" /><path d="M13 18l6 -6" /><path d="M13 6l6 6" /></symbol>
+        <symbol id="discord" viewBox="0 0 24 24"><path d="M8 12a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" /><path d="M14 12a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" /><path d="M15.5 17c0 1 1.5 3 2 3c1.5 0 2.833 -1.667 3.5 -3c.667 -1.667 .5 -5.833 -1.5 -11.5c-1.457 -1.015 -3 -1.34 -4.5 -1.5l-.972 1.923a11.913 11.913 0 0 0 -4.053 0l-.975 -1.923c-1.5 .16 -3.043 .485 -4.5 1.5c-2 5.667 -2.167 9.833 -1.5 11.5c.667 1.333 2 3 3.5 3c.5 0 2 -2 2 -3" /><path d="M7 16.5c3.5 1 6.5 1 10 0" /></symbol>
+    </svg>
+
+    <main>
+        <header>
+            <svg class="logo" viewBox="0 0 900 394" role="img" aria-label="WavezFM"><path d="M709.76 6.88077C732.915 18.6481 744.303 39.5255 772.393 117.721C787.576 160.235 791.752 163.272 842.997 166.309C881.335 168.587 886.27 169.346 892.723 177.697C901.074 187.946 901.833 207.305 894.621 216.795C885.131 229.321 863.874 235.015 826.674 235.015C787.956 235.015 771.634 231.219 753.413 217.174C738.989 206.546 717.732 167.448 705.964 130.627C701.409 115.823 695.336 99.1214 692.299 93.0479C687.744 83.9377 685.846 83.1786 681.67 87.3541C676.736 92.6683 659.275 149.607 647.887 197.056C614.103 339.023 602.716 371.288 581.838 386.092C557.544 403.553 529.454 391.406 511.993 356.484C506.679 345.096 491.495 299.545 478.589 255.892C465.683 211.86 453.536 174.66 451.638 172.382C446.324 167.068 444.047 172.003 417.475 242.607C389.385 318.145 384.071 328.774 368.128 344.337C352.945 359.141 336.243 362.937 318.402 355.345C296.006 345.855 283.859 319.664 247.039 200.852C231.476 150.366 223.504 132.525 217.051 132.525C215.153 132.525 206.422 147.329 197.692 165.55C188.961 184.15 177.194 208.444 171.88 219.831C160.112 244.125 143.79 263.484 128.986 271.456C115.7 278.288 91.0269 278.288 74.7045 271.456C52.6882 262.345 12.8312 234.256 6.37812 223.248C-5.76879 203.129 -0.0749455 181.493 19.2842 175.04C33.3291 169.725 47.7535 174.28 75.4637 192.501L95.2024 205.786L104.313 197.435C109.627 192.501 115.7 183.391 118.357 176.938C137.717 127.97 159.733 87.7336 174.157 74.8275C203.386 48.6357 234.892 47.8766 261.463 73.3091C279.684 90.0111 288.794 110.129 313.467 186.427C325.614 223.627 336.622 253.994 338.52 253.994C342.316 253.994 348.01 241.468 372.304 177.697C406.087 89.252 418.994 71.7908 451.638 71.7908C466.442 71.7908 471.377 73.6886 481.626 83.558C500.606 102.158 511.614 131.766 543.499 253.235C548.434 271.835 553.369 283.982 556.026 283.223C560.201 281.705 565.516 263.105 588.671 167.068C615.242 56.9868 631.185 21.3051 660.793 6.5011C677.875 -2.22949 691.919 -2.22941 709.76 6.88077Z" /></svg>
+            <h1>Wavez <span>Tools</span></h1>
+            <p>Quality of life tools for wavez.fm</p>
+        </header>
+
+        <section>
+            <h2>What Is This?</h2>
+            <p>I've spent a lot of hours in the rooms and the same small annoyances kept turning up. Chat I couldn't collapse. Songs I wanted to search on Spotify. 3rd party images that wouldn't load in my region. So I fixed them, one script at a time. Nothing official.</p>
+        </section>
+
+        <section>
+            <h2>Install</h2>
+            <ol>
+                <li>Get <a href="https://www.tampermonkey.net" target="_blank" rel="noopener">Tampermonkey</a> (or any userscript manager).</li>
+                <li>Click a script below. They self-update after that.</li>
+            </ol>
+        </section>
+
+        <a class="promo" href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-all.user.js">
+            <svg class="i" aria-hidden="true"><use href="#package" /></svg>
+            <div>
+                <h2>Get all six in one install</h2>
+                <p>Toggle each feature from your userscript manager's menu. Auto Woot and Auto Grab start off.</p>
+            </div>
+            <svg class="i arrow" aria-hidden="true"><use href="#arrow-right" /></svg>
         </a>
-        <a class="dicon" href="https://github.com/fluteds/wavez">
-            <span aria-hidden="true">📁</span><em>Source</em>
+
+        <section>
+            <h2>Scripts</h2>
+            <p class="hint">Or pick them individually.</p>
+            <ul>
+                <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-translate.user.js"><span><svg class="i" aria-hidden="true"><use href="#language" /></svg></span><b>Translate</b><small>Translate chat, inline and customisable</small></a></li>
+                <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-open-in-spotify.user.js"><span><svg class="i" aria-hidden="true"><use href="#spotify" /></svg></span><b>Open in Spotify</b><small>Find the currently playing song on Spotify</small></a></li>
+                <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-sidebar.user.js"><span><svg class="i" aria-hidden="true"><use href="#sidebar" /></svg></span><b>Chat Toggle</b><small>Collapsible rail, hide and show chat.</small></a></li>
+                <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-imgur.user.js"><span><svg class="i" aria-hidden="true"><use href="#photo" /></svg></span><b>Imgur Fix</b><small>Unbreak Imgur. Routes the traffic through a proxy</small></a></li>
+                <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js"><span><svg class="i" aria-hidden="true"><use href="#thumb-up" /></svg></span><b>Auto Woot</b><small>Woot everything automatically</small></a></li>
+                <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-grab.user.js"><span><svg class="i" aria-hidden="true"><use href="#playlist-add" /></svg></span><b>Auto Grab</b><small>Automatically grab what you woot</small></a></li>
+            </ul>
+        </section>
+
+        <a class="promo" href="https://github.com/fluteds/wavez-discord-presence">
+            <svg class="i" aria-hidden="true"><use href="#discord" /></svg>
+            <div>
+                <h2>Also: Discord Rich Presence</h2>
+                <p>Show your room, track, artist and DJ on your Discord profile. Userscript plus a local bridge.</p>
+            </div>
+            <svg class="i arrow" aria-hidden="true"><use href="#arrow-right" /></svg>
         </a>
-        <a class="dicon" href="https://github.com/fluteds/wavez/issues">
-            <span aria-hidden="true">🐛</span><em>Issues</em>
-        </a>
-        <a class="dicon" href="https://www.tampermonkey.net" target="_blank" rel="noopener">
-            <span aria-hidden="true">🐵</span><em>Tampermonkey</em>
-        </a>
-    </nav>
 
-    <div class="win out">
-        <div class="titlebar">
-            <span class="icon" aria-hidden="true">📄</span>
-            <h1>readme.txt &#8212; Notepad</h1>
-            <span class="tbtn" aria-hidden="true">_</span>
-            <span class="tbtn" aria-hidden="true">□</span>
-            <span class="tbtn" aria-hidden="true">✕</span>
-        </div>
+        <a class="cta" href="https://wavez.fm">Open wavez.fm</a>
+    </main>
 
-        <div class="menubar" aria-hidden="true">
-            <span><u>F</u>ile</span>
-            <span><u>E</u>dit</span>
-            <span><u>S</u>earch</span>
-            <span><u>H</u>elp</span>
-        </div>
-
-        <div class="pad in">WAVEZ TOOLS
-===========
-
-<span class="wrap">Quality of life tools for wavez.fm.
-
-I've spent a lot of nights in the rooms and the same small annoyances kept turning up. Chat I couldn't collapse. Songs I wanted on Spotify. Images that wouldn't load in my region. So I fixed them, one script at a time. Nothing official.</span>
-
-INSTALL
--------
-
-1. Get <a href="https://www.tampermonkey.net" target="_blank" rel="noopener">Tampermonkey</a> (or any userscript manager).
-2. Click a script below. They self-update after that.
-
-SCRIPTS
--------
-
-<a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-translate.user.js">translate.user.js</a> ........ translate chat, inline, customisable
-<a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-open-in-spotify.user.js">open-in-spotify.user.js</a> .. find the currently playing song on spotify
-<a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-sidebar.user.js">chat-toggle.user.js</a> ...... collapsible rail
-<a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-imgur.user.js">imgur-fix.user.js</a> ........ unbreak imgur
-<a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js">auto-woot.user.js</a> ........ woot everything automatically
-<a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-grab.user.js">auto-grab.user.js</a> ........ automatically grab what you woot
-
-
-Source: <a href="https://github.com/fluteds/wavez">github.com/fluteds/wavez</a>
-Not affiliated with <a href="https://wavez.fm">wavez.fm</a>.
-<span class="caret" aria-hidden="true">&nbsp;</span></div>
-
-        <div class="status">
-            <span>6 scripts, 0 excuses</span>
-            <span>Ln 1, Col 1</span>
-        </div>
-    </div>
-
-    <div class="player out">
-        <div class="titlebar">
-            <span class="icon" aria-hidden="true">🎵</span>
-            <h1>Wavez Player</h1>
-            <span class="tbtn" aria-hidden="true">_</span>
-            <span class="tbtn" aria-hidden="true">□</span>
-            <span class="tbtn" aria-hidden="true">✕</span>
-        </div>
-
-        <div class="lcd in">
-            <b>&#9835; discover new tunes &#9835; press play &#9835;</b>
-        </div>
-
-        <div class="transport">
-            <button class="out" type="button" aria-hidden="true" tabindex="-1">&#9664;&#9664;</button>
-            <a class="out" href="https://wavez.fm" aria-label="Open wavez.fm">&#9654;</a>
-            <button class="out" type="button" aria-hidden="true" tabindex="-1">&#9632;</button>
-            <button class="out" type="button" aria-hidden="true" tabindex="-1">&#9654;&#9654;</button>
-            <input type="range" value="70" aria-label="Volume">
-        </div>
-    </div>
-
-    <div class="taskbar">
-        <button class="start out" type="button">
-            <span class="flag" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-            Start
-        </button>
-        <span class="task out">📄 readme.txt — Notepad</span>
-        <span class="tray"><span aria-hidden="true">🔊</span><time id="clock">12:00</time></span>
-    </div>
-
-    <script>
-        // ponytail: the only JS on the page. a frozen taskbar clock looks broken.
-        const clock = document.getElementById("clock");
-        const tick = () => clock.textContent = new Date()
-            .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-        tick();
-        setInterval(tick, 10000);
-    </script>
+    <footer>
+        <p><a href="https://github.com/fluteds/wavez">Source on GitHub</a> &middot; <a href="https://github.com/fluteds/wavez/issues">Issues</a> 
+        <br>Not affiliated with <a href="https://wavez.fm">wavez.fm</a>.</p>
+    </footer>
 
 </body>
 
