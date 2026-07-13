@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      2026.07.13
+// @version      2026.07.14
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-all.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-all.user.js
 // @description  Every Wavez userscript in one install. Toggle features from the userscript manager menu.
