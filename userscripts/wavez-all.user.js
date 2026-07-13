@@ -10,6 +10,7 @@
 // @match        https://wavez.fm/*
 // @match        https://*.wavez.fm/*
 // @grant        GM_registerMenuCommand
+// @grant        GM_registerMenuCommand
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @connect      niceatc.api.br
