@@ -3,10 +3,10 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      1.0
+// @version      1.1
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js
-// @description  Woots every new track automatically via the WavezFM bridge.
+// @description  Woots every new track automatically via the WavezFM bridge, including while the tab is in the background.
 // @match        https://wavez.fm/*
 // @grant        none
 // @run-at       document-idle
@@ -30,10 +30,11 @@
     var state = api.room.getState();
     var pb = state && state.playback;
     if (!pb) return;
-    if (!shouldVote(pb.playbackKey, lastKey, state.votes)) {
-      lastKey = pb.playbackKey || lastKey;
-      return;
-    }
+    // Only stamp lastKey on an actual vote. Stamping on the skip marked a track
+    // as handled when votes just weren't ready yet (canVote still false), and
+    // nothing ever retried it - the main reason woots got missed in a background
+    // tab, where the state lands later relative to playback_changed.
+    if (!shouldVote(pb.playbackKey, lastKey, state.votes)) return;
     lastKey = pb.playbackKey;
     var res = api.actions.vote('woot');
     if (!res || !res.ok) console.warn('[wz-woot] vote failed:', res && res.code);
@@ -42,6 +43,13 @@
   function init(api) {
     voteCurrent(api); // catch the track already playing at load
     api.room.subscribe('playback_changed', function () { voteCurrent(api); });
+    // Retry once the vote state actually arrives for the new track.
+    api.room.subscribe('votes_changed', function () { voteCurrent(api); });
+    // Backstop for a hidden tab: events can be missed or arrive throttled, and a
+    // re-check is free (shouldVote gates it, so no redundant API calls). Timers
+    // are throttled in the background, but wavez is playing audio, which exempts
+    // the tab from Chrome's harshest throttling - worst case this lands late.
+    setInterval(function () { voteCurrent(api); }, 30000);
 
     window.WZWoot = {
       now: function () { lastKey = null; voteCurrent(api); }, // force a woot
@@ -49,7 +57,7 @@
       off: function () { enabled = false; localStorage.setItem('wavez-autowoot', 'off'); },
       get enabled() { return enabled; }
     };
-    console.log('[wz-woot] auto-woot ' + (enabled ? 'on' : 'off') + ' — toggle with WZWoot.on() / WZWoot.off()');
+    console.log('[wz-woot] auto-woot ' + (enabled ? 'on' : 'off') + ' - toggle with WZWoot.on() / WZWoot.off()');
   }
 
   // The bridge may be injected after document-idle, so wait for it.
