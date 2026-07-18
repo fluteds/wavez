@@ -158,12 +158,9 @@
 
     const api = window.WavezFM;
     if (api && api.version === '1') {
-      // Bridge fires only on real chat messages - no false positives from
-      // unrelated rail DOM churn.
+      // Bridge fires only on real chat messages - no false positives from unrelated rail DOM churn.
       api.room.subscribe('chat_message', markUnread);
     } else {
-      // ponytail: fallback for raw injection / pre-bridge pages. Any node added
-      // to the rail counts as a new message.
       new MutationObserver((records) => {
         if (records.some((r) => r.addedNodes.length)) markUnread();
       }).observe(rail, { childList: true, subtree: true });

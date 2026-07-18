@@ -18,9 +18,7 @@
 
   const ID = 'wavez-open-spotify-btn';
 
-  // Drop YouTube-style descriptor tags in ()/[] ("Official Video", "Lyrics", "HD"...).
-  // No track:/artist: filters: the source artist is a YouTube channel handle
-  // ("enyatv"), so plain text search on the "Artist - Title" string beats it.
+  // Drop YouTube-style descriptor tags in ()/[] ("Official Video", "Lyrics", "HD"...). No track:/artist: filters: the source artist is a YouTube channel handle ("enyatv"), so plain text search on the "Artist - Title" string beats it.
   const stripNoise = (s) => (s || '')
     .replace(/[([][^)\]]*\b(officials?|video|audio|lyrics?|visuali[sz]er|m\/?v|hd|4k|remaster(?:ed)?|explicit)\b[^)\]]*[)\]]/gi, '')
     .replace(/\s{2,}/g, ' ')
@@ -81,7 +79,6 @@
 
   setInterval(addButton, 500);
 
-  // ponytail: self-check for the title cleaner - run with #wz-spotify-test.
   if (location.hash === '#wz-spotify-test') {
     const cases = [
       ['Groove Is In The Heart (Official Video)', 'Groove Is In The Heart'],

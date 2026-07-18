@@ -12,18 +12,14 @@
 // @run-at       document-idle
 // ==/UserScript==
 
-// Track changes and "have I already grabbed this?" come from the official
-// extension API (https://github.com/WavezFM/WavezFM-Extension-API), but grab
-// itself is NOT in it - actions are vote/joinQueue/leaveQueue/sendChat/setVolume
-// only - so the grab itself clicks the real button and picks from the picker.
+// Track changes and "have I already grabbed this?" come from the official extension API (https://github.com/WavezFM/WavezFM-Extension-API), but grab itself is NOT in it - actions are vote/joinQueue/leaveQueue/sendChat/setVolume only - so the grab itself clicks the real button and picks from the picker.
 (function () {
   'use strict';
 
   // Playlist to grab into, by name. "" = whichever the picker lists first.
   var PLAYLIST = 'Recs';
 
-  // Only set these if the heuristics below match the wrong element.
-  // Run WZGrab.debug() in the console to see what they currently find.
+  // Only set these if the heuristics below match the wrong element. Run WZGrab.debug() in the console to see what they currently find.
   var GRAB_BTN_SELECTOR = '';
   var PICKER_SELECTOR = '';
 
@@ -34,27 +30,18 @@
 
   function log(m) { console.log('[wz-grab] ' + m); }
 
-  /* --------------------------------- guards -------------------------------- */
-
-  // Grab a track once you've wooted it, and only once. playbackKey identifies the
-  // track; clientVote is your own vote; clientGrabbed is "already in a playlist".
-  // Works with a manual woot or an auto-woot script - both land as clientVote.
+  // Grab a track once you've wooted it, and only once. playbackKey identifies the track; clientVote is your own vote; clientGrabbed is "already in a playlist". Works with a manual woot or an auto-woot script - both land as clientVote.
   function shouldGrab(key, last, votes) {
     return !!key && key !== last && !!votes &&
       votes.clientVote === 'woot' && !votes.clientGrabbed;
   }
 
-  /* ---------------------------------- dom ---------------------------------- */
-
+  // ---------------------------------- dom ----------------------------------
   function visible(el) {
     return el.offsetParent !== null;
   }
 
-  // The vote buttons carry no aria-label or id, just utility classes. Two things
-  // are stable though: the count span is themed with --theme-vote-grab, and the
-  // label sits in its own span ("Grab") next to the count. Prefer the theme var,
-  // it survives a relabel (the site has pt-BR locales); fall back to the label.
-  // ponytail: no pinned class selector, a Tailwind reshuffle would break it.
+  // The vote buttons carry no aria-label or id, just utility classes. Two things are stable though: the count span is themed with --theme-vote-grab, and the label sits in its own span ("Grab") next to the count. Prefer the theme var, it survives a relabel (the site has pt-BR locales); fall back to the label.
   function findGrabButton() {
     if (GRAB_BTN_SELECTOR) return document.querySelector(GRAB_BTN_SELECTOR);
     var btns = document.querySelectorAll('button');
@@ -71,9 +58,7 @@
     return byLabel;
   }
 
-  // The popup carries no role/dialog attributes, only data-wavezfm-grab-menu-root
-  // - which the wrapper around the Grab button carries too. The popup is the one
-  // that does NOT contain the button. It's only in the DOM while the menu is open.
+  // The popup carries no role/dialog attributes, only data-wavezfm-grab-menu-root which the wrapper around the Grab button carries too. The popup is the one that does NOT contain the button. It's only in the DOM while the menu is open.
   function findPicker() {
     if (PICKER_SELECTOR) return document.querySelector(PICKER_SELECTOR);
     var btn = findGrabButton();
@@ -85,9 +70,7 @@
     return null;
   }
 
-  // An option's textContent runs the name into the subtitle ("RecsPlaylist - 53/300"),
-  // so read the name span instead. Same span the header's "Choose a playlist" uses,
-  // but that's a <p>, and Cancel is filtered out before we get here.
+  // An option's textContent runs the name into the subtitle ("RecsPlaylist - 53/300"), so read the name span instead. Same span the header's "Choose a playlist" uses, but that's a <p>, and Cancel is filtered out before we get here.
   function nameOf(el) {
     var span = el.querySelector('span.truncate');
     return (span ? span.textContent : el.textContent).trim();
@@ -99,8 +82,7 @@
     return spans.length > 1 ? spans[1].textContent.trim() : '';
   }
 
-  // Every playlist button in the open picker. Full playlists come back too, but
-  // disabled - callers decide whether to care.
+  // Every playlist button in the open picker. Full playlists come back too, but disabled - callers decide whether to care.
   function optionsIn(picker) {
     var items = picker.querySelectorAll('button');
     var out = [];
@@ -116,8 +98,7 @@
     if (cancel) cancel.click();
   }
 
-  // Open the picker (if it isn't), hand the options to cb, and say whether we
-  // were the one who opened it so the caller can close it again.
+  // Open the picker (if it isn't), hand the options to cb, and say whether we were the one who opened it so the caller can close it again.
   function withPicker(cb) {
     var open = findPicker();
     if (open) return cb(optionsIn(open), null);
@@ -174,15 +155,13 @@
     var state = api.room.getState();
     var pb = state && state.playback;
     if (!pb) return;
-    // Only stamp lastKey on an actual grab: a track sits un-wooted for a while
-    // before you woot it, and stamping on the skip would dedupe that away.
+    // Only stamp lastKey on an actual grab: a track sits un-wooted for a while before you woot it, and stamping on the skip would dedupe that away.
     if (!shouldGrab(pb.playbackKey, lastKey, state.votes)) return;
     lastKey = pb.playbackKey;
     doGrab();
   }
 
-  /* ----------------------------------- ui ---------------------------------- */
-
+  // ----------------------------------- ui ----------------------------------
   function buildUI(api) {
     var css = document.createElement('style');
     css.textContent =
@@ -214,8 +193,7 @@
     document.body.appendChild(pill);
   }
 
-  /* ---------------------------------- init --------------------------------- */
-
+  // ---------------------------------- init ---------------------------------
   function init(api) {
     grabCurrent(api); // catch a track that's already wooted at load
     // The woot is the trigger, so watch votes, not playback.
@@ -227,9 +205,7 @@
       off: function () { enabled = false; localStorage.setItem(LS_KEY, 'off'); },
       now: function () { lastKey = null; doGrab(); }, // force a grab
       get enabled() { return enabled; },
-      // Your playlist names, for copying into PLAYLIST. Opens the picker, reads
-      // it, closes it again - opening it doesn't grab, only clicking an option does.
-      // Async: the table prints once the menu has rendered.
+      // Your playlist names, for copying into PLAYLIST. Opens the picker, reads it, closes it again - opening it doesn't grab, only clicking an option does. Async: the table prints once the menu has rendered.
       playlists: function () {
         withPicker(function (options, opened) {
           if (options.length) {
@@ -254,9 +230,7 @@
     log('auto grab ' + (enabled ? 'on' : 'off') + ' - toggle with the corner pill or WZGrab.on()/off()');
   }
 
-  // The bridge may be injected after document-idle, so wait for it. Say so up
-  // front: without this line a missing bridge and a missing script look identical
-  // in the console, since WZGrab is only defined once init() runs.
+  // The bridge may be injected after document-idle, so wait for it. Say so up front: without this line a missing bridge and a missing script look identical in the console, since WZGrab is only defined once init() runs.
   log('loaded, waiting for the WavezFM bridge...');
   var tries = 0;
   var wait = setInterval(function () {
@@ -271,7 +245,6 @@
     }
   }, 500);
 
-  // ponytail: self-check on the grab guard. Load with #wz-grab-test.
   if (location.hash === '#wz-grab-test') {
     var wooted = { clientVote: 'woot', clientGrabbed: false };
     console.assert(shouldGrab('k1', null, wooted) === true, 'wooted, not grabbed');

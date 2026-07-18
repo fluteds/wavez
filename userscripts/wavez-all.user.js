@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      2026.07.14
+// @version      2026.07.18
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-all.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-all.user.js
 // @description  Every Wavez userscript in one install. Toggle features from the userscript manager menu.
@@ -44,14 +44,10 @@
 
   if (menu('translate', 'Wavez Translate', 'on')) (function (window) {
 
-    // --- CONFIG ------------------------------------------------------------------
-    // Language to translate INTO (ISO code: "en", "es", "pt", "ja", ...).
+    // CONFIG Language to translate INTO (ISO code: "en", "es", "pt", "ja", ...).
     var TARGET_LANG = "en";
 
-    // How translated text is shown. Swap freely; you can also change it live from the console with: WZTranslate.setMode("replace")
-    //   "append"  = keep the original, add a dimmed translated line beneath it.
-    //   "replace" = swap the message text for the translation (original kept on hover).
-    //   "hover"   = chat stays original; on hover, the text crossfades to the translation (and back on leave).
+    // How translated text is shown. Change live from the console with WZTranslate.setMode(...). "append" = keep the original and add a dimmed translated line beneath it; "replace" = swap the message text for the translation (original kept on hover); "hover" = chat stays original and crossfades to the translation on hover (back on leave).
     var DISPLAY_MODE = "append";
 
     // Only translate messages NOT already in TARGET_LANG (uses Google's detected source language). Set false to translate everything.
@@ -60,8 +56,7 @@
     // Max simultaneous translation requests (keeps the free endpoint from rate-limiting).
     var MAX_INFLIGHT = 4;
 
-    /* -------------------------------------------------------------------------- */
-
+    // --------------------------------------------------------------------------
     (function () {
       "use strict";
 
@@ -114,8 +109,7 @@
             });
             return;
           }
-          // No GM API (e.g. raw injection): the endpoint sends CORS *, so plain
-          // fetch works in most setups.
+          // No GM API (e.g. raw injection): the endpoint sends CORS *, so plain fetch works in most setups.
           fetch(url)
             .then(function (r) {
               return r.text();
@@ -147,8 +141,7 @@
         });
       }
 
-      // --- translation ---------------------------------------------------------
-      // cache: original text -> { text, src }
+      // translation cache: original text -> { text, src }
       var cache = Object.create(null);
 
       function translate(text) {
@@ -375,9 +368,7 @@
 
       const ID = 'wavez-open-spotify-btn';
 
-      // Drop YouTube-style descriptor tags in ()/[] ("Official Video", "Lyrics", "HD"...).
-      // No track:/artist: filters: the source artist is a YouTube channel handle
-      // ("enyatv"), so plain text search on the "Artist - Title" string beats it.
+      // Drop YouTube-style descriptor tags in ()/[] ("Official Video", "Lyrics", "HD"...). No track:/artist: filters: the source artist is a YouTube channel handle ("enyatv"), so plain text search on the "Artist - Title" string beats it.
       const stripNoise = (s) => (s || '')
         .replace(/[([][^)\]]*\b(officials?|video|audio|lyrics?|visuali[sz]er|m\/?v|hd|4k|remaster(?:ed)?|explicit)\b[^)\]]*[)\]]/gi, '')
         .replace(/\s{2,}/g, ' ')
@@ -438,7 +429,6 @@
 
       setInterval(addButton, 500);
 
-      // ponytail: self-check for the title cleaner - run with #wz-spotify-test.
       if (location.hash === '#wz-spotify-test') {
         const cases = [
           ['Groove Is In The Heart (Official Video)', 'Groove Is In The Heart'],
@@ -603,12 +593,9 @@
 
         const api = window.WavezFM;
         if (api && api.version === '1') {
-          // Bridge fires only on real chat messages - no false positives from
-          // unrelated rail DOM churn.
+          // Bridge fires only on real chat messages - no false positives from unrelated rail DOM churn.
           api.room.subscribe('chat_message', markUnread);
         } else {
-          // ponytail: fallback for raw injection / pre-bridge pages. Any node added
-          // to the rail counts as a new message.
           new MutationObserver((records) => {
             if (records.some((r) => r.addedNodes.length)) markUnread();
           }).observe(rail, { childList: true, subtree: true });
@@ -656,9 +643,7 @@
         }
       }
 
-      // niceatc/nicewoot renders its badge from a CSS rule injected as a <style>
-      // block (e.g. --nw-badge-img: url("https://i.imgur.com/...png")), not from an
-      // element attribute - so the stylesheet text needs rewriting too.
+      // niceatc/nicewoot renders its badge from a CSS rule injected as a <style> block (e.g. --nw-badge-img: url("https://i.imgur.com/...png")), not from an element attribute - so the stylesheet text needs rewriting too.
       function fixStyleEl(el) {
         if (!el || el.tagName !== 'STYLE') return;
 
@@ -669,8 +654,7 @@
         if (next !== css) el.textContent = next;
       }
 
-      // Rules built with insertRule() (no <style> text node) only live in the CSSOM,
-      // so rewrite them in place. Recurse into @media/@layer/@supports groups.
+      // Rules built with insertRule() (no <style> text node) only live in the CSSOM, so rewrite them in place. Recurse into @media/@layer/@supports groups.
       function fixRules(parent) {
         let rules;
         try {
@@ -699,7 +683,7 @@
             parent.deleteRule(i);
             parent.insertRule(next, i);
           } catch (e) {
-            /* malformed rule - skip */
+            // malformed rule - skip
           }
         }
       }
@@ -709,11 +693,11 @@
         // document.styleSheets / ShadowRoot.styleSheets cover <style> + <link>.
         try {
           if (root.styleSheets) sheets = sheets.concat(Array.from(root.styleSheets));
-        } catch (e) { /* ignore */ }
+        } catch (e) {}
         // Constructed sheets attached via adoptedStyleSheets.
         try {
           if (root.adoptedStyleSheets) sheets = sheets.concat(Array.from(root.adoptedStyleSheets));
-        } catch (e) { /* ignore */ }
+        } catch (e) {}
         sheets.forEach(fixRules);
       }
 
@@ -724,12 +708,7 @@
         fixSheets(root);
       }
 
-      // --- Cross-origin CSS (e.g. niceatc/nicewoot badge sheet) ----------------
-      // The badge image lives in a remote stylesheet the browser won't let us read
-      // via the CSSOM (sheet.cssRules throws cross-origin). So refetch it ourselves,
-      // rewrite imgur -> rimgo in the raw CSS, inject the result as a local <style>,
-      // and disable the original <link> so the imgur-referencing version stops
-      // applying. Needs @grant GM_xmlhttpRequest + @connect for the host.
+      // Cross-origin CSS (e.g. niceatc/nicewoot badge sheet). The badge image lives in a remote stylesheet the browser won't let us read via the CSSOM (sheet.cssRules throws cross-origin). So refetch it ourselves, rewrite imgur -> rimgo in the raw CSS, inject the result as a local <style>, and disable the original <link> so the imgur-referencing version stops applying. Needs @grant GM_xmlhttpRequest + @connect for the host.
       const REMOTE_CSS_HOST = 'niceatc';
       const remoteCss = new Map(); // href -> 'pending' | 'done' | 'clean' | 'failed'
 
@@ -849,8 +828,7 @@
       var enabled = localStorage.getItem('wavez-autowoot') !== 'off';
       var lastKey = null;
 
-      // Vote only on a new track we haven't already wooted, and only when allowed.
-      // playbackKey is the API's track-change signal; clientVote is our own vote.
+      // Vote only on a new track we haven't already wooted, and only when allowed. playbackKey is the API's track-change signal; clientVote is our own vote.
       function shouldVote(key, last, votes) {
         return !!key && key !== last && !!votes && votes.canVote && votes.clientVote !== 'woot';
       }
@@ -860,10 +838,7 @@
         var state = api.room.getState();
         var pb = state && state.playback;
         if (!pb) return;
-        // Only stamp lastKey on an actual vote. Stamping on the skip marked a track
-        // as handled when votes just weren't ready yet (canVote still false), and
-        // nothing ever retried it - the main reason woots got missed in a background
-        // tab, where the state lands later relative to playback_changed.
+        // Only stamp lastKey on an actual vote. Stamping on the skip marked a track as handled when votes just weren't ready yet (canVote still false), and nothing ever retried it - the main reason woots got missed in a background tab, where the state lands later relative to playback_changed.
         if (!shouldVote(pb.playbackKey, lastKey, state.votes)) return;
         lastKey = pb.playbackKey;
         var res = api.actions.vote('woot');
@@ -875,10 +850,7 @@
         api.room.subscribe('playback_changed', function () { voteCurrent(api); });
         // Retry once the vote state actually arrives for the new track.
         api.room.subscribe('votes_changed', function () { voteCurrent(api); });
-        // Backstop for a hidden tab: events can be missed or arrive throttled, and a
-        // re-check is free (shouldVote gates it, so no redundant API calls). Timers
-        // are throttled in the background, but wavez is playing audio, which exempts
-        // the tab from Chrome's harshest throttling - worst case this lands late.
+        // Backstop for a hidden tab: events can be missed or arrive throttled, and a re-check is free (shouldVote gates it, so no redundant API calls). Timers are throttled in the background, but wavez is playing audio, which exempts the tab from Chrome's harshest throttling - worst case this lands late.
         setInterval(function () { voteCurrent(api); }, 30000);
 
         window.WZWoot = {
@@ -917,18 +889,14 @@
 
   if (menu('auto-grab', 'Wavez Auto Grab', 'off')) (function (window) {
 
-    // Track changes and "have I already grabbed this?" come from the official
-    // extension API (https://github.com/WavezFM/WavezFM-Extension-API), but grab
-    // itself is NOT in it - actions are vote/joinQueue/leaveQueue/sendChat/setVolume
-    // only - so the grab itself clicks the real button and picks from the picker.
+    // Track changes and "have I already grabbed this?" come from the official extension API (https://github.com/WavezFM/WavezFM-Extension-API), but grab itself is NOT in it - actions are vote/joinQueue/leaveQueue/sendChat/setVolume only - so the grab itself clicks the real button and picks from the picker.
     (function () {
       'use strict';
 
       // Playlist to grab into, by name. "" = whichever the picker lists first.
       var PLAYLIST = 'Recs';
 
-      // Only set these if the heuristics below match the wrong element.
-      // Run WZGrab.debug() in the console to see what they currently find.
+      // Only set these if the heuristics below match the wrong element. Run WZGrab.debug() in the console to see what they currently find.
       var GRAB_BTN_SELECTOR = '';
       var PICKER_SELECTOR = '';
 
@@ -939,27 +907,18 @@
 
       function log(m) { console.log('[wz-grab] ' + m); }
 
-      /* --------------------------------- guards -------------------------------- */
-
-      // Grab a track once you've wooted it, and only once. playbackKey identifies the
-      // track; clientVote is your own vote; clientGrabbed is "already in a playlist".
-      // Works with a manual woot or an auto-woot script - both land as clientVote.
+      // Grab a track once you've wooted it, and only once. playbackKey identifies the track; clientVote is your own vote; clientGrabbed is "already in a playlist". Works with a manual woot or an auto-woot script - both land as clientVote.
       function shouldGrab(key, last, votes) {
         return !!key && key !== last && !!votes &&
           votes.clientVote === 'woot' && !votes.clientGrabbed;
       }
 
-      /* ---------------------------------- dom ---------------------------------- */
-
+      // ---------------------------------- dom ----------------------------------
       function visible(el) {
         return el.offsetParent !== null;
       }
 
-      // The vote buttons carry no aria-label or id, just utility classes. Two things
-      // are stable though: the count span is themed with --theme-vote-grab, and the
-      // label sits in its own span ("Grab") next to the count. Prefer the theme var,
-      // it survives a relabel (the site has pt-BR locales); fall back to the label.
-      // ponytail: no pinned class selector, a Tailwind reshuffle would break it.
+      // The vote buttons carry no aria-label or id, just utility classes. Two things are stable though: the count span is themed with --theme-vote-grab, and the label sits in its own span ("Grab") next to the count. Prefer the theme var, it survives a relabel (the site has pt-BR locales); fall back to the label.
       function findGrabButton() {
         if (GRAB_BTN_SELECTOR) return document.querySelector(GRAB_BTN_SELECTOR);
         var btns = document.querySelectorAll('button');
@@ -976,9 +935,7 @@
         return byLabel;
       }
 
-      // The popup carries no role/dialog attributes, only data-wavezfm-grab-menu-root
-      // - which the wrapper around the Grab button carries too. The popup is the one
-      // that does NOT contain the button. It's only in the DOM while the menu is open.
+      // The popup carries no role/dialog attributes, only data-wavezfm-grab-menu-root which the wrapper around the Grab button carries too. The popup is the one that does NOT contain the button. It's only in the DOM while the menu is open.
       function findPicker() {
         if (PICKER_SELECTOR) return document.querySelector(PICKER_SELECTOR);
         var btn = findGrabButton();
@@ -990,9 +947,7 @@
         return null;
       }
 
-      // An option's textContent runs the name into the subtitle ("RecsPlaylist - 53/300"),
-      // so read the name span instead. Same span the header's "Choose a playlist" uses,
-      // but that's a <p>, and Cancel is filtered out before we get here.
+      // An option's textContent runs the name into the subtitle ("RecsPlaylist - 53/300"), so read the name span instead. Same span the header's "Choose a playlist" uses, but that's a <p>, and Cancel is filtered out before we get here.
       function nameOf(el) {
         var span = el.querySelector('span.truncate');
         return (span ? span.textContent : el.textContent).trim();
@@ -1004,8 +959,7 @@
         return spans.length > 1 ? spans[1].textContent.trim() : '';
       }
 
-      // Every playlist button in the open picker. Full playlists come back too, but
-      // disabled - callers decide whether to care.
+      // Every playlist button in the open picker. Full playlists come back too, but disabled - callers decide whether to care.
       function optionsIn(picker) {
         var items = picker.querySelectorAll('button');
         var out = [];
@@ -1021,8 +975,7 @@
         if (cancel) cancel.click();
       }
 
-      // Open the picker (if it isn't), hand the options to cb, and say whether we
-      // were the one who opened it so the caller can close it again.
+      // Open the picker (if it isn't), hand the options to cb, and say whether we were the one who opened it so the caller can close it again.
       function withPicker(cb) {
         var open = findPicker();
         if (open) return cb(optionsIn(open), null);
@@ -1079,15 +1032,13 @@
         var state = api.room.getState();
         var pb = state && state.playback;
         if (!pb) return;
-        // Only stamp lastKey on an actual grab: a track sits un-wooted for a while
-        // before you woot it, and stamping on the skip would dedupe that away.
+        // Only stamp lastKey on an actual grab: a track sits un-wooted for a while before you woot it, and stamping on the skip would dedupe that away.
         if (!shouldGrab(pb.playbackKey, lastKey, state.votes)) return;
         lastKey = pb.playbackKey;
         doGrab();
       }
 
-      /* ----------------------------------- ui ---------------------------------- */
-
+      // ----------------------------------- ui ----------------------------------
       function buildUI(api) {
         var css = document.createElement('style');
         css.textContent =
@@ -1119,8 +1070,7 @@
         document.body.appendChild(pill);
       }
 
-      /* ---------------------------------- init --------------------------------- */
-
+      // ---------------------------------- init ---------------------------------
       function init(api) {
         grabCurrent(api); // catch a track that's already wooted at load
         // The woot is the trigger, so watch votes, not playback.
@@ -1132,9 +1082,7 @@
           off: function () { enabled = false; localStorage.setItem(LS_KEY, 'off'); },
           now: function () { lastKey = null; doGrab(); }, // force a grab
           get enabled() { return enabled; },
-          // Your playlist names, for copying into PLAYLIST. Opens the picker, reads
-          // it, closes it again - opening it doesn't grab, only clicking an option does.
-          // Async: the table prints once the menu has rendered.
+          // Your playlist names, for copying into PLAYLIST. Opens the picker, reads it, closes it again - opening it doesn't grab, only clicking an option does. Async: the table prints once the menu has rendered.
           playlists: function () {
             withPicker(function (options, opened) {
               if (options.length) {
@@ -1159,9 +1107,7 @@
         log('auto grab ' + (enabled ? 'on' : 'off') + ' - toggle with the corner pill or WZGrab.on()/off()');
       }
 
-      // The bridge may be injected after document-idle, so wait for it. Say so up
-      // front: without this line a missing bridge and a missing script look identical
-      // in the console, since WZGrab is only defined once init() runs.
+      // The bridge may be injected after document-idle, so wait for it. Say so up front: without this line a missing bridge and a missing script look identical in the console, since WZGrab is only defined once init() runs.
       log('loaded, waiting for the WavezFM bridge...');
       var tries = 0;
       var wait = setInterval(function () {
@@ -1176,7 +1122,6 @@
         }
       }, 500);
 
-      // ponytail: self-check on the grab guard. Load with #wz-grab-test.
       if (location.hash === '#wz-grab-test') {
         var wooted = { clientVote: 'woot', clientGrabbed: false };
         console.assert(shouldGrab('k1', null, wooted) === true, 'wooted, not grabbed');

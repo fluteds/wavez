@@ -14,14 +14,10 @@
 // @connect      translate.googleapis.com
 // ==/UserScript==
 
-// --- CONFIG ------------------------------------------------------------------
-// Language to translate INTO (ISO code: "en", "es", "pt", "ja", ...).
+// CONFIG Language to translate INTO (ISO code: "en", "es", "pt", "ja", ...).
 var TARGET_LANG = "en";
 
-// How translated text is shown. Swap freely; you can also change it live from the console with: WZTranslate.setMode("replace")
-//   "append"  = keep the original, add a dimmed translated line beneath it.
-//   "replace" = swap the message text for the translation (original kept on hover).
-//   "hover"   = chat stays original; on hover, the text crossfades to the translation (and back on leave).
+// How translated text is shown. Change live from the console with WZTranslate.setMode(...). "append" = keep the original and add a dimmed translated line beneath it; "replace" = swap the message text for the translation (original kept on hover); "hover" = chat stays original and crossfades to the translation on hover (back on leave).
 var DISPLAY_MODE = "append";
 
 // Only translate messages NOT already in TARGET_LANG (uses Google's detected source language). Set false to translate everything.
@@ -30,8 +26,7 @@ var ONLY_NON_TARGET = true;
 // Max simultaneous translation requests (keeps the free endpoint from rate-limiting).
 var MAX_INFLIGHT = 4;
 
-/* -------------------------------------------------------------------------- */
-
+// --------------------------------------------------------------------------
 (function () {
   "use strict";
 
@@ -84,8 +79,7 @@ var MAX_INFLIGHT = 4;
         });
         return;
       }
-      // No GM API (e.g. raw injection): the endpoint sends CORS *, so plain
-      // fetch works in most setups.
+      // No GM API (e.g. raw injection): the endpoint sends CORS *, so plain fetch works in most setups.
       fetch(url)
         .then(function (r) {
           return r.text();
@@ -117,8 +111,7 @@ var MAX_INFLIGHT = 4;
     });
   }
 
-  // --- translation ---------------------------------------------------------
-  // cache: original text -> { text, src }
+  // translation cache: original text -> { text, src }
   var cache = Object.create(null);
 
   function translate(text) {

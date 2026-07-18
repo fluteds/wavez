@@ -43,9 +43,7 @@
     }
   }
 
-  // niceatc/nicewoot renders its badge from a CSS rule injected as a <style>
-  // block (e.g. --nw-badge-img: url("https://i.imgur.com/...png")), not from an
-  // element attribute - so the stylesheet text needs rewriting too.
+  // niceatc/nicewoot renders its badge from a CSS rule injected as a <style> block (e.g. --nw-badge-img: url("https://i.imgur.com/...png")), not from an element attribute - so the stylesheet text needs rewriting too.
   function fixStyleEl(el) {
     if (!el || el.tagName !== 'STYLE') return;
 
@@ -56,8 +54,7 @@
     if (next !== css) el.textContent = next;
   }
 
-  // Rules built with insertRule() (no <style> text node) only live in the CSSOM,
-  // so rewrite them in place. Recurse into @media/@layer/@supports groups.
+  // Rules built with insertRule() (no <style> text node) only live in the CSSOM, so rewrite them in place. Recurse into @media/@layer/@supports groups.
   function fixRules(parent) {
     let rules;
     try {
@@ -86,7 +83,7 @@
         parent.deleteRule(i);
         parent.insertRule(next, i);
       } catch (e) {
-        /* malformed rule - skip */
+        // malformed rule - skip
       }
     }
   }
@@ -96,11 +93,11 @@
     // document.styleSheets / ShadowRoot.styleSheets cover <style> + <link>.
     try {
       if (root.styleSheets) sheets = sheets.concat(Array.from(root.styleSheets));
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
     // Constructed sheets attached via adoptedStyleSheets.
     try {
       if (root.adoptedStyleSheets) sheets = sheets.concat(Array.from(root.adoptedStyleSheets));
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
     sheets.forEach(fixRules);
   }
 
@@ -111,12 +108,7 @@
     fixSheets(root);
   }
 
-  // --- Cross-origin CSS (e.g. niceatc/nicewoot badge sheet) ----------------
-  // The badge image lives in a remote stylesheet the browser won't let us read
-  // via the CSSOM (sheet.cssRules throws cross-origin). So refetch it ourselves,
-  // rewrite imgur -> rimgo in the raw CSS, inject the result as a local <style>,
-  // and disable the original <link> so the imgur-referencing version stops
-  // applying. Needs @grant GM_xmlhttpRequest + @connect for the host.
+  // Cross-origin CSS (e.g. niceatc/nicewoot badge sheet). The badge image lives in a remote stylesheet the browser won't let us read via the CSSOM (sheet.cssRules throws cross-origin). So refetch it ourselves, rewrite imgur -> rimgo in the raw CSS, inject the result as a local <style>, and disable the original <link> so the imgur-referencing version stops applying. Needs @grant GM_xmlhttpRequest + @connect for the host.
   const REMOTE_CSS_HOST = 'niceatc';
   const remoteCss = new Map(); // href -> 'pending' | 'done' | 'clean' | 'failed'
 
