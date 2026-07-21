@@ -108,7 +108,9 @@
             padding-left: 1.25rem;
         }
 
-        ol li + li { margin-top: .35rem; }
+        ol li + li { margin-top: .6rem; }
+
+        section ol + p { margin-top: 1rem; }
 
         .hint {
             margin: -.25rem 0 1rem;
@@ -235,6 +237,26 @@
 
         .promo:hover .arrow { transform: translateX(4px); }
 
+        .promo-img { align-items: flex-start; }
+
+        .promo-img > svg:first-child { margin-top: .15rem; }
+
+        .promo img {
+            display: block;
+            width: 100%;
+            margin-top: .875rem;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
+        }
+
+        .promo code {
+            padding: .1rem .35rem;
+            border-radius: .25rem;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            font-size: .95em;
+        }
+
         footer {
             width: min(100%, 44rem);
             margin: 2.5rem auto 0;
@@ -242,6 +264,8 @@
             font-size: .875rem;
             color: var(--text-muted);
         }
+
+        footer .disclaimer { margin-top: .75rem; opacity: .7; font-size: .8rem; }
 
         @media (prefers-reduced-motion: reduce) {
             ul a, .cta, .promo, .promo .arrow { transition: none; }
@@ -272,11 +296,12 @@
 
         <section>
             <h2>What Is This?</h2>
-            <p>I've spent a lot of hours in the rooms and the same small annoyances kept turning up. Chat I couldn't collapse. Songs I wanted to search on Spotify. 3rd party images that wouldn't load in my region. So I fixed them, one script at a time. Nothing official.</p>
+            <p>I've spent a lot of hours in the rooms and some small things kept turning up. Chat I couldn't collapse. Songs I wanted to search on Spotify. 3rd party images that wouldn't load in my region, thanks UK law. So I fixed them, one script at a time.</p>
+            <p>All code is open source, so you can see what you're installing.</p>
         </section>
 
         <section>
-            <h2>Install</h2>
+            <h2>Installing</h2>
             <ol>
                 <li>Get <a href="https://www.tampermonkey.net" target="_blank" rel="noopener">Tampermonkey</a> (or any userscript manager).</li>
                 <li>Click a script below. They self-update after that.</li>
@@ -286,8 +311,9 @@
         <a class="promo" href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-all.user.js">
             <svg class="i" aria-hidden="true"><use href="#package" /></svg>
             <div>
-                <h2>Get all six in one install</h2>
-                <p>Toggle each feature from your userscript manager's menu. Auto Woot and Auto Grab start off.</p>
+                <h2>Get all scripts in one install</h2>
+                <p>Toggle each feature from your userscript manager's menu.</p>
+                <p>Auto Woot and Auto Grab start off by default.</p>
             </div>
             <svg class="i arrow" aria-hidden="true"><use href="#arrow-right" /></svg>
         </a>
@@ -305,21 +331,29 @@
             </ul>
         </section>
 
-        <a class="promo" href="https://github.com/fluteds/wavez-discord-presence">
+        <a class="promo promo-img" href="https://github.com/fluteds/wavez-discord-presence">
             <svg class="i" aria-hidden="true"><use href="#discord" /></svg>
             <div>
-                <h2>Also: Discord Rich Presence</h2>
-                <p>Show your room, track, artist and DJ on your Discord profile. Userscript plus a local bridge.</p>
+                <h2>Discord Rich Presence</h2>
+                <p>Share and display your current room, track and artist on Discord.</p>
+                <p>Installing is two part with a browser userscript and a local bridge.</p>
+                <img src="assets/discord-presence.png" alt="Discord Rich Presence showing the current track, artist, room and listener count" loading="lazy">
             </div>
             <svg class="i arrow" aria-hidden="true"><use href="#arrow-right" /></svg>
         </a>
+
+        <section>
+            <h2>Contributing</h2>
+            <p>Ideas, bug reports and pull requests are welcome.</p>
+            <p>Open an <a href="https://github.com/fluteds/wavez/issues">issue</a> or send a <a href="https://github.com/fluteds/wavez/pulls">pull request</a> on GitHub.</p>
+        </section>
 
         <a class="cta" href="https://wavez.fm">Open wavez.fm</a>
     </main>
 
     <footer>
-        <p><a href="https://github.com/fluteds/wavez">Source on GitHub</a> &middot; <a href="https://github.com/fluteds/wavez/issues">Issues</a> 
-        <br>Not affiliated with <a href="https://wavez.fm">wavez.fm</a>.</p>
+        <p><a href="https://github.com/fluteds/wavez">Source on GitHub</a> &middot; <a href="https://github.com/fluteds/wavez/issues">Issues</a></p>
+        <p class="disclaimer">Not affiliated with <a href="https://wavez.fm">wavez.fm</a>.</p>
     </footer>
 
 </body>
