@@ -41,7 +41,8 @@ wavez-open-in-spotify:spotify:on
 wavez-sidebar:chat-toggle:on
 wavez-imgur:imgur:on
 wavez-auto-woot:auto-woot:off
-wavez-auto-grab:auto-grab:off"
+wavez-auto-grab:auto-grab:off
+wavez-region-check:region-check:off"
 
 # Union of every feature's @grant/@connect: the bundle needs them all.
 grants=$(grep -h '^// @grant' userscripts/*.user.js | grep -v 'grant *none' | awk '{print $3}' | sort -u)
