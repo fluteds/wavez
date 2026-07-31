@@ -1,0 +1,11 @@
+{
+  "name": "wavez-userscript-tests",
+  "private": true,
+  "description": "DOM-fixture tests for the Wavez userscripts. Guards the selectors and behaviour most likely to break when wavez.fm changes its markup.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "jsdom": "^24.1.0"
+  }
+}

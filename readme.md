@@ -30,6 +30,47 @@ From the [home page](https://fluteds.github.io/wavez)
 
 - Install [Tampermonkey](https://www.tampermonkey.net) (or your userscript manager of choice), then click an addon to install it.
 
+## Supported pages
+
+Every addon matches `https://wavez.fm/*`. What each one needs on screen:
+
+| Addon | Needs | Notes |
+| --- | --- | --- |
+| Translate | Chat visible | Works in any room; also translates system callouts. |
+| Open in Spotify | A track playing | Reads the now-playing title, so it only shows in a room. |
+| Chat Toggle | The desktop chat rail | Room pages only. |
+| Imgur Fix | Any Imgur image/badge | Works site-wide, including profile and chat. |
+| Auto Woot | Inside a room | Uses the [WavezFM extension bridge](https://github.com/WavezFM/WavezFM-Extension-API) (`window.WavezFM`). |
+| Auto Grab | Inside a room | Same bridge; grabs into the playlist named in the script (`Recs` by default). |
+| Region Check | The playlist page | Needs a YouTube Data API key (prompted once, stored in `localStorage`). |
+
+## Troubleshooting
+
+Each addon exposes console helpers on `window`. Open DevTools (F12) and:
+
+- **A button or pill is missing after a wavez.fm update** - the markup moved. Run `WZRegion.debug()`, `WZGrab.debug()`, or `WZRegion.find('track title')` to see what the selectors currently resolve to.
+- **Region Check does nothing** - set the API key with `WZRegion.setKey('...')`, then `WZRegion.check()`. Flags persist across reloads; clear them with `WZRegion.clearFlags()`.
+- **Auto Woot / Auto Grab never fire** - they wait for the WavezFM bridge, which only loads inside a room. The console logs `bridge never appeared` if it times out; install the [WavezFM extension](https://github.com/WavezFM/WavezFM-Extension-API) and join a room.
+- **Nothing works at all** - check the console for the offending `[wz-*]` line.
+
+## Limitations
+
+- **Region Check** matches playlist rows by title (rows carry no track id), and only flags tracks whose YouTube `regionRestriction.allowed` list is a subset of `US`/`CA` - a *block*list that happens to exclude everywhere else isn't detected. It costs one YouTube API quota unit per 50 tracks.
+- **Imgur Fix** reroutes through a public [Rimgo](https://codeberg.org/rimgo/rimgo) instance (`rimgo.vern.cc`); if that instance is down, images won't load. Change `ALTSITE` in the script to switch instances.
+- **Translate** uses the unofficial Google endpoint, which can rate-limit; it caps concurrent requests to stay under the limit.
+- **Auto Woot / Auto Grab** depend on the WavezFM bridge API (`window.WavezFM` v1); grab still clicks the real button, since the bridge exposes no grab action.
+- Selectors track wavez.fm's current markup. A redesign can break them - the tests below and the `debug()` helpers are there to catch and pin that.
+
+## Tests
+
+DOM-fixture tests guard the selectors and the vote/grab/region logic against wavez.fm markup changes.
+
+```sh
+cd userscripts/tests
+npm install
+npm test
+```
+
 ## Related
 
 [Wavez Discord Presence](https://github.com/fluteds/wavez-discord-presence) shows your room, track, artist and DJ as Discord Rich Presence.

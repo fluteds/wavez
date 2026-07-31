@@ -44,9 +44,12 @@ wavez-auto-woot:auto-woot:off
 wavez-auto-grab:auto-grab:off
 wavez-region-check:region-check:off"
 
-# Union of every feature's @grant/@connect: the bundle needs them all.
-grants=$(grep -h '^// @grant' userscripts/*.user.js | grep -v 'grant *none' | awk '{print $3}' | sort -u)
-connects=$(grep -h '^// @connect' userscripts/*.user.js | awk '{print $3}' | sort -u)
+# Union of every feature's @grant/@connect: the bundle needs them all. Read the
+# standalone sources only - globbing the bundle back in re-feeds its own @grant
+# lines, duplicating GM_registerMenuCommand on every rebuild.
+sources=$(ls userscripts/*.user.js | grep -vF "$bundle")
+grants=$(grep -h '^// @grant' $sources | grep -v 'grant *none' | awk '{print $3}' | sort -u)
+connects=$(grep -h '^// @connect' $sources | awk '{print $3}' | sort -u)
 
 {
   echo '// ==UserScript=='

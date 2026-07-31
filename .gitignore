@@ -1,5 +1,6 @@
 .vscode
 .settings
 yarn.lock
+node_modules
 /ws
 wavez-frontend.user.js
