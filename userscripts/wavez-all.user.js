@@ -46,7 +46,7 @@
     // CONFIG Language to translate INTO (ISO code: "en", "es", "pt", "ja", ...).
     var TARGET_LANG = "en";
 
-    // How translated text is shown. Change live from the console with WZTranslate.setMode(...). "append" = keep the original and add a dimmed translated line beneath it; "replace" = swap the message text for the translation (original kept on hover); "hover" = chat stays original and crossfades to the translation on hover (back on leave).
+    // How translations show (WZTranslate.setMode live): "append" adds a line beneath, "replace" swaps in place, "hover" crossfades on hover.
     var DISPLAY_MODE = "append";
 
     // Only translate messages NOT already in TARGET_LANG (uses Google's detected source language). Set false to translate everything.
@@ -59,7 +59,7 @@
     (function () {
       "use strict";
 
-      // Chat message bodies carry a wavez-specific token, a stable hook across theme changes. System callouts (e.g. "Agente X moveu...") have no such token on text itself, so we anchor off the only wavez class in the callout the icon, and grab the paragraph beside it.
+      // Chat bodies carry a wavez token (stable across themes). System callouts don't, so we anchor off the callout icon's class and grab the paragraph beside it.
       var MSG_SELECTOR =
         '[class*="wavezfm-chat-text-size"], .wavezfm-centered-icon + div > p';
 
@@ -184,7 +184,7 @@
         el.removeAttribute("title");
       }
 
-      // Crossfade between the original markup and the translation on hover. We keep a busy flag so the MutationObserver ignores our own text swaps.
+      // Crossfade original/translation on hover; a busy flag keeps the observer from reacting to our own swaps.
       function swapHover(el, toTranslated) {
         var h = el._wzHover;
         if (!h || h.shown === toTranslated) return;
@@ -249,13 +249,13 @@
         if (!config.enabled || el._wzBusy) return;
         var original = (el.textContent || "").trim();
         if (!original || !LETTERS.test(original)) return;
-        // Skip if this is text we've already handled - either the source we translated, or the translation itself currently swapped in on hover.
+        // Skip text we've already handled: our source, or the translation swapped in on hover.
         if (original === el._wzSrc || original === el._wzTranslated) return;
         el._wzSrc = original;
 
         translate(original)
           .then(function (res) {
-            // Element text changed while we were translating, bail, the observer will re-fire for the new content.
+            // Text changed mid-translation; bail, the observer re-fires for the new content.
             if ((el.textContent || "").trim() !== original) return;
             el._wzTranslated = res.text.trim();
             var sameLang =
@@ -370,7 +370,7 @@
 
       const ID = 'wavez-open-spotify-btn';
 
-      // Drop YouTube-style descriptor tags in ()/[] ("Official Video", "Lyrics", "HD"...). No track:/artist: filters: the source artist is a YouTube channel handle ("enyatv"), so plain text search on the "Artist - Title" string beats it.
+      // Drop YouTube descriptor tags in ()/[] ("Official Video", "Lyrics", "HD"). Plain text search beats track:/artist: filters since the artist is a YT channel handle.
       const stripNoise = (s) => (s || '')
         .replace(/[([][^)\]]*\b(officials?|video|audio|lyrics?|visuali[sz]er|m\/?v|hd|4k|remaster(?:ed)?|explicit)\b[^)\]]*[)\]]/gi, '')
         .replace(/\s{2,}/g, ' ')
@@ -847,7 +847,7 @@
       var enabled = localStorage.getItem('wavez-autowoot') !== 'off';
       var lastKey = null;
 
-      // Vote only on a new track we haven't already wooted, and only when allowed. playbackKey is the API's track-change signal; clientVote is our own vote.
+      // New track, not already wooted, voting allowed. playbackKey = track-change signal, clientVote = our vote.
       function shouldVote(key, last, votes) {
         return !!key && key !== last && !!votes && votes.canVote && votes.clientVote !== 'woot';
       }
@@ -857,7 +857,7 @@
         var state = api.room.getState();
         var pb = state && state.playback;
         if (!pb) return;
-        // Only stamp lastKey on an actual vote. Stamping on the skip marked a track as handled when votes just weren't ready yet (canVote still false), and nothing ever retried it - the main reason woots got missed in a background tab, where the state lands later relative to playback_changed.
+        // Stamp lastKey only on an actual vote, else a not-yet-votable track gets marked handled and never retried (the background-tab miss).
         if (!shouldVote(pb.playbackKey, lastKey, state.votes)) return;
         lastKey = pb.playbackKey;
         var res = api.actions.vote('woot');
@@ -869,7 +869,7 @@
         api.room.subscribe('playback_changed', function () { voteCurrent(api); });
         // Retry once the vote state actually arrives for the new track.
         api.room.subscribe('votes_changed', function () { voteCurrent(api); });
-        // Backstop for a hidden tab: events can be missed or arrive throttled, and a re-check is free (shouldVote gates it, so no redundant API calls). Timers are throttled in the background, but wavez is playing audio, which exempts the tab from Chrome's harshest throttling - worst case this lands late.
+        // Backstop for a hidden tab where events get missed/throttled; shouldVote gates it, so re-checking is free.
         setInterval(function () { voteCurrent(api); }, 30000);
 
         window.WZWoot = {
@@ -908,7 +908,7 @@
 
   if (menu('auto-grab', 'Wavez Auto Grab', 'off')) (function (window) {
 
-    // Track changes and "have I already grabbed this?" come from the official extension API (https://github.com/WavezFM/WavezFM-Extension-API), but grab itself is NOT in it - actions are vote/joinQueue/leaveQueue/sendChat/setVolume only - so the grab itself clicks the real button and picks from the picker.
+    // Track state comes from the extension API (github.com/WavezFM/WavezFM-Extension-API), but grab isn't an exposed action, so we click the real button and pick from the picker.
     (function () {
       'use strict';
 
@@ -926,7 +926,7 @@
 
       function log(m) { console.log('[wz-grab] ' + m); }
 
-      // Grab a track once you've wooted it, and only once. playbackKey identifies the track; clientVote is your own vote; clientGrabbed is "already in a playlist". Works with a manual woot or an auto-woot script - both land as clientVote.
+      // Grab once, after you woot. playbackKey = track, clientVote = your vote (manual or auto-woot), clientGrabbed = already in a playlist.
       function shouldGrab(key, last, votes) {
         return !!key && key !== last && !!votes &&
           votes.clientVote === 'woot' && !votes.clientGrabbed;
@@ -937,7 +937,7 @@
         return el.offsetParent !== null;
       }
 
-      // The vote buttons carry no aria-label or id, just utility classes. Two things are stable though: the count span is themed with --theme-vote-grab, and the label sits in its own span ("Grab") next to the count. Prefer the theme var, it survives a relabel (the site has pt-BR locales); fall back to the label.
+      // Vote buttons have no aria-label/id. Anchor on the --theme-vote-grab count span (survives relabels/locales), falling back to the "Grab" label span.
       function findGrabButton() {
         if (GRAB_BTN_SELECTOR) return document.querySelector(GRAB_BTN_SELECTOR);
         var btns = document.querySelectorAll('button');
@@ -954,7 +954,7 @@
         return byLabel;
       }
 
-      // The popup carries no role/dialog attributes, only data-wavezfm-grab-menu-root which the wrapper around the Grab button carries too. The popup is the one that does NOT contain the button. It's only in the DOM while the menu is open.
+      // The picker has no role/dialog attrs, only data-wavezfm-grab-menu-root (shared with the Grab button's wrapper). It's the one NOT containing the button, and only exists while open.
       function findPicker() {
         if (PICKER_SELECTOR) return document.querySelector(PICKER_SELECTOR);
         var btn = findGrabButton();
@@ -966,7 +966,7 @@
         return null;
       }
 
-      // An option's textContent runs the name into the subtitle ("RecsPlaylist - 53/300"), so read the name span instead. Same span the header's "Choose a playlist" uses, but that's a <p>, and Cancel is filtered out before we get here.
+      // An option's textContent runs the name into the subtitle ("RecsPlaylist - 53/300"), so read the name span instead.
       function nameOf(el) {
         var span = el.querySelector('span.truncate');
         return (span ? span.textContent : el.textContent).trim();
@@ -994,7 +994,7 @@
         if (cancel) cancel.click();
       }
 
-      // Open the picker (if it isn't), hand the options to cb, and say whether we were the one who opened it so the caller can close it again.
+      // Open the picker if needed, pass options to cb, and report if we opened it so the caller can close it.
       function withPicker(cb) {
         var open = findPicker();
         if (open) return cb(optionsIn(open), null);
@@ -1051,7 +1051,7 @@
         var state = api.room.getState();
         var pb = state && state.playback;
         if (!pb) return;
-        // Only stamp lastKey on an actual grab: a track sits un-wooted for a while before you woot it, and stamping on the skip would dedupe that away.
+        // Stamp lastKey only on an actual grab, else the pre-woot window dedupes the track away.
         if (!shouldGrab(pb.playbackKey, lastKey, state.votes)) return;
         lastKey = pb.playbackKey;
         doGrab();
@@ -1101,7 +1101,7 @@
           off: function () { enabled = false; localStorage.setItem(LS_KEY, 'off'); },
           now: function () { lastKey = null; doGrab(); }, // force a grab
           get enabled() { return enabled; },
-          // Your playlist names, for copying into PLAYLIST. Opens the picker, reads it, closes it again - opening it doesn't grab, only clicking an option does. Async: the table prints once the menu has rendered.
+          // Print your playlist names for PLAYLIST. Opens/reads/closes the picker (opening doesn't grab); async, prints once rendered.
           playlists: function () {
             withPicker(function (options, opened) {
               if (options.length) {
@@ -1126,7 +1126,7 @@
         log('auto grab ' + (enabled ? 'on' : 'off') + ' - toggle with the corner pill or WZGrab.on()/off()');
       }
 
-      // The bridge may be injected after document-idle, so wait for it. Say so up front: without this line a missing bridge and a missing script look identical in the console, since WZGrab is only defined once init() runs.
+      // The bridge may arrive after document-idle, so wait for it. Logged up front so a missing bridge is distinguishable from a missing script.
       log('loaded, waiting for the WavezFM bridge...');
       var tries = 0;
       var wait = setInterval(function () {

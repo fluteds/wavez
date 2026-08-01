@@ -17,7 +17,7 @@
 // CONFIG Language to translate INTO (ISO code: "en", "es", "pt", "ja", ...).
 var TARGET_LANG = "en";
 
-// How translated text is shown. Change live from the console with WZTranslate.setMode(...). "append" = keep the original and add a dimmed translated line beneath it; "replace" = swap the message text for the translation (original kept on hover); "hover" = chat stays original and crossfades to the translation on hover (back on leave).
+// How translations show (WZTranslate.setMode live): "append" adds a line beneath, "replace" swaps in place, "hover" crossfades on hover.
 var DISPLAY_MODE = "append";
 
 // Only translate messages NOT already in TARGET_LANG (uses Google's detected source language). Set false to translate everything.
@@ -30,7 +30,7 @@ var MAX_INFLIGHT = 4;
 (function () {
   "use strict";
 
-  // Chat message bodies carry a wavez-specific token, a stable hook across theme changes. System callouts (e.g. "Agente X moveu...") have no such token on text itself, so we anchor off the only wavez class in the callout the icon, and grab the paragraph beside it.
+  // Chat bodies carry a wavez token (stable across themes). System callouts don't, so we anchor off the callout icon's class and grab the paragraph beside it.
   var MSG_SELECTOR =
     '[class*="wavezfm-chat-text-size"], .wavezfm-centered-icon + div > p';
 
@@ -155,7 +155,7 @@ var MAX_INFLIGHT = 4;
     el.removeAttribute("title");
   }
 
-  // Crossfade between the original markup and the translation on hover. We keep a busy flag so the MutationObserver ignores our own text swaps.
+  // Crossfade original/translation on hover; a busy flag keeps the observer from reacting to our own swaps.
   function swapHover(el, toTranslated) {
     var h = el._wzHover;
     if (!h || h.shown === toTranslated) return;
@@ -220,13 +220,13 @@ var MAX_INFLIGHT = 4;
     if (!config.enabled || el._wzBusy) return;
     var original = (el.textContent || "").trim();
     if (!original || !LETTERS.test(original)) return;
-    // Skip if this is text we've already handled - either the source we translated, or the translation itself currently swapped in on hover.
+    // Skip text we've already handled: our source, or the translation swapped in on hover.
     if (original === el._wzSrc || original === el._wzTranslated) return;
     el._wzSrc = original;
 
     translate(original)
       .then(function (res) {
-        // Element text changed while we were translating, bail, the observer will re-fire for the new content.
+        // Text changed mid-translation; bail, the observer re-fires for the new content.
         if ((el.textContent || "").trim() !== original) return;
         el._wzTranslated = res.text.trim();
         var sameLang =

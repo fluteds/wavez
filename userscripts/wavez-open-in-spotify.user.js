@@ -18,7 +18,7 @@
 
   const ID = 'wavez-open-spotify-btn';
 
-  // Drop YouTube-style descriptor tags in ()/[] ("Official Video", "Lyrics", "HD"...). No track:/artist: filters: the source artist is a YouTube channel handle ("enyatv"), so plain text search on the "Artist - Title" string beats it.
+  // Drop YouTube descriptor tags in ()/[] ("Official Video", "Lyrics", "HD"). Plain text search beats track:/artist: filters since the artist is a YT channel handle.
   const stripNoise = (s) => (s || '')
     .replace(/[([][^)\]]*\b(officials?|video|audio|lyrics?|visuali[sz]er|m\/?v|hd|4k|remaster(?:ed)?|explicit)\b[^)\]]*[)\]]/gi, '')
     .replace(/\s{2,}/g, ' ')

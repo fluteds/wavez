@@ -19,7 +19,7 @@
   var enabled = localStorage.getItem('wavez-autowoot') !== 'off';
   var lastKey = null;
 
-  // Vote only on a new track we haven't already wooted, and only when allowed. playbackKey is the API's track-change signal; clientVote is our own vote.
+  // New track, not already wooted, voting allowed. playbackKey = track-change signal, clientVote = our vote.
   function shouldVote(key, last, votes) {
     return !!key && key !== last && !!votes && votes.canVote && votes.clientVote !== 'woot';
   }
@@ -29,7 +29,7 @@
     var state = api.room.getState();
     var pb = state && state.playback;
     if (!pb) return;
-    // Only stamp lastKey on an actual vote. Stamping on the skip marked a track as handled when votes just weren't ready yet (canVote still false), and nothing ever retried it - the main reason woots got missed in a background tab, where the state lands later relative to playback_changed.
+    // Stamp lastKey only on an actual vote, else a not-yet-votable track gets marked handled and never retried (the background-tab miss).
     if (!shouldVote(pb.playbackKey, lastKey, state.votes)) return;
     lastKey = pb.playbackKey;
     var res = api.actions.vote('woot');
@@ -41,7 +41,7 @@
     api.room.subscribe('playback_changed', function () { voteCurrent(api); });
     // Retry once the vote state actually arrives for the new track.
     api.room.subscribe('votes_changed', function () { voteCurrent(api); });
-    // Backstop for a hidden tab: events can be missed or arrive throttled, and a re-check is free (shouldVote gates it, so no redundant API calls). Timers are throttled in the background, but wavez is playing audio, which exempts the tab from Chrome's harshest throttling - worst case this lands late.
+    // Backstop for a hidden tab where events get missed/throttled; shouldVote gates it, so re-checking is free.
     setInterval(function () { voteCurrent(api); }, 30000);
 
     window.WZWoot = {

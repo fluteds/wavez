@@ -12,7 +12,7 @@
 // @run-at       document-idle
 // ==/UserScript==
 
-// Track changes and "have I already grabbed this?" come from the official extension API (https://github.com/WavezFM/WavezFM-Extension-API), but grab itself is NOT in it - actions are vote/joinQueue/leaveQueue/sendChat/setVolume only - so the grab itself clicks the real button and picks from the picker.
+// Track state comes from the extension API (github.com/WavezFM/WavezFM-Extension-API), but grab isn't an exposed action, so we click the real button and pick from the picker.
 (function () {
   'use strict';
 
@@ -30,7 +30,7 @@
 
   function log(m) { console.log('[wz-grab] ' + m); }
 
-  // Grab a track once you've wooted it, and only once. playbackKey identifies the track; clientVote is your own vote; clientGrabbed is "already in a playlist". Works with a manual woot or an auto-woot script - both land as clientVote.
+  // Grab once, after you woot. playbackKey = track, clientVote = your vote (manual or auto-woot), clientGrabbed = already in a playlist.
   function shouldGrab(key, last, votes) {
     return !!key && key !== last && !!votes &&
       votes.clientVote === 'woot' && !votes.clientGrabbed;
@@ -41,7 +41,7 @@
     return el.offsetParent !== null;
   }
 
-  // The vote buttons carry no aria-label or id, just utility classes. Two things are stable though: the count span is themed with --theme-vote-grab, and the label sits in its own span ("Grab") next to the count. Prefer the theme var, it survives a relabel (the site has pt-BR locales); fall back to the label.
+  // Vote buttons have no aria-label/id. Anchor on the --theme-vote-grab count span (survives relabels/locales), falling back to the "Grab" label span.
   function findGrabButton() {
     if (GRAB_BTN_SELECTOR) return document.querySelector(GRAB_BTN_SELECTOR);
     var btns = document.querySelectorAll('button');
@@ -58,7 +58,7 @@
     return byLabel;
   }
 
-  // The popup carries no role/dialog attributes, only data-wavezfm-grab-menu-root which the wrapper around the Grab button carries too. The popup is the one that does NOT contain the button. It's only in the DOM while the menu is open.
+  // The picker has no role/dialog attrs, only data-wavezfm-grab-menu-root (shared with the Grab button's wrapper). It's the one NOT containing the button, and only exists while open.
   function findPicker() {
     if (PICKER_SELECTOR) return document.querySelector(PICKER_SELECTOR);
     var btn = findGrabButton();
@@ -70,7 +70,7 @@
     return null;
   }
 
-  // An option's textContent runs the name into the subtitle ("RecsPlaylist - 53/300"), so read the name span instead. Same span the header's "Choose a playlist" uses, but that's a <p>, and Cancel is filtered out before we get here.
+  // An option's textContent runs the name into the subtitle ("RecsPlaylist - 53/300"), so read the name span instead.
   function nameOf(el) {
     var span = el.querySelector('span.truncate');
     return (span ? span.textContent : el.textContent).trim();
@@ -98,7 +98,7 @@
     if (cancel) cancel.click();
   }
 
-  // Open the picker (if it isn't), hand the options to cb, and say whether we were the one who opened it so the caller can close it again.
+  // Open the picker if needed, pass options to cb, and report if we opened it so the caller can close it.
   function withPicker(cb) {
     var open = findPicker();
     if (open) return cb(optionsIn(open), null);
@@ -155,7 +155,7 @@
     var state = api.room.getState();
     var pb = state && state.playback;
     if (!pb) return;
-    // Only stamp lastKey on an actual grab: a track sits un-wooted for a while before you woot it, and stamping on the skip would dedupe that away.
+    // Stamp lastKey only on an actual grab, else the pre-woot window dedupes the track away.
     if (!shouldGrab(pb.playbackKey, lastKey, state.votes)) return;
     lastKey = pb.playbackKey;
     doGrab();
@@ -205,7 +205,7 @@
       off: function () { enabled = false; localStorage.setItem(LS_KEY, 'off'); },
       now: function () { lastKey = null; doGrab(); }, // force a grab
       get enabled() { return enabled; },
-      // Your playlist names, for copying into PLAYLIST. Opens the picker, reads it, closes it again - opening it doesn't grab, only clicking an option does. Async: the table prints once the menu has rendered.
+      // Print your playlist names for PLAYLIST. Opens/reads/closes the picker (opening doesn't grab); async, prints once rendered.
       playlists: function () {
         withPicker(function (options, opened) {
           if (options.length) {
@@ -230,7 +230,7 @@
     log('auto grab ' + (enabled ? 'on' : 'off') + ' - toggle with the corner pill or WZGrab.on()/off()');
   }
 
-  // The bridge may be injected after document-idle, so wait for it. Say so up front: without this line a missing bridge and a missing script look identical in the console, since WZGrab is only defined once init() runs.
+  // The bridge may arrive after document-idle, so wait for it. Logged up front so a missing bridge is distinguishable from a missing script.
   log('loaded, waiting for the WavezFM bridge...');
   var tries = 0;
   var wait = setInterval(function () {
