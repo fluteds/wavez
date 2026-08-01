@@ -88,7 +88,7 @@
       box-shadow: 0 0 0 2px var(--theme-room-nav);
     }
   `;
-  document.head.appendChild(css);
+  (document.head || document.documentElement).appendChild(css); // head may be unparsed at document-start (the bundle)
 
   function getRail() {
     return document.querySelector('[data-room-desktop-rail="true"]');

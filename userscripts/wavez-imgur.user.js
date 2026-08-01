@@ -3,13 +3,13 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      1.7
+// @version      1.8
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-imgur.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-imgur.user.js
 // @description  Replace Imgur links, backgrounds and CSS url() badges (e.g. niceatc/nicewoot) with Rimgo safely. Avoids "Content not viewable in your region" placeholders.
 // @match        https://wavez.fm/*
 // @match        https://*.wavez.fm/*
-// @run-at       document-idle
+// @run-at       document-start
 // @grant        GM_xmlhttpRequest
 // @connect      niceatc.api.br
 // @connect      woot.niceatc.api.br
@@ -29,6 +29,28 @@
     );
   }
 
+  // nicewoot measures the imgur image (new Image()) to size its avatar sprites, so a region-blocked browser measures the placeholder and the geometry is wrong however we rewrite the DOM. Rewrite at the src boundary so the measurement loads Rimgo. Needs document-start.
+  function patchImageSrc() {
+    const proto = HTMLImageElement.prototype;
+    for (const prop of ['src', 'srcset']) {
+      const desc = Object.getOwnPropertyDescriptor(proto, prop);
+      if (!desc || !desc.set) continue;
+      Object.defineProperty(proto, prop, {
+        configurable: true,
+        enumerable: desc.enumerable,
+        get() { return desc.get.call(this); },
+        set(v) { desc.set.call(this, rewrite(v)); }
+      });
+    }
+    // Also the setAttribute path.
+    const setAttr = proto.setAttribute;
+    proto.setAttribute = function (name, value) {
+      if (name === 'src' || name === 'srcset') value = rewrite(value);
+      return setAttr.call(this, name, value);
+    };
+  }
+  try { patchImageSrc(); } catch (e) {}
+
   function fixElement(el) {
     if (!el || el.nodeType !== 1) return;
 
@@ -43,7 +65,7 @@
     }
   }
 
-  // niceatc/nicewoot renders its badge from a CSS rule injected as a <style> block (e.g. --nw-badge-img: url("https://i.imgur.com/...png")), not from an element attribute - so the stylesheet text needs rewriting too.
+  // Badges live in an injected <style> block (--nw-badge-img: url(...)), not an attribute, so rewrite the stylesheet text too.
   function fixStyleEl(el) {
     if (!el || el.tagName !== 'STYLE') return;
 
@@ -54,7 +76,7 @@
     if (next !== css) el.textContent = next;
   }
 
-  // Rules built with insertRule() (no <style> text node) only live in the CSSOM, so rewrite them in place. Recurse into @media/@layer/@supports groups.
+  // insertRule() rules have no <style> text node, so rewrite them in the CSSOM. Recurse into @media/@layer/@supports.
   function fixRules(parent) {
     let rules;
     try {
@@ -67,7 +89,7 @@
     for (let i = 0; i < rules.length; i++) {
       const rule = rules[i];
 
-      // Grouping rule (@media, @layer, @supports) - descend.
+      // Grouping rule - descend.
       if (rule.cssRules && rule.cssRules.length) {
         fixRules(rule);
         continue;
@@ -90,11 +112,10 @@
 
   function fixSheets(root) {
     let sheets = [];
-    // document.styleSheets / ShadowRoot.styleSheets cover <style> + <link>.
+    // <style> + <link>, plus constructed adoptedStyleSheets.
     try {
       if (root.styleSheets) sheets = sheets.concat(Array.from(root.styleSheets));
     } catch (e) {}
-    // Constructed sheets attached via adoptedStyleSheets.
     try {
       if (root.adoptedStyleSheets) sheets = sheets.concat(Array.from(root.adoptedStyleSheets));
     } catch (e) {}
@@ -103,12 +124,11 @@
 
   function scanStyles(root) {
     root = root || document;
-    // Styles usually live in <head>, so scan the whole document, not just body.
     root.querySelectorAll?.('style').forEach(fixStyleEl);
     fixSheets(root);
   }
 
-  // Cross-origin CSS (e.g. niceatc/nicewoot badge sheet). The badge image lives in a remote stylesheet the browser won't let us read via the CSSOM (sheet.cssRules throws cross-origin). So refetch it ourselves, rewrite imgur -> rimgo in the raw CSS, inject the result as a local <style>, and disable the original <link> so the imgur-referencing version stops applying. Needs @grant GM_xmlhttpRequest + @connect for the host.
+  // The niceatc badge sheet is cross-origin, so the CSSOM won't read it. Refetch it, rewrite the raw CSS, inject as a local <style>, and disable the original <link>. Needs GM_xmlhttpRequest + @connect.
   const REMOTE_CSS_HOST = 'niceatc';
   const remoteCss = new Map(); // href -> 'pending' | 'done' | 'clean' | 'failed'
 
@@ -169,7 +189,7 @@
 
     root.querySelectorAll?.('style').forEach(fixStyleEl);
 
-    // Descend into shadow roots (userscript widgets often isolate their UI).
+    // Descend into shadow roots.
     root.querySelectorAll?.('*').forEach(el => {
       if (el.shadowRoot) {
         scan(el.shadowRoot);
@@ -178,11 +198,14 @@
     });
   }
 
-  function start() {
+  function fullScan() {
     scan(document.body);
     scanStyles();
     scanRemoteCss();
+  }
 
+  function start() {
+    // Attach at document-start, before nicewoot mounts avatars, so their imgur URLs are rewritten before the browser fetches the placeholder.
     const observer = new MutationObserver(mutations => {
       for (const mutation of mutations) {
         if (mutation.type === 'childList') {
@@ -203,17 +226,11 @@
       attributeFilter: ['href', 'src', 'srcset', 'data-src', 'poster', 'style']
     });
 
-    // Fallback for scripts that inject/rewrite styles or backgrounds after load.
-    setInterval(() => {
-      scan(document.body);
-      scanStyles();
-      scanRemoteCss();
-    }, 1500);
+    // Sweep now, again once the body parses, then a slow fallback.
+    fullScan();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fullScan);
+    setInterval(fullScan, 1500);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start);
-  } else {
-    start();
-  }
+  start();
 })();

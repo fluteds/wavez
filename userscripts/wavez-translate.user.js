@@ -271,14 +271,17 @@ var MAX_INFLIGHT = 4;
       }
     }
   });
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    characterData: true,
-  });
-
-  // Catch messages already on screen at load.
-  scan(document.body);
+  // Wait for <body>: at document-start (the all-in-one bundle) it isn't parsed yet.
+  function observeChat() {
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    scan(document.body); // catch messages already on screen
+  }
+  if (document.body) observeChat();
+  else document.addEventListener("DOMContentLoaded", observeChat, { once: true });
 
   // --- live controls -------------------------------------------------------
   function retranslateAll() {
