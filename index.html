@@ -98,6 +98,8 @@
 
         p { margin: 0; }
 
+        p + p { margin-top: .75rem; }
+
         a {
             color: var(--accent);
             text-underline-offset: 2px;
@@ -109,8 +111,6 @@
         }
 
         ol li + li { margin-top: .6rem; }
-
-        section ol + p { margin-top: 1rem; }
 
         .hint {
             margin: -.25rem 0 1rem;
@@ -127,9 +127,10 @@
         }
 
         ul a {
-            display: flex;
+            display: grid;
+            grid-template-columns: auto 1fr;
             align-items: center;
-            gap: .875rem;
+            column-gap: .875rem;
             padding: .75rem .875rem;
             border: 1px solid var(--border-light);
             border-radius: var(--radius);
@@ -149,7 +150,7 @@
         ul a:focus-visible { box-shadow: 0 0 0 3px var(--accent-soft); }
 
         ul span {
-            flex: none;
+            grid-row: span 2;
             display: grid;
             place-items: center;
             width: 2.25rem;
@@ -310,12 +311,22 @@
 
         <section>
             <h2>What Is This?</h2>
-            <p>I've spent a lot of hours in the rooms and some small things kept turning up. Chat I couldn't collapse. Songs I wanted to search on Spotify. 3rd party images that wouldn't load in my region, thanks UK law. So I fixed them, one script at a time.</p>
-            <p>All code is open source, so you can see what you're installing.</p>
+            <p>This is a collection of things I've made for Wavez. From Userscripts, Discord statuses and general guides.</p>
+
+            <p>I've spent a lot of hours in the rooms and some small things kept turning up. Chat I couldn't collapse. Songs I wanted to search on Spotify. 3rd party images that wouldn't load in my region, thanks UK law. So I fixed them, one script at a time. All code is open source, so you can see what you're installing.</p>
         </section>
 
+        <a class="promo" href="https://fluted.omg.lol/wavezfm">
+            <svg class="i" aria-hidden="true"><use href="#book" /></svg>
+            <div>
+                <h2>New to Wavez.fm?</h2>
+                <p>An unofficial guide to rooms, the DJ queue, playlists, roles and room settings. Written from my own notes, not official docs.</p>
+            </div>
+            <svg class="i arrow" aria-hidden="true"><use href="#arrow-right" /></svg>
+        </a>
+
         <section>
-            <h2>Installing</h2>
+            <h2>Installing Userscripts</h2>
             <ol>
                 <li>Get <a href="https://www.tampermonkey.net" target="_blank" rel="noopener">Tampermonkey</a> (or any userscript manager).</li>
                 <li>Click a script below. They self-update after that.</li>
@@ -341,8 +352,8 @@
                 <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-sidebar.user.js"><span><svg class="i" aria-hidden="true"><use href="#sidebar" /></svg></span><b>Chat Toggle</b><small>Collapsible rail, hide and show chat.</small></a></li>
                 <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-imgur.user.js"><span><svg class="i" aria-hidden="true"><use href="#photo" /></svg></span><b>Imgur Fix</b><small>Unbreak Imgur. Routes the traffic through a proxy</small></a></li>
                 <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js"><span><svg class="i" aria-hidden="true"><use href="#thumb-up" /></svg></span><b>Auto Woot</b><small>Woot everything automatically</small></a></li>
-                <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-grab.user.js"><span><svg class="i" aria-hidden="true"><use href="#playlist-add" /></svg></span><b>Auto Grab</b><small>Automatically grab what you woot</small></a></li>
-                <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-region-check.user.js"><span><svg class="i" aria-hidden="true"><use href="#world" /></svg></span><b>Region Check</b><small>Flag playlist tracks blocked in your region <em class="note">Needs a YouTube API key</em></small></a></li>
+                <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-grab.user.js"><span><svg class="i" aria-hidden="true"><use href="#playlist-add" /></svg></span><b>Auto Grab</b><small>Automatically grab what you woot to a defined playlist</small></a></li>
+                <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-region-check.user.js"><span><svg class="i" aria-hidden="true"><use href="#world" /></svg></span><b>Region Check</b><small>Flag YouTube tracks blocked outside of US/CA. Soundcloud track checking is not supported<em class="note">Needs a YouTube API key</em></small></a></li>
             </ul>
         </section>
 
@@ -353,16 +364,6 @@
                 <p>Share and display your current room, track and artist on Discord.</p>
                 <p>Installing is two part with a browser userscript and a local bridge.</p>
                 <img src="assets/discord-presence.png" alt="Discord Rich Presence showing the current track, artist, room and listener count" loading="lazy">
-            </div>
-            <svg class="i arrow" aria-hidden="true"><use href="#arrow-right" /></svg>
-        </a>
-
-        <a class="promo" href="https://fluted.omg.lol/wavezfm">
-            <svg class="i" aria-hidden="true"><use href="#book" /></svg>
-            <div>
-                <h2>New to wavez.fm?</h2>
-                <p>An unofficial guide to rooms, the DJ queue, playlists, roles and room settings.</p>
-                <p>Written from my own notes, not official docs.</p>
             </div>
             <svg class="i arrow" aria-hidden="true"><use href="#arrow-right" /></svg>
         </a>
