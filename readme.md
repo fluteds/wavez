@@ -11,6 +11,8 @@ Userscripts that add features to wavez.fm. Needs [Tampermonkey](https://www.tamp
 | Translate | Translate chat and system messages inline. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-translate.user.js) |
 | Open in Spotify | Find the currently playing song on Spotify. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-open-in-spotify.user.js) |
 | Chat Toggle | Collapsible chat rail with an unread dot. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-sidebar.user.js) |
+| Chat Pop-out | Chat in its own window, read and send over the same session. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-chat-popout.user.js) |
+| Scrobble Toggle | Flip Last.fm scrobbling on and off from the room footer. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-scrobble.user.js) |
 | Imgur Fix | Reroute region-blocked Imgur images through Rimgo. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-imgur.user.js) |
 | Auto Woot | Woots every new track automatically. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js) |
 | Auto Grab | Grabs every track you woot. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-grab.user.js) |
@@ -39,6 +41,8 @@ Every addon matches `https://wavez.fm/*`. What each one needs on screen:
 | Translate | Chat visible | Works in any room; also translates system callouts. |
 | Open in Spotify | A track playing | Reads the now-playing title, so it only shows in a room. |
 | Chat Toggle | The desktop chat rail | Room pages only. |
+| Chat Pop-out | The desktop chat rail | Room pages only; mirrors the rail's messages and sends over the live WebSocket. Allow popups for wavez.fm. |
+| Scrobble Toggle | The room footer | Sits after the Discord button; reads and PATCHes `api.wavez.fm/settings`, so you must be signed in. |
 | Imgur Fix | Any Imgur image/badge | Works site-wide, including profile and chat. |
 | Auto Woot | Inside a room | Uses the [WavezFM extension bridge](https://github.com/WavezFM/WavezFM-Extension-API) (`window.WavezFM`). |
 | Auto Grab | Inside a room | Same bridge; grabs into the playlist named in the script (`Recs` by default). |

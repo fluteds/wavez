@@ -72,6 +72,16 @@
             color: var(--text-muted);
         }
 
+        .plug {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto .25rem;
+            background: url(assets/admin-avatar.png) -400px 0 / 2400px 100px;
+            animation: dance 1.8s steps(20) infinite;
+        }
+
+        @keyframes dance { from { background-position-x: -400px; } to { background-position-x: -2400px; } }
+
         .logo {
             width: clamp(9rem, 30vw, 12rem);
             height: auto;
@@ -123,10 +133,12 @@
             padding: 0;
             list-style: none;
             display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
             gap: .5rem;
         }
 
         ul a {
+            height: 100%;
             display: grid;
             grid-template-columns: auto 1fr;
             align-items: center;
@@ -295,6 +307,8 @@
         <symbol id="photo" viewBox="0 0 24 24"><path d="M15 8h.01" /><path d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12" /><path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5" /><path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3" /></symbol>
         <symbol id="thumb-up" viewBox="0 0 24 24"><path d="M7 11v8a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1v-7a1 1 0 0 1 1 -1h3a4 4 0 0 0 4 -4v-1a2 2 0 0 1 4 0v5h3a2 2 0 0 1 2 2l-1 5a2 3 0 0 1 -2 2h-7a3 3 0 0 1 -3 -3" /></symbol>
         <symbol id="playlist-add" viewBox="0 0 24 24"><path d="M19 8h-14" /><path d="M5 12h9" /><path d="M11 16h-6" /><path d="M15 16h6" /><path d="M18 13v6" /></symbol>
+        <symbol id="external" viewBox="0 0 24 24"><path d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6" /><path d="M11 13l9 -9" /><path d="M15 4h5v5" /></symbol>
+        <symbol id="radio" viewBox="0 0 24 24"><path d="M14 3l-9.371 3.749a1 1 0 0 0 -.629 .928v11.323a1 1 0 0 0 1 1h14a1 1 0 0 0 1 -1v-11a1 1 0 0 0 -1 -1h-14.5" /><path d="M4 12h16" /><path d="M7 12v-2" /><path d="M17 16v.01" /><path d="M13 16v.01" /></symbol>
         <symbol id="world" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M3.6 9h16.8" /><path d="M3.6 15h16.8" /><path d="M11.5 3a17 17 0 0 0 0 18" /><path d="M12.5 3a17 17 0 0 1 0 18" /></symbol>
         <symbol id="package" viewBox="0 0 24 24"><path d="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5" /><path d="M12 12l8 -4.5" /><path d="M12 12l0 9" /><path d="M12 12l-8 -4.5" /><path d="M16 5.25l-8 4.5" /></symbol>
         <symbol id="arrow-right" viewBox="0 0 24 24"><path d="M5 12l14 0" /><path d="M13 18l6 -6" /><path d="M13 6l6 6" /></symbol>
@@ -304,6 +318,7 @@
 
     <main>
         <header>
+            <div class="plug" role="img" aria-label="Dancing plug.dj avatar" hidden></div>
             <svg class="logo" viewBox="0 0 900 394" role="img" aria-label="WavezFM"><path d="M709.76 6.88077C732.915 18.6481 744.303 39.5255 772.393 117.721C787.576 160.235 791.752 163.272 842.997 166.309C881.335 168.587 886.27 169.346 892.723 177.697C901.074 187.946 901.833 207.305 894.621 216.795C885.131 229.321 863.874 235.015 826.674 235.015C787.956 235.015 771.634 231.219 753.413 217.174C738.989 206.546 717.732 167.448 705.964 130.627C701.409 115.823 695.336 99.1214 692.299 93.0479C687.744 83.9377 685.846 83.1786 681.67 87.3541C676.736 92.6683 659.275 149.607 647.887 197.056C614.103 339.023 602.716 371.288 581.838 386.092C557.544 403.553 529.454 391.406 511.993 356.484C506.679 345.096 491.495 299.545 478.589 255.892C465.683 211.86 453.536 174.66 451.638 172.382C446.324 167.068 444.047 172.003 417.475 242.607C389.385 318.145 384.071 328.774 368.128 344.337C352.945 359.141 336.243 362.937 318.402 355.345C296.006 345.855 283.859 319.664 247.039 200.852C231.476 150.366 223.504 132.525 217.051 132.525C215.153 132.525 206.422 147.329 197.692 165.55C188.961 184.15 177.194 208.444 171.88 219.831C160.112 244.125 143.79 263.484 128.986 271.456C115.7 278.288 91.0269 278.288 74.7045 271.456C52.6882 262.345 12.8312 234.256 6.37812 223.248C-5.76879 203.129 -0.0749455 181.493 19.2842 175.04C33.3291 169.725 47.7535 174.28 75.4637 192.501L95.2024 205.786L104.313 197.435C109.627 192.501 115.7 183.391 118.357 176.938C137.717 127.97 159.733 87.7336 174.157 74.8275C203.386 48.6357 234.892 47.8766 261.463 73.3091C279.684 90.0111 288.794 110.129 313.467 186.427C325.614 223.627 336.622 253.994 338.52 253.994C342.316 253.994 348.01 241.468 372.304 177.697C406.087 89.252 418.994 71.7908 451.638 71.7908C466.442 71.7908 471.377 73.6886 481.626 83.558C500.606 102.158 511.614 131.766 543.499 253.235C548.434 271.835 553.369 283.982 556.026 283.223C560.201 281.705 565.516 263.105 588.671 167.068C615.242 56.9868 631.185 21.3051 660.793 6.5011C677.875 -2.22949 691.919 -2.22941 709.76 6.88077Z" /></svg>
             <h1>Wavez <span>Tools</span></h1>
             <p>Quality of life tools for wavez.fm</p>
@@ -350,6 +365,8 @@
                 <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-translate.user.js"><span><svg class="i" aria-hidden="true"><use href="#language" /></svg></span><b>Translate</b><small>Translate chat, inline and customisable</small></a></li>
                 <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-open-in-spotify.user.js"><span><svg class="i" aria-hidden="true"><use href="#spotify" /></svg></span><b>Open in Spotify</b><small>Find the currently playing song on Spotify</small></a></li>
                 <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-sidebar.user.js"><span><svg class="i" aria-hidden="true"><use href="#sidebar" /></svg></span><b>Chat Toggle</b><small>Collapsible rail, hide and show chat.</small></a></li>
+                <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-chat-popout.user.js"><span><svg class="i" aria-hidden="true"><use href="#external" /></svg></span><b>Chat Pop-out</b><small>Chat in its own window, read and send without a second session</small></a></li>
+                <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-scrobble.user.js"><span><svg class="i" aria-hidden="true"><use href="#radio" /></svg></span><b>Scrobble Toggle</b><small>Flip Last.fm scrobbling on and off from the room footer</small></a></li>
                 <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-imgur.user.js"><span><svg class="i" aria-hidden="true"><use href="#photo" /></svg></span><b>Imgur Fix</b><small>Unbreak Imgur. Routes the traffic through a proxy</small></a></li>
                 <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js"><span><svg class="i" aria-hidden="true"><use href="#thumb-up" /></svg></span><b>Auto Woot</b><small>Woot everything automatically</small></a></li>
                 <li><a href="https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-grab.user.js"><span><svg class="i" aria-hidden="true"><use href="#playlist-add" /></svg></span><b>Auto Grab</b><small>Automatically grab what you woot to a defined playlist</small></a></li>
@@ -381,6 +398,12 @@
         <p><a href="https://github.com/fluteds/wavez">Source on GitHub</a> &middot; <a href="https://github.com/fluteds/wavez/issues">Issues</a></p>
         <p class="disclaimer">Not affiliated with <a href="https://wavez.fm">wavez.fm</a>.</p>
     </footer>
+
+    <script>
+        // Easter egg: double-click the wordmark for a dancing plug.dj avatar.
+        const plug = document.querySelector('.plug');
+        document.querySelector('.logo').addEventListener('dblclick', () => { plug.hidden = !plug.hidden; });
+    </script>
 
 </body>
 

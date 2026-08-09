@@ -39,7 +39,9 @@ echo "synced $n script(s) from $src"
 features="wavez-translate:translate:on
 wavez-open-in-spotify:spotify:on
 wavez-sidebar:chat-toggle:on
+wavez-chat-popout:chat-popout:on
 wavez-imgur:imgur:on
+wavez-scrobble:scrobble:on
 wavez-auto-woot:auto-woot:off
 wavez-auto-grab:auto-grab:off
 wavez-region-check:region-check:off"
@@ -48,7 +50,7 @@ wavez-region-check:region-check:off"
 # standalone sources only - globbing the bundle back in re-feeds its own @grant
 # lines, duplicating GM_registerMenuCommand on every rebuild.
 sources=$(ls userscripts/*.user.js | grep -vF "$bundle")
-grants=$(grep -h '^// @grant' $sources | grep -v 'grant *none' | awk '{print $3}' | sort -u)
+grants=$(grep -h '^// @grant' $sources | grep -v 'grant *none' | awk '{print $3}' | sort -u | grep -v '^GM_registerMenuCommand$')
 connects=$(grep -h '^// @connect' $sources | awk '{print $3}' | sort -u)
 
 {
