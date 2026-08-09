@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      1.5
+// @version      1.6
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-translate.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-translate.user.js
 // @description  Translate wavez.fm chat and system messages into English (or any language) inline.

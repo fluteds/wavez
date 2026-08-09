@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      1.3
+// @version      1.4
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-sidebar.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-sidebar.user.js
 // @description  Adds a collapsible chat button to the chat section, with an unread dot when collapsed.

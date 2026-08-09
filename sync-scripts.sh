@@ -9,15 +9,17 @@ author=fluteds
 
 bundle=userscripts/wavez-all.user.js
 
+# Managers only install an update when @version goes up, so a changed script
+# always gets the next number.
+bump() { echo "$1" | awk -F. '{ $NF = $NF + 1; print }' OFS=.; }
+
 n=0
 for dest in userscripts/*.user.js; do
   name=$(basename "$dest")
   [ "$dest" = "$bundle" ] && continue
-  if [ -f "$src/$name" ]; then
-    cp "$src/$name" "$dest"
-    n=$((n + 1))
-  else
+  if [ ! -f "$src/$name" ]; then
     echo "  keep (no source): $name"
+    continue
   fi
 
   # stamp author, and point update/download URLs at this repo
@@ -29,9 +31,25 @@ for dest in userscripts/*.user.js; do
       printf "// @updateURL    %s\n", url
       printf "// @downloadURL  %s\n", url
     }
-  ' "$dest" > "$dest.tmp" && mv "$dest.tmp" "$dest"
+  ' "$src/$name" > "$dest.tmp"
+
+  sv=$(grep -m1 '^// @version' "$src/$name" | awk '{print $3}')
+  dv=$(grep -m1 '^// @version' "$dest" 2>/dev/null | awk '{print $3}')
+
+  if [ "$sv" != "$dv" ] && [ "$(printf '%s\n%s\n' "$sv" "$dv" | sort -V | tail -1)" = "$sv" ]; then
+    nv=$sv # bumped by hand in the source, publish that
+  elif [ -f "$dest" ] && diff -q -I '^// @version' "$dest.tmp" "$dest" >/dev/null; then
+    rm "$dest.tmp" # nothing changed, leave the published copy alone
+    continue
+  else
+    nv=$(bump "${dv:-$sv}") # body changed with no manual bump, take the next number
+  fi
+  sed "s|^// @version .*|// @version      $nv|" "$dest.tmp" > "$dest"
+  rm "$dest.tmp"
+  echo "  $name ${dv:-new} -> $nv"
+  n=$((n + 1))
 done
-echo "synced $n script(s) from $src"
+echo "synced $n changed script(s) from $src"
 
 # ---- all-in-one bundle -------------------------------------------------
 # Concatenates the scripts above, each behind a toggle. Feature order is fixed
@@ -59,7 +77,7 @@ connects=$(grep -h '^// @connect' $sources | awk '{print $3}' | sort -u)
   echo '// @namespace    https://wavez.fm/'
   echo "// @author       $author"
   echo '// @icon         https://wavez.fm/favicon.ico'
-  echo "// @version      $(date +%Y.%m.%d)"
+  echo "// @version      PENDING"
   echo "// @updateURL    $raw/$(basename "$bundle")"
   echo "// @downloadURL  $raw/$(basename "$bundle")"
   echo '// @description  Every Wavez userscript in one install. Toggle features from the userscript manager menu.'
@@ -106,6 +124,18 @@ connects=$(grep -h '^// @connect' $sources | awk '{print $3}' | sort -u)
   done
 
   echo "})();"
-} > "$bundle"
+} > "$bundle.tmp"
 
-echo "built $(basename "$bundle") ($(echo "$features" | wc -l | tr -d ' ') features, $(wc -l < "$bundle" | tr -d ' ') lines)"
+# rebuilt output identical apart from the version? leave the bundle alone
+if [ -f "$bundle" ] && diff -q -I '^// @version' "$bundle.tmp" "$bundle" >/dev/null; then
+  rm "$bundle.tmp"
+  echo "unchanged $(basename "$bundle")"
+else
+  # the bundle has always been dated, and going backwards would strand installs
+  bv=$(grep -m1 '^// @version' "$bundle" 2>/dev/null | awk '{print $3}')
+  nv=$(date +%Y.%m.%d)
+  [ "$nv" != "$bv" ] && [ "$(printf '%s\n%s\n' "$nv" "$bv" | sort -V | tail -1)" = "$nv" ] || nv=$(bump "$bv")
+  sed "s|^// @version .*|// @version      $nv|" "$bundle.tmp" > "$bundle"
+  rm "$bundle.tmp"
+  echo "built $(basename "$bundle") $bv -> $nv ($(echo "$features" | wc -l | tr -d ' ') features, $(wc -l < "$bundle" | tr -d ' ') lines)"
+fi
