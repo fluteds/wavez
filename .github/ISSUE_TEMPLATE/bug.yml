@@ -1,0 +1,75 @@
+name: Bug report
+description: A script stopped working or does the wrong thing.
+labels: [bug]
+body:
+  - type: dropdown
+    id: script
+    attributes:
+      label: Script
+      options:
+        - All-in-one (wavez-all)
+        - Translate
+        - Open in Spotify
+        - Chat Toggle
+        - Chat Pop-out
+        - Scrobble Toggle
+        - Imgur Fix
+        - Auto Woot
+        - Auto Grab
+        - Region Check
+        - Landing Site (fluteds.github.io/wavez)
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got instead.
+      value: |
+        - What you did:
+
+        - What you expected:
+
+        - What happened instead:
+
+        - Does it happen every time?:
+
+    validations:
+      required: true
+  - type: input
+    id: script-version
+    attributes:
+      label: Script version
+      description: The @version line at the top of the script, or the version your manager lists.
+      placeholder: E.G. v1.3, or 2026.08.09 for the all-in-one
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: E.G. Firefox 141
+    validations:
+      required: true
+  - type: input
+    id: manager
+    attributes:
+      label: Userscript manager and version
+      placeholder: E.G. Tampermonkey 5.3
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output
+      description: F12 then the Console tab. Paste any red errors or lines starting with [wz-.
+      render: shell
+  - type: checkboxes
+    id: checked
+    attributes:
+      label: Before you file
+      options:
+        - label: I am on the latest version of the script (userscript managers auto-update, but check).
+          required: true
+        - label: I was on the page the script needs (see Supported pages in the readme).
+          required: true

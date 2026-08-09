@@ -1,0 +1,21 @@
+name: Idea
+description: Suggest a new script or a change to an existing one.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What should it do
+      description: The feature you'd like to add, what it solves, and how you picture it working.
+      value: |
+        - What it does:
+        - What it solves:
+        - How you picture it working:
+        - Seen it done elsewhere:
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where on wavez.fm
+      placeholder: Room page, playlist page, profile, everywhere

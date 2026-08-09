@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Unofficial wavez.fm guide
+    url: https://fluted.omg.lol/wavezfm
+    about: A basic guide to using Wavez, covering rooms, the DJ queue, playlists and roles.
+  - name: Wavez.fm itself
+    url: https://wavez.fm
+    about: Problems with the site rather than these userscripts belong there, not here.
