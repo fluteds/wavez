@@ -9,8 +9,11 @@ body:
       description: The feature you'd like to add, what it solves, and how you picture it working.
       value: |
         - What it does:
+
         - What it solves:
+
         - How you picture it working:
+        
         - Seen it done elsewhere:
     validations:
       required: true
