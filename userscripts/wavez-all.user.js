@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      2026.08.26
+// @version      2026.08.27
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-all.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-all.user.js
 // @description  Every Wavez userscript in one install. Toggle features from the userscript manager menu.
@@ -270,7 +270,9 @@
             }
             render(el, original, res.text);
           })
-          .catch(function () {
+          .catch(function (err) {
+            // Endpoint down (bot page / CORS / rate-limit) fails silently otherwise; warn once so it's not mistaken for a dead selector.
+            if (!process._warned) { process._warned = true; console.warn("%c[wz-translate]", "color:#30C7FB;font-weight:bold", "translation request failed - the endpoint is likely blocking (bot check / CORS / rate-limit), not the selector:", err); }
             // Network/parse error: allow a retry next time the node is seen.
             if (el._wzSrc === original) el._wzSrc = null;
           });

@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      1.7
+// @version      1.8
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-translate.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-translate.user.js
 // @description  Translate wavez.fm chat and system messages into English (or any language) inline.
@@ -241,7 +241,9 @@ var MAX_INFLIGHT = 4;
         }
         render(el, original, res.text);
       })
-      .catch(function () {
+      .catch(function (err) {
+        // Endpoint down (bot page / CORS / rate-limit) fails silently otherwise; warn once so it's not mistaken for a dead selector.
+        if (!process._warned) { process._warned = true; console.warn("%c[wz-translate]", "color:#30C7FB;font-weight:bold", "translation request failed - the endpoint is likely blocking (bot check / CORS / rate-limit), not the selector:", err); }
         // Network/parse error: allow a retry next time the node is seen.
         if (el._wzSrc === original) el._wzSrc = null;
       });
