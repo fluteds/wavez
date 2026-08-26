@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      1.1
+// @version      1.2
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-open-in-spotify.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-open-in-spotify.user.js
 // @description  Adds an "Open in Spotfify" button next to the currently playing song to search for it on Spotify.
@@ -15,6 +15,8 @@
 
 (function () {
   'use strict';
+
+  const log = (...a) => console.log('%c[wz-spotify]', 'color:#1DB954;font-weight:bold', ...a);
 
   const ID = 'wavez-open-spotify-btn';
 
@@ -90,6 +92,6 @@
     ];
     cases.forEach(([raw, want]) =>
       console.assert(stripNoise(raw) === want, 'stripNoise:', raw, '->', stripNoise(raw), 'want', want));
-    console.log('[wz-spotify] self-check passed');
+    log('self-check passed');
   }
 })();

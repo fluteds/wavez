@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      2026.08.27
+// @version      2026.08.28
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-all.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-all.user.js
 // @description  Every Wavez userscript in one install. Toggle features from the userscript manager menu.
@@ -367,6 +367,8 @@
     (function () {
       'use strict';
 
+      const log = (...a) => console.log('%c[wz-spotify]', 'color:#1DB954;font-weight:bold', ...a);
+
       const ID = 'wavez-open-spotify-btn';
 
       // Drop YouTube descriptor tags in ()/[] ("Official Video", "Lyrics", "HD"). Plain text search beats track:/artist: filters since the artist is a YT channel handle.
@@ -441,7 +443,7 @@
         ];
         cases.forEach(([raw, want]) =>
           console.assert(stripNoise(raw) === want, 'stripNoise:', raw, '->', stripNoise(raw), 'want', want));
-        console.log('[wz-spotify] self-check passed');
+        log('self-check passed');
       }
     })();
   })(PAGE);
@@ -1181,6 +1183,9 @@
     (function () {
       'use strict';
 
+      var log = function () { console.log.apply(console, ["%c[wz-woot]", "color:#EF5350;font-weight:bold"].concat([].slice.call(arguments))); };
+      var warn = function () { console.warn.apply(console, ["%c[wz-woot]", "color:#EF5350;font-weight:bold"].concat([].slice.call(arguments))); };
+
       var enabled = localStorage.getItem('wavez-autowoot') !== 'off';
       var lastKey = null;
 
@@ -1198,7 +1203,7 @@
         if (!shouldVote(pb.playbackKey, lastKey, state.votes)) return;
         lastKey = pb.playbackKey;
         var res = api.actions.vote('woot');
-        if (!res || !res.ok) console.warn('[wz-woot] vote failed:', res && res.code);
+        if (!res || !res.ok) warn('vote failed:', res && res.code);
       }
 
       function init(api) {
@@ -1215,7 +1220,7 @@
           off: function () { enabled = false; localStorage.setItem('wavez-autowoot', 'off'); },
           get enabled() { return enabled; }
         };
-        console.log('[wz-woot] auto-woot ' + (enabled ? 'on' : 'off') + ' - toggle with WZWoot.on() / WZWoot.off()');
+        log('auto-woot ' + (enabled ? 'on' : 'off') + ' - toggle with WZWoot.on() / WZWoot.off()');
       }
 
       // The bridge may be injected after document-idle, so wait for it.
@@ -1238,7 +1243,7 @@
         console.assert(shouldVote('k2', 'k1', { canVote: false, clientVote: null }) === false, 'cannot vote, skip');
         console.assert(shouldVote('k2', 'k1', { canVote: true, clientVote: 'woot' }) === false, 'already wooted, skip');
         console.assert(shouldVote(null, 'k1', ok) === false, 'no playbackKey, skip');
-        console.log('[wz-woot] tests passed');
+        log('tests passed');
       }
     })();
   })(PAGE);
@@ -1261,7 +1266,8 @@
       var enabled = localStorage.getItem(LS_KEY) === 'on';
       var lastKey = null;
 
-      function log(m) { console.log('[wz-grab] ' + m); }
+      var log = function () { console.log.apply(console, ["%c[wz-grab]", "color:#FFCA28;font-weight:bold"].concat([].slice.call(arguments))); };
+      var warn = function () { console.warn.apply(console, ["%c[wz-grab]", "color:#FFCA28;font-weight:bold"].concat([].slice.call(arguments))); };
 
       // Grab once, after you woot. playbackKey = track, clientVote = your vote (manual or auto-woot), clientGrabbed = already in a playlist.
       function shouldGrab(key, last, votes) {
@@ -1473,8 +1479,7 @@
           init(api);
         } else if (++tries > 40) { // ~20s
           clearInterval(wait);
-          console.warn('[wz-grab] WavezFM bridge never appeared, so WZGrab is unavailable. ' +
-            'Are you inside a room? window.WavezFM is currently ' + typeof window.WavezFM + '.');
+          warn('WavezFM bridge never appeared, so WZGrab is unavailable. Are you inside a room? window.WavezFM is currently ' + typeof window.WavezFM + '.');
         }
       }, 500);
 
@@ -1486,7 +1491,7 @@
         console.assert(shouldGrab('k2', 'k1', { clientVote: 'meh', clientGrabbed: false }) === false, 'mehed, skip');
         console.assert(shouldGrab('k2', 'k1', { clientVote: 'woot', clientGrabbed: true }) === false, 'already in a playlist, skip');
         console.assert(shouldGrab(null, 'k1', wooted) === false, 'no playbackKey, skip');
-        console.log('[wz-grab] tests passed');
+        log('tests passed');
       }
     })();
   })(PAGE);
@@ -1511,7 +1516,7 @@
       var lockedTitles = {};
       var lastOffenders = []; // from the last check, for the console remove helpers
 
-      function log(m) { console.log('[wz-region] ' + m); }
+      var log = function () { console.log.apply(console, ["%c[wz-region]", "color:#9CCC65;font-weight:bold"].concat([].slice.call(arguments))); };
 
       // Snoop the app's own Authorization header off its requests and reuse it, since we can't guess it.
       var authHeader = null;
@@ -1644,8 +1649,8 @@
         results.forEach(function (r) { locked = locked.concat(r.locked); gone = gone.concat(r.gone); });
         var lockedCols = function (r) { return { playlist: r.playlistName, track: r.track, allowed: r.allowed }; };
         var goneCols = function (r) { return { playlist: r.playlistName, track: r.track, url: r.url }; };
-        if (locked.length) { console.log('[wz-region] playable only in ' + REGIONS.join('/') + ':'); console.table(locked.map(lockedCols)); }
-        if (gone.length) { console.log('[wz-region] deleted or private:'); console.table(gone.map(goneCols)); }
+        if (locked.length) { log('playable only in ' + REGIONS.join('/') + ':'); console.table(locked.map(lockedCols)); }
+        if (gone.length) { log('deleted or private:'); console.table(gone.map(goneCols)); }
         if (!locked.length && !gone.length) log('nothing region-locked or missing');
         return locked.length;
       }
@@ -1926,7 +1931,7 @@
         console.assert(limitedTo(['JP'], REGIONS) === false, 'JP only is not a US/CA lock');
         console.assert(limitedTo(null, REGIONS) === false, 'no restriction at all');
         console.assert(limitedTo([], REGIONS) === false, 'empty allowed list is not a lock');
-        console.log('[wz-region] self-check passed');
+        log('self-check passed');
       }
     })();
   })(PAGE);

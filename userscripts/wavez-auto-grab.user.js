@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      1.0
+// @version      1.1
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-grab.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-grab.user.js
 // @description  Grabs a track into a playlist whenever you woot it, with an on/off toggle in the corner.
@@ -28,7 +28,8 @@
   var enabled = localStorage.getItem(LS_KEY) === 'on';
   var lastKey = null;
 
-  function log(m) { console.log('[wz-grab] ' + m); }
+  var log = function () { console.log.apply(console, ["%c[wz-grab]", "color:#FFCA28;font-weight:bold"].concat([].slice.call(arguments))); };
+  var warn = function () { console.warn.apply(console, ["%c[wz-grab]", "color:#FFCA28;font-weight:bold"].concat([].slice.call(arguments))); };
 
   // Grab once, after you woot. playbackKey = track, clientVote = your vote (manual or auto-woot), clientGrabbed = already in a playlist.
   function shouldGrab(key, last, votes) {
@@ -240,8 +241,7 @@
       init(api);
     } else if (++tries > 40) { // ~20s
       clearInterval(wait);
-      console.warn('[wz-grab] WavezFM bridge never appeared, so WZGrab is unavailable. ' +
-        'Are you inside a room? window.WavezFM is currently ' + typeof window.WavezFM + '.');
+      warn('WavezFM bridge never appeared, so WZGrab is unavailable. Are you inside a room? window.WavezFM is currently ' + typeof window.WavezFM + '.');
     }
   }, 500);
 
@@ -253,6 +253,6 @@
     console.assert(shouldGrab('k2', 'k1', { clientVote: 'meh', clientGrabbed: false }) === false, 'mehed, skip');
     console.assert(shouldGrab('k2', 'k1', { clientVote: 'woot', clientGrabbed: true }) === false, 'already in a playlist, skip');
     console.assert(shouldGrab(null, 'k1', wooted) === false, 'no playbackKey, skip');
-    console.log('[wz-grab] tests passed');
+    log('tests passed');
   }
 })();

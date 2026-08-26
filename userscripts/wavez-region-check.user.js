@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      1.5
+// @version      1.6
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-region-check.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-region-check.user.js
 // @description  Flags tracks in your playlists that YouTube only allows in a couple of countries, so you can keep spinning.
@@ -30,7 +30,7 @@
   var lockedTitles = {};
   var lastOffenders = []; // from the last check, for the console remove helpers
 
-  function log(m) { console.log('[wz-region] ' + m); }
+  var log = function () { console.log.apply(console, ["%c[wz-region]", "color:#9CCC65;font-weight:bold"].concat([].slice.call(arguments))); };
 
   // Snoop the app's own Authorization header off its requests and reuse it, since we can't guess it.
   var authHeader = null;
@@ -163,8 +163,8 @@
     results.forEach(function (r) { locked = locked.concat(r.locked); gone = gone.concat(r.gone); });
     var lockedCols = function (r) { return { playlist: r.playlistName, track: r.track, allowed: r.allowed }; };
     var goneCols = function (r) { return { playlist: r.playlistName, track: r.track, url: r.url }; };
-    if (locked.length) { console.log('[wz-region] playable only in ' + REGIONS.join('/') + ':'); console.table(locked.map(lockedCols)); }
-    if (gone.length) { console.log('[wz-region] deleted or private:'); console.table(gone.map(goneCols)); }
+    if (locked.length) { log('playable only in ' + REGIONS.join('/') + ':'); console.table(locked.map(lockedCols)); }
+    if (gone.length) { log('deleted or private:'); console.table(gone.map(goneCols)); }
     if (!locked.length && !gone.length) log('nothing region-locked or missing');
     return locked.length;
   }
@@ -445,6 +445,6 @@
     console.assert(limitedTo(['JP'], REGIONS) === false, 'JP only is not a US/CA lock');
     console.assert(limitedTo(null, REGIONS) === false, 'no restriction at all');
     console.assert(limitedTo([], REGIONS) === false, 'empty allowed list is not a lock');
-    console.log('[wz-region] self-check passed');
+    log('self-check passed');
   }
 })();

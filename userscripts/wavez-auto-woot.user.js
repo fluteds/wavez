@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      1.1
+// @version      1.2
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js
 // @description  Woots every new track automatically via the WavezFM bridge, including while the tab is in the background.
@@ -15,6 +15,9 @@
 // Uses the official extension API: https://github.com/WavezFM/WavezFM-Extension-API
 (function () {
   'use strict';
+
+  var log = function () { console.log.apply(console, ["%c[wz-woot]", "color:#EF5350;font-weight:bold"].concat([].slice.call(arguments))); };
+  var warn = function () { console.warn.apply(console, ["%c[wz-woot]", "color:#EF5350;font-weight:bold"].concat([].slice.call(arguments))); };
 
   var enabled = localStorage.getItem('wavez-autowoot') !== 'off';
   var lastKey = null;
@@ -33,7 +36,7 @@
     if (!shouldVote(pb.playbackKey, lastKey, state.votes)) return;
     lastKey = pb.playbackKey;
     var res = api.actions.vote('woot');
-    if (!res || !res.ok) console.warn('[wz-woot] vote failed:', res && res.code);
+    if (!res || !res.ok) warn('vote failed:', res && res.code);
   }
 
   function init(api) {
@@ -50,7 +53,7 @@
       off: function () { enabled = false; localStorage.setItem('wavez-autowoot', 'off'); },
       get enabled() { return enabled; }
     };
-    console.log('[wz-woot] auto-woot ' + (enabled ? 'on' : 'off') + ' - toggle with WZWoot.on() / WZWoot.off()');
+    log('auto-woot ' + (enabled ? 'on' : 'off') + ' - toggle with WZWoot.on() / WZWoot.off()');
   }
 
   // The bridge may be injected after document-idle, so wait for it.
@@ -73,6 +76,6 @@
     console.assert(shouldVote('k2', 'k1', { canVote: false, clientVote: null }) === false, 'cannot vote, skip');
     console.assert(shouldVote('k2', 'k1', { canVote: true, clientVote: 'woot' }) === false, 'already wooted, skip');
     console.assert(shouldVote(null, 'k1', ok) === false, 'no playbackKey, skip');
-    console.log('[wz-woot] tests passed');
+    log('tests passed');
   }
 })();
