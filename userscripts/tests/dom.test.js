@@ -86,7 +86,7 @@ test('translate renders a translation for a chat message', async () => {
     html: '<!DOCTYPE html><body><div id="chat"><div class="wavezfm-chat-text-size-md">Hola mundo</div></div></body>',
     before(w) {
       // fake google translate, resolves sync
-      w.GM_xmlhttpRequest = ({ onload }) => onload({ responseText: JSON.stringify([[['Hello world', 'Hola mundo', null, null, 10]], null, 'es']) });
+      w.GM_xmlhttpRequest = ({ onload }) => onload({ responseText: JSON.stringify([['Hello world', 'es']]) });
     }
   });
   await tick(50);

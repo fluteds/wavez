@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      2026.08.09
+// @version      2026.08.26
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-all.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-all.user.js
 // @description  Every Wavez userscript in one install. Toggle features from the userscript manager menu.
@@ -12,8 +12,8 @@
 // @grant        GM_registerMenuCommand
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
+// @connect      clients5.google.com
 // @connect      niceatc.api.br
-// @connect      translate.googleapis.com
 // @connect      woot.niceatc.api.br
 // @run-at       document-start
 // ==/UserScript==
@@ -146,19 +146,16 @@
       function translate(text) {
         if (cache[text]) return Promise.resolve(cache[text]);
         return enqueue(function () {
+          // dict-chrome-ex (Google Dictionary extension's endpoint) is far less rate-limited than client=gtx, which bot-blocks a burst of messages on room load. Shape: [["translated text","src lang"]].
           var url =
-            "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" +
+            "https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=" +
             encodeURIComponent(config.target) +
-            "&dt=t&q=" +
+            "&q=" +
             encodeURIComponent(text);
           return httpGet(url).then(function (raw) {
             var data = JSON.parse(raw);
-            var out = (data[0] || [])
-              .map(function (seg) {
-                return seg && seg[0] ? seg[0] : "";
-              })
-              .join("");
-            var result = { text: out, src: data[2] || "" };
+            var seg = data[0] || [];
+            var result = { text: seg[0] || "", src: seg[1] || "" };
             cache[text] = result;
             return result;
           });
