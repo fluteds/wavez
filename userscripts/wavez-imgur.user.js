@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      1.8
+// @version      1.9
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-imgur.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-imgur.user.js
 // @description  Replace Imgur links, backgrounds and CSS url() badges (e.g. niceatc/nicewoot) with Rimgo safely. Avoids "Content not viewable in your region" placeholders.
@@ -18,7 +18,7 @@
 (function () {
   'use strict';
 
-  const ALTSITE = 'https://rimgo.vern.cc';
+  const ALTSITE = 'https://rimgo.ducks.party';
 
   function rewrite(value) {
     if (!value || !value.includes('imgur.com')) return value;

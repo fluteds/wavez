@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      2026.08.28
+// @version      2026.09.09
 // @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-all.user.js
 // @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-all.user.js
 // @description  Every Wavez userscript in one install. Toggle features from the userscript manager menu.
@@ -867,7 +867,7 @@
     (function () {
       'use strict';
 
-      const ALTSITE = 'https://rimgo.vern.cc';
+      const ALTSITE = 'https://rimgo.ducks.party';
 
       function rewrite(value) {
         if (!value || !value.includes('imgur.com')) return value;
