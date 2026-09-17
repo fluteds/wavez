@@ -4,8 +4,8 @@
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
 // @version      3.0
-// @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-sos-alert.user.js
-// @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-sos-alert.user.js
+// @updateURL    https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-sos-alert.user.js
+// @downloadURL  https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-sos-alert.user.js
 // @description  Plays an audible alert when the room footer's reports/SOS button lights up its bright badge, so a call isn't missed while you're tabbed away.
 // @match        https://wavez.fm/*
 // @run-at       document-idle

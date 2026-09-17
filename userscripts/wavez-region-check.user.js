@@ -4,8 +4,8 @@
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
 // @version      1.6
-// @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-region-check.user.js
-// @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-region-check.user.js
+// @updateURL    https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-region-check.user.js
+// @downloadURL  https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-region-check.user.js
 // @description  Flags tracks in your playlists that YouTube only allows in a couple of countries, so you can keep spinning.
 // @match        https://wavez.fm/*
 // @run-at       document-idle

@@ -4,8 +4,8 @@
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
 // @version      1.2
-// @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js
-// @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js
+// @updateURL    https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-woot.user.js
+// @downloadURL  https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-woot.user.js
 // @description  Woots every new track automatically via the WavezFM bridge, including while the tab is in the background.
 // @match        https://wavez.fm/*
 // @grant        none

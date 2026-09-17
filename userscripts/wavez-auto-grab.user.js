@@ -4,8 +4,8 @@
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
 // @version      1.1
-// @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-grab.user.js
-// @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-grab.user.js
+// @updateURL    https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-grab.user.js
+// @downloadURL  https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-grab.user.js
 // @description  Grabs a track into a playlist whenever you woot it, with an on/off toggle in the corner.
 // @match        https://wavez.fm/*
 // @grant        none

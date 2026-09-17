@@ -4,7 +4,7 @@
 set -e
 cd "$(dirname "$0")"
 src=../userscripts/wavez
-raw=https://github.com/fluteds/wavez/raw/main/userscripts
+raw=https://raw.githubusercontent.com/fluteds/wavez/main/userscripts
 author=fluteds
 
 bundle=userscripts/wavez-all.user.js

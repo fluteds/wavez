@@ -4,8 +4,8 @@
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
 // @version      1.1
-// @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-idle.user.js
-// @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-idle.user.js
+// @updateURL    https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-idle.user.js
+// @downloadURL  https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-idle.user.js
 // @description  Sets your presence to "away" after you've been off the tab for X minutes; restores it when you return. Leaves "dnd" alone.
 // @match        https://wavez.fm/*
 // @run-at       document-idle

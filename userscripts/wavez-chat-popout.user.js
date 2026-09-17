@@ -4,8 +4,8 @@
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
 // @version      4.2
-// @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-chat-popout.user.js
-// @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-chat-popout.user.js
+// @updateURL    https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-chat-popout.user.js
+// @downloadURL  https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-chat-popout.user.js
 // @description  Pops chat into a separate always-on-top window that mirrors the real wavez chat rail (pixel-identical markup + styling) and sends over the wavez WebSocket directly. No second session, fully interactive (read + send).
 // @match        https://wavez.fm/*
 // @run-at       document-start

@@ -4,8 +4,8 @@
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
 // @version      2.0
-// @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-new-users.user.js
-// @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-new-users.user.js
+// @updateURL    https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-new-users.user.js
+// @downloadURL  https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-new-users.user.js
 // @description  Pills accounts younger than NEW_DAYS in chat and the user list, using each account's real join date from the public profile API.
 // @match        https://wavez.fm/*
 // @run-at       document-idle

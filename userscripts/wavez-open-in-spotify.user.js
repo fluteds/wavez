@@ -4,8 +4,8 @@
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
 // @version      1.2
-// @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-open-in-spotify.user.js
-// @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-open-in-spotify.user.js
+// @updateURL    https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-open-in-spotify.user.js
+// @downloadURL  https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-open-in-spotify.user.js
 // @description  Adds an "Open in Spotfify" button next to the currently playing song to search for it on Spotify.
 // @match        https://wavez.fm/*
 // @match        https://wavez.fm/~/*

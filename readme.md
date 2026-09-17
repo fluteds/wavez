@@ -8,20 +8,20 @@ Userscripts that add features to wavez.fm. Needs [Tampermonkey](https://www.tamp
 
 | Addon | What it does | |
 | --- | --- | --- |
-| Translate | Translate chat and system messages inline. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-translate.user.js) |
-| Open in Spotify | Find the currently playing song on Spotify. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-open-in-spotify.user.js) |
-| Chat Toggle | Collapsible chat rail with an unread dot. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-sidebar.user.js) |
-| Chat Pop-out | Chat in its own window, read and send over the same session. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-chat-popout.user.js) |
-| Scrobble Toggle | Flip Last.fm scrobbling on and off from the room footer. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-scrobble.user.js) |
-| Imgur Fix | Reroute region-blocked Imgur images through Rimgo. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-imgur.user.js) |
-| Auto Woot | Woots every new track automatically. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-woot.user.js) |
-| Auto Grab | Grabs every track you woot. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-grab.user.js) |
-| Auto Idle | Marks you away after time off the tab, active when you return. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-auto-idle.user.js) |
-| Region Check | Flag playlist tracks blocked in your region, and remove them. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-region-check.user.js) |
+| Translate | Translate chat and system messages inline. | [Install](https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-translate.user.js) |
+| Open in Spotify | Find the currently playing song on Spotify. | [Install](https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-open-in-spotify.user.js) |
+| Chat Toggle | Collapsible chat rail with an unread dot. | [Install](https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-sidebar.user.js) |
+| Chat Pop-out | Chat in its own window, read and send over the same session. | [Install](https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-chat-popout.user.js) |
+| Scrobble Toggle | Flip Last.fm scrobbling on and off from the room footer. | [Install](https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-scrobble.user.js) |
+| Imgur Fix | Reroute region-blocked Imgur images through Rimgo. | [Install](https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-imgur.user.js) |
+| Auto Woot | Woots every new track automatically. | [Install](https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-woot.user.js) |
+| Auto Grab | Grabs every track you woot. | [Install](https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-grab.user.js) |
+| Auto Idle | Marks you away after time off the tab, active when you return. | [Install](https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-idle.user.js) |
+| Region Check | Flag playlist tracks blocked in your region, and remove them. | [Install](https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-region-check.user.js) |
 
 ### All-in-one
 
-Everything above in a single install: [wavez-all.user.js](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-all.user.js)
+Everything above in a single install: [wavez-all.user.js](https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-all.user.js)
 
 Toggle features from your userscript manager's menu (Tampermonkey ▸ the wavez.fm tab ▸ the ✓/✕ entries). Auto Woot, Auto Grab and Region Check start **off**, everything else starts on.
 
@@ -35,8 +35,8 @@ Room-staff tools. Same install method, listed apart because they are only useful
 
 | Addon | What it does | |
 | --- | --- | --- |
-| New Users | Pills accounts younger than two days in chat and the user list. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-new-users.user.js) |
-| SOS Alert | Beeps when the room footer's SOS badge lights up, so a report isn't missed. Needs Ambassador or above. | [Install](https://github.com/fluteds/wavez/raw/main/userscripts/wavez-sos-alert.user.js) |
+| New Users | Pills accounts younger than two days in chat and the user list. | [Install](https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-new-users.user.js) |
+| SOS Alert | Beeps when the room footer's SOS badge lights up, so a report isn't missed. Needs Ambassador or above. | [Install](https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-sos-alert.user.js) |
 
 ## Installing
 

@@ -3,8 +3,8 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @version      1.0
-// @updateURL    https://github.com/fluteds/wavez/raw/main/userscripts/wavez-scrobble.user.js
-// @downloadURL  https://github.com/fluteds/wavez/raw/main/userscripts/wavez-scrobble.user.js
+// @updateURL    https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-scrobble.user.js
+// @downloadURL  https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-scrobble.user.js
 // @description  Flip wavez's Last.fm scrobbling on/off from a room-footer button, no digging through settings.
 // @match        https://wavez.fm/*
 // @icon         https://wavez.fm/favicon.ico?favicon.39fukza6fvb7p.ico
