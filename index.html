@@ -9,292 +9,546 @@
     <meta property="og:title" content="Wavez Tools">
     <meta property="og:description" content="A collection of quality of life tools for wavez.fm.">
     <meta property="og:url" content="https://fluteds.github.io/wavez">
-    <meta name="theme-color" content="#080808">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#f5f5f5" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="assets/favicon.ico" sizes="any">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&family=Sora:wght@400;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Doto:wght@500&family=Space+Grotesk:wght@400;500&family=Space+Mono:wght@400&display=swap">
     <style>
         :root {
-            --bg-primary: #080808;
-            --bg-secondary: #0f0f0f;
-            --bg-elevated: #151515;
-            --bg-hover: #1b1b1b;
-            --border: #262626;
-            --border-light: #1e1e1e;
-            --text-primary: #f4f6f8;
-            --text-secondary: #c2c8d1;
-            --text-muted: #8b92a0;
-            --accent: #42a5dc;
-            --accent-soft: #42a5dc26;
-            --accent-glow: #42a5dc33;
-            --radius: .5rem;
-            --panel: linear-gradient(155deg, var(--bg-elevated), var(--bg-secondary));
-            --sans: "Manrope", "SF Pro Text", "Segoe UI", "Helvetica Neue", sans-serif;
-            --display: "Sora", "SF Pro Display", "Helvetica Neue", sans-serif;
+            --black: #000000;
+            --surface: #111111;
+            --surface-raised: #1a1a1a;
+            --border: #222222;
+            --border-visible: #333333;
+            --text-disabled: #666666;
+            --text-secondary: #999999;
+            --text-primary: #e8e8e8;
+            --text-display: #ffffff;
+            --accent: #d71921;
+            --brand: #42a5dc;
+            --display: "Doto", "Space Mono", monospace;
+            --sans: "Space Grotesk", "DM Sans", system-ui, sans-serif;
+            --mono: "Space Mono", "JetBrains Mono", "SF Mono", monospace;
+            --ease: cubic-bezier(.25, .1, .25, 1);
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --black: #f5f5f5;
+                --surface: #ffffff;
+                --surface-raised: #f0f0f0;
+                --border: #e8e8e8;
+                --border-visible: #cccccc;
+                --text-disabled: #999999;
+                --text-secondary: #666666;
+                --text-primary: #1a1a1a;
+                --text-display: #000000;
+                --brand: #1d7fb8;
+            }
         }
 
         * { box-sizing: border-box; }
 
         body {
             margin: 0;
-            min-height: 100vh;
-            padding: clamp(2rem, 6vw, 5rem) 1.25rem 4rem;
-            font: 400 15px/1.625 var(--sans);
+            padding: 0 var(--pad, 24px) 64px;
+            font: 400 16px/1.5 var(--sans);
+            color: var(--text-primary);
+            background: var(--black);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        @media (max-width: 40rem) { body { --pad: 16px; } }
+
+        main, .topbar, footer { position: relative; width: min(100%, 68rem); margin-inline: auto; }
+
+        /* Theme glow lives in a fixed overlay, because background-image gradients cannot transition. Opacity can. */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            opacity: 0;
+            pointer-events: none;
+            background: radial-gradient(38rem 24rem at 15% -6%, #42a5dc2b, transparent 70%), radial-gradient(32rem 22rem at 88% -4%, #a970ff26, transparent 70%);
+            transition: opacity .5s var(--ease);
+        }
+
+        /* Everything that repaints when the theme flips */
+        body, .start, .note, .block, .settings li, details summary, .stat, .head, .hero, footer, .tag, code, .wordmark, .idx, .what, .val, .opts {
+            transition: background-color .5s var(--ease), border-color .5s var(--ease), color .5s var(--ease), fill .5s var(--ease);
+        }
+
+        a { color: var(--brand); text-underline-offset: 3px; }
+
+        .label {
+            font: 400 11px/1.2 var(--mono);
+            letter-spacing: .08em;
+            text-transform: uppercase;
             color: var(--text-secondary);
-            background: radial-gradient(circle at top, var(--accent-glow), transparent 32%), linear-gradient(180deg, var(--bg-primary), var(--bg-secondary)) fixed;
-            background-color: var(--bg-primary);
         }
 
-        main {
-            width: min(100%, 44rem);
-            margin: 0 auto;
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 24px 0;
+        }
+
+        .wordmark {
+            width: 104px;
+            cursor: pointer;
+            height: auto;
+            display: block;
+            fill: var(--text-display);
+        }
+
+        .topbar .label { text-align: right; }
+
+        .hero {
+            position: relative;
+            padding: clamp(48px, 9vw, 96px) 0 clamp(48px, 8vw, 80px);
+            border-top: 1px solid var(--border);
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 40%;
+            z-index: 0;
+            opacity: .5;
+            background-image: radial-gradient(circle, var(--border-visible) 1px, transparent 1px);
+            background-size: 16px 16px;
+            -webkit-mask-image: linear-gradient(180deg, #000, transparent);
+            mask-image: linear-gradient(180deg, #000, transparent);
+        }
+
+        .hero-grid {
+            position: relative;
             display: grid;
-            gap: 1.25rem;
-        }
-
-        header {
-            margin-bottom: .75rem;
-            text-align: center;
+            grid-template-columns: 1fr 15rem;
+            gap: clamp(32px, 6vw, 64px);
+            align-items: end;
         }
 
         h1 {
             margin: 0;
-            font-family: var(--display);
-            font-size: clamp(2rem, 7vw, 2.75rem);
-            font-weight: 700;
-            letter-spacing: -.02em;
-            color: var(--text-primary);
+            font: 500 clamp(3.25rem, 12vw, 6.5rem)/.92 var(--display);
+            letter-spacing: -.03em;
+            text-transform: uppercase;
+            color: var(--text-display);
+            background: linear-gradient(115deg, #42a5dc, #a970ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: var(--text-display);
+            transition: -webkit-text-fill-color .5s var(--ease);
         }
 
-        h1 span { color: var(--accent); }
-
-        header p {
-            margin: .5rem 0 0;
-            color: var(--text-muted);
+        .lede {
+            max-width: 34rem;
+            margin: 24px 0 0;
+            color: var(--text-secondary);
         }
 
-        .plug {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto .25rem;
-            background: url(assets/admin-avatar.png) -400px 0 / 2400px 100px;
-            animation: dance 1.8s steps(20) infinite;
+        .stats { margin: 0; border-top: 1px solid var(--border-visible); }
+
+        .stat dd { margin: 0; }
+
+        .stat {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
         }
 
-        @keyframes dance { from { background-position-x: -400px; } to { background-position-x: -2400px; } }
-
-        .logo {
-            width: clamp(9rem, 30vw, 12rem);
-            height: auto;
-            margin-bottom: 1.25rem;
-            fill: var(--text-primary);
-            opacity: .9;
-            filter: drop-shadow(0 0 32px var(--accent-glow));
+        .stat b {
+            font: 400 14px/1.2 var(--mono);
+            color: var(--text-display);
         }
 
-        section {
-            padding: 1.5rem;
+        .start {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: clamp(24px, 4vw, 48px);
+            align-items: center;
+            padding: 24px;
             border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--panel);
+            border-radius: 8px;
+            background: var(--surface);
         }
 
-        h2 {
-            margin: 0 0 .75rem;
-            font-family: var(--display);
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        p { margin: 0; }
-
-        p + p { margin-top: .75rem; }
-
-        a {
-            color: var(--accent);
-            text-underline-offset: 2px;
-        }
-
-        ol {
-            margin: 0;
-            padding-left: 1.25rem;
-        }
-
-        ol li + li { margin-top: .6rem; }
-
-        .hint {
-            margin: -.25rem 0 1rem;
-            color: var(--text-muted);
-            font-size: .9rem;
-        }
-
-        ul {
+        .steps {
             margin: 0;
             padding: 0;
             list-style: none;
+            counter-reset: step;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-            gap: .5rem;
+            gap: 8px;
         }
 
-        ul a {
-            height: 100%;
-            display: grid;
-            grid-template-columns: auto 1fr;
+        .steps li {
+            position: relative;
+            padding-left: 2rem;
+            counter-increment: step;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .steps li::before {
+            content: counter(step, decimal-leading-zero);
+            position: absolute;
+            left: 0;
+            top: 0;
+            font: 400 11px/2.2 var(--mono);
+            letter-spacing: .08em;
+            color: var(--text-disabled);
+        }
+
+        .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .note {
+            margin-top: 16px;
+            padding: 20px 24px;
+            border: 1px solid var(--border);
+            border-left: 2px solid var(--brand);
+            border-radius: 8px;
+            background: var(--surface);
+        }
+
+        .note .label { margin: 0 0 10px; }
+
+        .note p {
+            max-width: 46rem;
+            margin: 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .note p + p { margin-top: 8px; }
+
+        .note b { color: var(--text-primary); font-weight: 500; }
+
+        .btn {
+            display: inline-flex;
             align-items: center;
-            align-content: center;
-            column-gap: .875rem;
-            padding: .75rem .875rem;
-            border: 1px solid var(--border-light);
-            border-radius: var(--radius);
-            background: var(--bg-secondary);
+            justify-content: center;
+            min-height: 44px;
+            padding: 12px 24px;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            font: 400 13px/1 var(--mono);
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: opacity .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease);
+        }
+
+        .btn-primary { background: var(--text-display); color: var(--black); }
+
+        .btn-primary:hover { opacity: .85; }
+
+        .btn-secondary { border-color: var(--border-visible); color: var(--text-primary); }
+
+        .btn-secondary:hover { border-color: var(--text-primary); }
+
+        .btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+        section { margin-top: clamp(48px, 8vw, 64px); }
+
+        .head {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 0 0 8px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-visible);
+        }
+
+        .head h2 {
+            margin: 0;
+            font: 400 11px/1.2 var(--mono);
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--text-display);
+        }
+
+        .head .num { color: var(--text-disabled); }
+
+        .head .count { margin-left: auto; }
+
+        .rows { margin: 0; padding: 0; list-style: none; }
+
+        .row {
+            display: grid;
+            grid-template-columns: 2.5rem 1.5rem minmax(7rem, 10rem) 1fr auto;
+            align-items: center;
+            gap: 4px 16px;
+            padding: 14px 8px 14px 0;
+            border-bottom: 1px solid var(--border);
             color: var(--text-primary);
             text-decoration: none;
-            transition: background .15s, border-color .15s;
+            transition: background .15s var(--ease), box-shadow .15s var(--ease), border-color .5s var(--ease), color .5s var(--ease);
         }
 
-        ul a:hover,
-        ul a:focus-visible {
-            background: var(--bg-hover);
-            border-color: var(--accent);
+        .row:hover, .row:focus-visible {
+            background: var(--surface);
+            box-shadow: inset 2px 0 0 var(--brand);
             outline: none;
         }
 
-        ul a:focus-visible { box-shadow: 0 0 0 3px var(--accent-soft); }
+        .row:focus-visible { box-shadow: inset 2px 0 0 var(--brand), 0 0 0 1px var(--brand); }
 
-        ul span {
-            grid-row: span 2;
-            display: grid;
-            place-items: center;
-            width: 2.25rem;
-            height: 2.25rem;
-            border-radius: var(--radius);
-            background: var(--accent-soft);
-            color: var(--accent);
+        .idx {
+            padding-left: 8px;
+            font: 400 11px/1.2 var(--mono);
+            letter-spacing: .08em;
+            color: var(--text-disabled);
         }
+
+        .row .i { color: var(--text-secondary); transition: color .15s var(--ease); }
+
+        .row:hover .i { color: var(--text-display); }
+
+        .name { font-weight: 500; letter-spacing: -.01em; }
+
+        .desc { color: var(--text-secondary); font-size: 14px; }
+
+        .act {
+            font: 400 11px/1.2 var(--mono);
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--text-disabled);
+            transition: color .15s var(--ease);
+        }
+
+        .row:hover .act, .row:focus-visible .act { color: var(--brand); }
+
+        .tag {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 8px;
+            border: 1px solid var(--text-disabled);
+            border-radius: 4px;
+            font: 400 10px/1.4 var(--mono);
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            font-style: normal;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .tag.pop { color: var(--brand); border-color: var(--brand); }
+
+        .tag.req { color: var(--accent); border-color: var(--accent); }
+
+        .settings { margin: 0; padding: 0; list-style: none; }
+
+        .settings li {
+            display: grid;
+            grid-template-columns: 9rem 11rem 1fr;
+            align-items: baseline;
+            gap: 4px 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .settings b { font-weight: 500; color: var(--text-primary); }
+
+        .settings .what { color: var(--text-display); font-size: 14px; }
+
+        .settings .set { font: 400 12px/1.5 var(--mono); color: var(--text-disabled); }
+
+        .settings code { color: var(--brand); }
+
+        .settings .val { color: var(--text-display); }
+
+        .settings .opts { display: block; margin-top: 4px; color: var(--text-disabled); }
+
+        details summary {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+            list-style: none;
+            cursor: pointer;
+            font: 400 11px/1.2 var(--mono);
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        details summary::-webkit-details-marker { display: none; }
+
+        details summary::after { content: "[ Show ]"; color: var(--brand); }
+
+        details[open] summary::after { content: "[ Hide ]"; }
+
+        details summary:hover { color: var(--text-display); }
+
+        .settings li.req .val { color: var(--accent); }
+
+        @media (max-width: 52rem) {
+            .settings li { grid-template-columns: 1fr; gap: 2px; padding: 14px 0; }
+            .settings b { color: var(--text-display); }
+        }
+
+        .hint {
+            max-width: 46rem;
+            margin: 12px 0 0;
+            font-size: 13px;
+            color: var(--text-disabled);
+        }
+
+        .hint b { color: var(--text-secondary); font-weight: 400; font-family: var(--mono); font-size: 12px; }
+
+        .row.alert .idx { color: var(--accent); }
+
+        .blocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr)); gap: 16px; }
+
+        .block {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--surface);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: border-color .2s var(--ease);
+        }
+
+        .block:hover, .block:focus-visible { border-color: var(--border-visible); outline: none; }
+
+        .block:focus-visible { border-color: var(--brand); }
+
+        .block h3 {
+            margin: 0;
+            font: 500 18px/1.3 var(--sans);
+            color: var(--text-display);
+        }
+
+        .block p { margin: 0; font-size: 14px; }
+
+        .block img {
+            display: block;
+            width: 100%;
+            margin-top: 4px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .block .go { margin-top: auto; padding-top: 8px; color: var(--brand); }
+
+        .prose { max-width: 38rem; margin: 0; color: var(--text-secondary); }
 
         .i {
             width: 20px;
             height: 20px;
             fill: none;
             stroke: currentColor;
-            stroke-width: 2;
+            stroke-width: 1.5;
             stroke-linecap: round;
             stroke-linejoin: round;
         }
 
-        ul b {
-            display: block;
-            font-weight: 600;
-            font-size: .95rem;
-        }
+        .block > .i:first-child { color: var(--text-display); }
 
-        ul small {
-            display: block;
-            color: var(--text-muted);
-            font-size: .85rem;
-        }
-
-        ul small .note {
-            display: inline-block;
-            margin: .3rem 0 0 .4rem;
-            padding: .1rem .45rem;
-            border: 1px solid var(--accent-soft);
-            border-radius: .35rem;
-            background: var(--accent-soft);
-            color: var(--accent);
-            font-size: .75rem;
-            font-style: normal;
-        }
-
-        .cta {
-            display: block;
-            width: fit-content;
-            margin: .5rem auto 0;
-            padding: .7rem 1.75rem;
-            border-radius: var(--radius);
-            background: var(--accent);
-            color: var(--bg-primary);
-            font-weight: 600;
-            text-decoration: none;
-            box-shadow: 0 0 24px -4px var(--accent-glow);
-            transition: filter .15s;
-        }
-
-        .cta:hover { filter: brightness(1.1); }
-
-        .promo {
+        .title {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
-            gap: 1rem;
-            padding: 1.25rem 1.5rem;
-            border: 1px solid var(--accent-soft);
-            border-radius: var(--radius);
-            background: linear-gradient(155deg, var(--accent-soft), var(--bg-secondary) 60%);
-            text-decoration: none;
-            transition: border-color .15s;
         }
 
-        .promo:hover { border-color: var(--accent); }
-
-        .promo > svg:first-child {
+        .plug {
             flex: none;
-            width: 28px;
-            height: 28px;
-            color: var(--accent);
+            width: 0;
+            height: 100px;
+            margin-left: 0;
+            opacity: 0;
+            overflow: hidden;
+            background: url(assets/admin-avatar.png) -400px 0 / 2400px 100px;
+            animation: dance 1.8s steps(20) infinite;
+            animation-play-state: paused;
+            transition: width .45s var(--ease), margin-left .45s var(--ease), opacity .45s var(--ease);
         }
 
-        .promo div { flex: 1; }
-
-        .promo h2 { margin: 0; }
-
-        .promo p {
-            color: var(--text-muted);
-            font-size: .9rem;
+        .plug.show {
+            width: 100px;
+            margin-left: 24px;
+            opacity: 1;
+            animation-play-state: running;
         }
 
-        .promo .arrow {
-            flex: none;
-            width: 18px;
-            height: 18px;
-            color: var(--accent);
-            transition: transform .2s;
-        }
-
-        .promo:hover .arrow { transform: translateX(4px); }
-
-        .promo-img { align-items: flex-start; }
-
-        .promo-img > svg:first-child { margin-top: .15rem; }
-
-        .promo img {
-            display: block;
-            width: 100%;
-            margin-top: .875rem;
-            border: 1px solid var(--border-light);
-            border-radius: var(--radius);
-        }
-
-        .promo code {
-            padding: .1rem .35rem;
-            border-radius: .25rem;
-            background: var(--bg-primary);
-            color: var(--text-secondary);
-            font-size: .95em;
-        }
+        @keyframes dance { from { background-position-x: -400px; } to { background-position-x: -2400px; } }
 
         footer {
-            width: min(100%, 44rem);
-            margin: 2.5rem auto 0;
-            text-align: center;
-            font-size: .875rem;
-            color: var(--text-muted);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 8px 24px;
+            margin-top: clamp(48px, 8vw, 64px);
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
         }
 
-        footer .disclaimer { margin-top: .75rem; opacity: .7; font-size: .8rem; }
+        footer a { color: var(--text-secondary); }
+
+        footer a:hover { color: var(--text-display); }
+
+        @media (max-width: 52rem) {
+            .hero-grid { grid-template-columns: 1fr; align-items: start; }
+            .start { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 40rem) {
+            .row { grid-template-columns: 2.25rem 1.25rem 1fr auto; padding-block: 12px; }
+            .row .desc { grid-column: 3 / -1; padding-right: 8px; }
+            .tag { margin: 6px 0 0 0; }
+            .topbar { flex-wrap: wrap; padding: 20px 0; }
+            .wordmark { width: 88px; }
+            .actions { width: 100%; }
+            .btn { width: 100%; }
+            .note { padding: 16px; }
+            .block { padding: 20px; }
+            .stat { padding: 10px 0; }
+        }
+
+        /* Secret theme: double-click the wordmark. Everything is tokens, so a class on <html> repaints the page. */
+        :root.wavez {
+            --black: #06070e;
+            --surface: #12141d;
+            --surface-raised: #1a1d28;
+            --border: #252a3b;
+            --border-visible: #454c63;
+            --text-disabled: #6f7789;
+            --text-secondary: #9aa3b8;
+            --text-primary: #e9ecf5;
+            --text-display: #ffffff;
+            --brand: #5bb8ea;
+            --grad: linear-gradient(115deg, #42a5dc, #a970ff);
+        }
+
+        :root.wavez body::before { opacity: 1; }
+
+        :root.wavez h1 { -webkit-text-fill-color: transparent; }
+
+        :root.wavez .head .num { color: var(--brand); }
+
+        :root.wavez .btn-primary { background: var(--grad); color: #06060a; }
+
+        :root.wavez .wordmark { fill: var(--brand); }
 
         @media (prefers-reduced-motion: reduce) {
-            ul a, .cta, .promo, .promo .arrow { transition: none; }
+            .plug { animation: none; transition: none; }
+            .row, .btn, .block, .act, .row .i { transition: none; }
+            body, body::before, h1, .start, .note, .settings li, details summary, .stat, .head, .hero, footer, .tag, code, .wordmark, .idx, .what, .val, .opts { transition: none; }
         }
     </style>
 </head>
@@ -314,109 +568,162 @@
         <symbol id="external" viewBox="0 0 24 24"><path d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6" /><path d="M11 13l9 -9" /><path d="M15 4h5v5" /></symbol>
         <symbol id="radio" viewBox="0 0 24 24"><path d="M14 3l-9.371 3.749a1 1 0 0 0 -.629 .928v11.323a1 1 0 0 0 1 1h14a1 1 0 0 0 1 -1v-11a1 1 0 0 0 -1 -1h-14.5" /><path d="M4 12h16" /><path d="M7 12v-2" /><path d="M17 16v.01" /><path d="M13 16v.01" /></symbol>
         <symbol id="world" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M3.6 9h16.8" /><path d="M3.6 15h16.8" /><path d="M11.5 3a17 17 0 0 0 0 18" /><path d="M12.5 3a17 17 0 0 1 0 18" /></symbol>
-        <symbol id="package" viewBox="0 0 24 24"><path d="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5" /><path d="M12 12l8 -4.5" /><path d="M12 12l0 9" /><path d="M12 12l-8 -4.5" /><path d="M16 5.25l-8 4.5" /></symbol>
-        <symbol id="arrow-right" viewBox="0 0 24 24"><path d="M5 12l14 0" /><path d="M13 18l6 -6" /><path d="M13 6l6 6" /></symbol>
         <symbol id="discord" viewBox="0 0 24 24"><path d="M8 12a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" /><path d="M14 12a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" /><path d="M15.5 17c0 1 1.5 3 2 3c1.5 0 2.833 -1.667 3.5 -3c.667 -1.667 .5 -5.833 -1.5 -11.5c-1.457 -1.015 -3 -1.34 -4.5 -1.5l-.972 1.923a11.913 11.913 0 0 0 -4.053 0l-.975 -1.923c-1.5 .16 -3.043 .485 -4.5 1.5c-2 5.667 -2.167 9.833 -1.5 11.5c.667 1.333 2 3 3.5 3c.5 0 2 -2 2 -3" /><path d="M7 16.5c3.5 1 6.5 1 10 0" /></symbol>
         <symbol id="book" viewBox="0 0 24 24"><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6l0 13" /><path d="M12 6l0 13" /><path d="M21 6l0 13" /></symbol>
     </svg>
+    <div class="topbar">
+        <svg class="wordmark" viewBox="0 0 900 394" role="img" aria-label="WavezFM"><path d="M709.76 6.88077C732.915 18.6481 744.303 39.5255 772.393 117.721C787.576 160.235 791.752 163.272 842.997 166.309C881.335 168.587 886.27 169.346 892.723 177.697C901.074 187.946 901.833 207.305 894.621 216.795C885.131 229.321 863.874 235.015 826.674 235.015C787.956 235.015 771.634 231.219 753.413 217.174C738.989 206.546 717.732 167.448 705.964 130.627C701.409 115.823 695.336 99.1214 692.299 93.0479C687.744 83.9377 685.846 83.1786 681.67 87.3541C676.736 92.6683 659.275 149.607 647.887 197.056C614.103 339.023 602.716 371.288 581.838 386.092C557.544 403.553 529.454 391.406 511.993 356.484C506.679 345.096 491.495 299.545 478.589 255.892C465.683 211.86 453.536 174.66 451.638 172.382C446.324 167.068 444.047 172.003 417.475 242.607C389.385 318.145 384.071 328.774 368.128 344.337C352.945 359.141 336.243 362.937 318.402 355.345C296.006 345.855 283.859 319.664 247.039 200.852C231.476 150.366 223.504 132.525 217.051 132.525C215.153 132.525 206.422 147.329 197.692 165.55C188.961 184.15 177.194 208.444 171.88 219.831C160.112 244.125 143.79 263.484 128.986 271.456C115.7 278.288 91.0269 278.288 74.7045 271.456C52.6882 262.345 12.8312 234.256 6.37812 223.248C-5.76879 203.129 -0.0749455 181.493 19.2842 175.04C33.3291 169.725 47.7535 174.28 75.4637 192.501L95.2024 205.786L104.313 197.435C109.627 192.501 115.7 183.391 118.357 176.938C137.717 127.97 159.733 87.7336 174.157 74.8275C203.386 48.6357 234.892 47.8766 261.463 73.3091C279.684 90.0111 288.794 110.129 313.467 186.427C325.614 223.627 336.622 253.994 338.52 253.994C342.316 253.994 348.01 241.468 372.304 177.697C406.087 89.252 418.994 71.7908 451.638 71.7908C466.442 71.7908 471.377 73.6886 481.626 83.558C500.606 102.158 511.614 131.766 543.499 253.235C548.434 271.835 553.369 283.982 556.026 283.223C560.201 281.705 565.516 263.105 588.671 167.068C615.242 56.9868 631.185 21.3051 660.793 6.5011C677.875 -2.22949 691.919 -2.22941 709.76 6.88077Z" /></svg>
+        <p class="label">Unofficial<br>Open source</p>
+    </div>
 
     <main>
-        <header>
-            <div class="plug" role="img" aria-label="Dancing plug.dj avatar" hidden></div>
-            <svg class="logo" viewBox="0 0 900 394" role="img" aria-label="WavezFM"><path d="M709.76 6.88077C732.915 18.6481 744.303 39.5255 772.393 117.721C787.576 160.235 791.752 163.272 842.997 166.309C881.335 168.587 886.27 169.346 892.723 177.697C901.074 187.946 901.833 207.305 894.621 216.795C885.131 229.321 863.874 235.015 826.674 235.015C787.956 235.015 771.634 231.219 753.413 217.174C738.989 206.546 717.732 167.448 705.964 130.627C701.409 115.823 695.336 99.1214 692.299 93.0479C687.744 83.9377 685.846 83.1786 681.67 87.3541C676.736 92.6683 659.275 149.607 647.887 197.056C614.103 339.023 602.716 371.288 581.838 386.092C557.544 403.553 529.454 391.406 511.993 356.484C506.679 345.096 491.495 299.545 478.589 255.892C465.683 211.86 453.536 174.66 451.638 172.382C446.324 167.068 444.047 172.003 417.475 242.607C389.385 318.145 384.071 328.774 368.128 344.337C352.945 359.141 336.243 362.937 318.402 355.345C296.006 345.855 283.859 319.664 247.039 200.852C231.476 150.366 223.504 132.525 217.051 132.525C215.153 132.525 206.422 147.329 197.692 165.55C188.961 184.15 177.194 208.444 171.88 219.831C160.112 244.125 143.79 263.484 128.986 271.456C115.7 278.288 91.0269 278.288 74.7045 271.456C52.6882 262.345 12.8312 234.256 6.37812 223.248C-5.76879 203.129 -0.0749455 181.493 19.2842 175.04C33.3291 169.725 47.7535 174.28 75.4637 192.501L95.2024 205.786L104.313 197.435C109.627 192.501 115.7 183.391 118.357 176.938C137.717 127.97 159.733 87.7336 174.157 74.8275C203.386 48.6357 234.892 47.8766 261.463 73.3091C279.684 90.0111 288.794 110.129 313.467 186.427C325.614 223.627 336.622 253.994 338.52 253.994C342.316 253.994 348.01 241.468 372.304 177.697C406.087 89.252 418.994 71.7908 451.638 71.7908C466.442 71.7908 471.377 73.6886 481.626 83.558C500.606 102.158 511.614 131.766 543.499 253.235C548.434 271.835 553.369 283.982 556.026 283.223C560.201 281.705 565.516 263.105 588.671 167.068C615.242 56.9868 631.185 21.3051 660.793 6.5011C677.875 -2.22949 691.919 -2.22941 709.76 6.88077Z" /></svg>
-            <h1>Wavez <span>Tools</span></h1>
-            <p>Quality of life tools for wavez.fm</p>
-        </header>
+        <div class="hero">
+            <div class="hero-grid">
+                <div>
+                    <div class="title">
+                        <h1>Wavez<br>Tools</h1>
+                        <div class="plug" role="img" aria-label="Dancing plug.dj avatar" aria-hidden="true"></div>
+                    </div>
+                    <p class="lede">Small things that I was annoyed with, fixed one script at a time.</p>
+                </div>
 
-        <section>
-            <h2>What Is This?</h2>
-            <p>This is a collection of things I've made for Wavez. From Userscripts, Discord statuses and general guides.</p>
-
-            <p>I've spent a lot of hours in the rooms and some small things kept turning up. Chat I couldn't collapse. Songs I wanted to search on Spotify. 3rd party images that wouldn't load in my region, thanks UK law. So I fixed them, one script at a time. All code is open source, so you can see what you're installing.</p>
-        </section>
-
-        <a class="promo" href="https://fluted.omg.lol/wavezfm">
-            <svg class="i" aria-hidden="true"><use href="#book" /></svg>
-            <div>
-                <h2>New to Wavez.fm?</h2>
-                <p>An unofficial guide to rooms, the DJ queue, playlists, roles and room settings. Written from my own notes, not official docs.</p>
+                <dl class="stats">
+                    <div class="stat"><dt class="label">Scripts</dt><dd><b>12</b></dd></div>
+                    <div class="stat"><dt class="label">Install</dt><dd><b>1 CLICK</b></dd></div>
+                    <div class="stat"><dt class="label">Updates</dt><dd><b>AUTO</b></dd></div>
+                </dl>
             </div>
-            <svg class="i arrow" aria-hidden="true"><use href="#arrow-right" /></svg>
-        </a>
+        </div>
 
-        <section>
-            <h2>Installing Userscripts</h2>
-            <ol>
-                <li>Get <a href="https://www.tampermonkey.net" target="_blank" rel="noopener">Tampermonkey</a> (or any userscript manager).</li>
-                <li>Click a script below. They self-update after that.</li>
+        <div class="start">
+            <ol class="steps">
+                <li>Install <a href="https://www.tampermonkey.net" target="_blank" rel="noopener">Tampermonkey</a>, or any userscript manager.</li>
+                <li>Take the bundle, or pick scripts below.</li>
             </ol>
-        </section>
-
-        <a class="promo" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-all.user.js">
-            <svg class="i" aria-hidden="true"><use href="#package" /></svg>
-            <div>
-                <h2>Get all scripts in one install</h2>
-                <p>Toggle each feature from your userscript manager's menu.</p>
-                <p>Auto Woot, Auto Grab and Region Check start off by default.</p>
+            <div class="actions">
+                <a class="btn btn-primary" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-all.user.js">Install the bundle</a>
+                <a class="btn btn-secondary" href="https://wavez.fm">Open wavez.fm</a>
             </div>
-            <svg class="i arrow" aria-hidden="true"><use href="#arrow-right" /></svg>
-        </a>
+        </div>
+
+        <div class="note">
+            <p class="label">About the bundle</p>
+            <p>One install that carries most scripts inside it. Each feature gets a switch in your userscript manager's menu, and the page reloads when you flip one.</p>
+            <p><b>Auto Woot</b>, <b>Auto Grab</b> and <b>Region Check</b> start switched off. The other six start on.</p>
+            <p class="hint">A <b>red</b> tag means a script needs setting up before it does anything. Every config option is in <a href="#settings">05 Settings</a>.</p>
+        </div>
+
+        <div class="note">
+            <p class="label">Install not working?</p>
+            <p>If clicking Install lands you on Tampermonkey's Script Installation page and nothing else happens, Chrome is blocking the install, not the script.</p>
+            <p>Open <b>chrome://extensions</b>, click <b>Details</b> on Tampermonkey and turn on <b>Allow User Scripts</b>.</p>
+            <p>No such toggle? Turn on <b>Developer mode</b> at the top right instead.</p>
+            <p>Reload the page and click Install again. Don't use Tampermonkey's "Try to install as script", that installs the install page itself and fails.</p>
+        </div>
 
         <section>
-            <h2>Scripts</h2>
-            <p class="hint">Or pick them individually.</p>
-            <ul>
-                <li><a href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-translate.user.js"><span><svg class="i" aria-hidden="true"><use href="#language" /></svg></span><b>Translate</b><small>Translate chat, inline and customisable</small></a></li>
-                <li><a href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-open-in-spotify.user.js"><span><svg class="i" aria-hidden="true"><use href="#spotify" /></svg></span><b>Open in Spotify</b><small>Find the currently playing song on Spotify</small></a></li>
-                <li><a href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-sidebar.user.js"><span><svg class="i" aria-hidden="true"><use href="#sidebar" /></svg></span><b>Chat Toggle</b><small>Collapsible rail, hide and show chat.</small></a></li>
-                <li><a href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-chat-popout.user.js"><span><svg class="i" aria-hidden="true"><use href="#external" /></svg></span><b>Chat Pop-out</b><small>Chat in its own window, read and send without a second session</small></a></li>
-                <li><a href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-scrobble.user.js"><span><svg class="i" aria-hidden="true"><use href="#radio" /></svg></span><b>Scrobble Toggle</b><small>Flip Last.fm scrobbling on and off from the room footer</small></a></li>
-                <li><a href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-imgur.user.js"><span><svg class="i" aria-hidden="true"><use href="#photo" /></svg></span><b>Imgur Fix</b><small>Unbreak Imgur. Routes the traffic through a proxy</small></a></li>
-                <li><a href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-woot.user.js"><span><svg class="i" aria-hidden="true"><use href="#thumb-up" /></svg></span><b>Auto Woot</b><small>Woot everything automatically</small></a></li>
-                <li><a href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-grab.user.js"><span><svg class="i" aria-hidden="true"><use href="#playlist-add" /></svg></span><b>Auto Grab</b><small>Automatically grab what you woot to a defined playlist</small></a></li>
-                <li><a href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-idle.user.js"><span><svg class="i" aria-hidden="true"><use href="#moon" /></svg></span><b>Auto Idle</b><small>Go away after time off the tab, active again when you return</small></a></li>
-                <li><a href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-region-check.user.js"><span><svg class="i" aria-hidden="true"><use href="#world" /></svg></span><b>Region Check</b><small>Flag YouTube tracks blocked outside of US/CA. Soundcloud track checking is not supported<em class="note">Needs a YouTube API key</em></small></a></li>
+            <div class="head"><h2><span class="num">01</span> &nbsp;Automation</h2><span class="label count">3 scripts</span></div>
+            <ul class="rows">
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-woot.user.js"><span class="idx">01</span><svg class="i" aria-hidden="true"><use href="#thumb-up" /></svg><span class="name">Auto Woot</span><span class="desc">Woot every track<em class="tag pop">Popular</em></span><span class="act">Install</span></a></li>
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-grab.user.js"><span class="idx">02</span><svg class="i" aria-hidden="true"><use href="#playlist-add" /></svg><span class="name">Auto Grab</span><span class="desc">Grab what you woot to a playlist<em class="tag req">needs a playlist defined in config</em><em class="tag">Config: playlist</em></span><span class="act">Install</span></a></li>
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-idle.user.js"><span class="idx">03</span><svg class="i" aria-hidden="true"><use href="#moon" /></svg><span class="name">Auto Idle</span><span class="desc">Go idle when you leave the tab for X minutes<em class="tag">Config: idle time</em></span><span class="act">Install</span></a></li>
             </ul>
         </section>
 
         <section>
-            <h2>Moderation</h2>
-            <p class="hint">Room-staff tools. Only useful if you moderate.</p>
-            <ul>
-                <li><a href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-new-users.user.js"><span><svg class="i" aria-hidden="true"><use href="#user-plus" /></svg></span><b>New Users</b><small>Pill accounts younger than two days in chat and the user list</small></a></li>
-                <li><a href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-sos-alert.user.js"><span><svg class="i" aria-hidden="true"><use href="#alert-triangle" /></svg></span><b>SOS Alert</b><small>Beep when the room footer's SOS badge lights up, so a report isn't missed<em class="note">Ambassador or above</em></small></a></li>
+            <div class="head"><h2><span class="num">02</span> &nbsp;Chat</h2><span class="label count">4 scripts</span></div>
+            <ul class="rows">
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-translate.user.js"><span class="idx">04</span><svg class="i" aria-hidden="true"><use href="#language" /></svg><span class="name">Translate</span><span class="desc">Inline chat translation<em class="tag">Config: language</em></span><span class="act">Install</span></a></li>
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-sidebar.user.js"><span class="idx">05</span><svg class="i" aria-hidden="true"><use href="#sidebar" /></svg><span class="name">Chat Toggle</span><span class="desc">Hide and show chat</span><span class="act">Install</span></a></li>
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-chat-popout.user.js"><span class="idx">06</span><svg class="i" aria-hidden="true"><use href="#external" /></svg><span class="name">Chat Pop-out</span><span class="desc">Chat in its own window</span><span class="act">Install</span></a></li>
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-imgur.user.js"><span class="idx">07</span><svg class="i" aria-hidden="true"><use href="#photo" /></svg><span class="name">Imgur Fix</span><span class="desc">Load Imgur through a proxy<em class="tag">Config: proxy</em></span><span class="act">Install</span></a></li>
             </ul>
         </section>
 
-        <a class="promo promo-img" href="https://github.com/fluteds/wavez-discord-presence">
-            <svg class="i" aria-hidden="true"><use href="#discord" /></svg>
-            <div>
-                <h2>Discord Rich Presence</h2>
-                <p>Share and display your current room, track and artist on Discord.</p>
-                <p>Installing is two part with a browser userscript and a local bridge.</p>
-                <img src="assets/discord-presence.png" alt="Discord Rich Presence showing the current track, artist, room and listener count" loading="lazy">
-            </div>
-            <svg class="i arrow" aria-hidden="true"><use href="#arrow-right" /></svg>
-        </a>
-
         <section>
-            <h2>Contributing</h2>
-            <p>Ideas, bug reports and pull requests are welcome.</p>
-            <p>Open an <a href="https://github.com/fluteds/wavez/issues">issue</a> or send a <a href="https://github.com/fluteds/wavez/pulls">pull request</a> on GitHub.</p>
+            <div class="head"><h2><span class="num">03</span> &nbsp;Music</h2><span class="label count">3 scripts</span></div>
+            <ul class="rows">
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-open-in-spotify.user.js"><span class="idx">08</span><svg class="i" aria-hidden="true"><use href="#spotify" /></svg><span class="name">Open in Spotify</span><span class="desc">Search the current song on Spotify</span><span class="act">Install</span></a></li>
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-scrobble.user.js"><span class="idx">09</span><svg class="i" aria-hidden="true"><use href="#radio" /></svg><span class="name">Scrobble Toggle</span><span class="desc">Toggles Last.fm scrobbling on and off from the room view</span><span class="act">Install</span></a></li>
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-region-check.user.js"><span class="idx">10</span><svg class="i" aria-hidden="true"><use href="#world" /></svg><span class="name">Region Check</span><span class="desc">Flag tracks blocked outside US/CA<em class="tag req">needs a YouTube API key</em><em class="tag">Config: regions</em></span><span class="act">Install</span></a></li>
+            </ul>
         </section>
 
-        <a class="cta" href="https://wavez.fm">Open wavez.fm</a>
+        <section>
+            <div class="head"><h2><span class="num">04</span> &nbsp;Moderation</h2></div>
+            <ul class="rows">
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-new-users.user.js"><span class="idx">11</span><svg class="i" aria-hidden="true"><use href="#user-plus" /></svg><span class="name">New Users</span><span class="desc">Mark recently joined accounts<em class="tag">Config: badge and days</em></span><span class="act">Install</span></a></li>
+                <li><a class="row alert" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-sos-alert.user.js"><span class="idx">12</span><svg class="i" aria-hidden="true"><use href="#alert-triangle" /></svg><span class="name">SOS Alert</span><span class="desc">Beep when the SOS badge lights up<em class="tag req">Role: Ambassador+</em><em class="tag">Config: sound and volume</em></span><span class="act">Install</span></a></li>
+            </ul>
+        </section>
+
+        <section id="settings">
+            <div class="head"><h2><span class="num">05</span> &nbsp;Settings</h2><span class="label count">7 scripts</span></div>
+            <p class="hint">Open a script in your userscript manager and change the value after the <b>=</b>. Anything marked red does nothing until you fill it in.</p>
+            <details>
+                <summary>17 settings across 7 scripts</summary>
+                <ul class="settings">
+                    <li><b>Translate</b><span class="what">Language</span><span class="set"><code>TARGET_LANG</code> = <span class="val">"en"</span><span class="opts">"en" &middot; "es" &middot; "pt" &middot; "ja" &middot; any ISO code</span></span></li>
+                    <li><b></b><span class="what">How it shows</span><span class="set"><code>DISPLAY_MODE</code> = <span class="val">"append"</span><span class="opts">"append" a line beneath &middot; "replace" in place &middot; "hover" to crossfade</span></span></li>
+                    <li><b></b><span class="what">What gets translated</span><span class="set"><code>ONLY_NON_TARGET</code> = <span class="val">true</span><span class="opts">true skips your own language &middot; false does every message</span></span></li>
+                    <li><b></b><span class="what">Request limit</span><span class="set"><code>MAX_INFLIGHT</code> = <span class="val">4</span><span class="opts">any number &middot; higher risks rate-limiting</span></span></li>
+                    <li class="req"><b>Auto Grab</b><span class="what">Playlist</span><span class="set"><code>PLAYLIST</code> = <span class="val">'Recs'</span><em class="tag req">Required</em><span class="opts">any playlist name &middot; no playlist by that name means nothing is grabbed</span></span></li>
+                    <li><b>Auto Idle</b><span class="what">Idle time</span><span class="set"><code>IDLE_MINUTES</code> = <span class="val">5</span><span class="opts">any number of minutes</span></span></li>
+                    <li><b>New Users</b><span class="what">How long flagged</span><span class="set"><code>NEW_DAYS</code> = <span class="val">2</span><span class="opts">any number of days</span></span></li>
+                    <li><b></b><span class="what">Pill text</span><span class="set"><code>BADGE</code> = <span class="val">"NEW"</span><span class="opts">any text &middot; "" for no pill</span></span></li>
+                    <li><b></b><span class="what">Colour the name</span><span class="set"><code>COLOR_NAME</code> = <span class="val">false</span><span class="opts">true tints the name too &middot; false</span></span></li>
+                    <li><b></b><span class="what">Colour</span><span class="set"><code>COLOR</code> = <span class="val">"#00E5A0"</span><span class="opts">any hex colour</span></span></li>
+                    <li><b>Imgur Fix</b><span class="what">Proxy</span><span class="set"><code>ALTSITE</code> = <span class="val">'https://rimgo.ducks.party'</span><span class="opts">any rimgo instance &middot; swap it if this one goes down</span></span></li>
+                    <li class="req"><b>Region Check</b><span class="what">API key</span><span class="set"><code>YT_API_KEY</code> = <span class="val">''</span><em class="tag req">Required</em><span class="opts">a YouTube Data API v3 key &middot; blank asks you once, then remembers</span></span></li>
+                    <li><b></b><span class="what">Regions</span><span class="set"><code>REGIONS</code> = <span class="val">['US', 'CA']</span><span class="opts">any country codes &middot; a track is flagged when it only plays in these</span></span></li>
+                    <li><b>SOS Alert</b><span class="what">Button watched</span><span class="set"><code>SOS_ACTION</code> = <span class="val">"reports"</span><span class="opts">any footer action name &middot; "reports" is the SOS shield</span></span></li>
+                    <li><b></b><span class="what">Quiet time</span><span class="set"><code>COOLDOWN_SECONDS</code> = <span class="val">15</span><span class="opts">any number of seconds &middot; stops a flickering badge beeping twice</span></span></li>
+                    <li><b></b><span class="what">Volume</span><span class="set"><code>VOLUME</code> = <span class="val">0.35</span><span class="opts">0 to 1</span></span></li>
+                    <li><b></b><span class="what">Sound</span><span class="set"><code>SOUND_URL</code> = <span class="val">""</span><span class="opts">any sound URL &middot; "" for the built-in beep</span></span></li>
+                </ul>
+            </details>
+        </section>
+
+        <section>
+            <div class="head"><h2><span class="num">06</span> &nbsp;Beyond the browser</h2></div>
+            <div class="blocks">
+                <a class="block" href="https://github.com/fluteds/wavez-discord-presence">
+                    <svg class="i" aria-hidden="true"><use href="#discord" /></svg>
+                    <h3>Discord Rich Presence</h3>
+                    <p>Your room, track and artist on Discord. Userscript plus a local bridge.</p>
+                    <img src="assets/discord-presence.png" alt="Discord Rich Presence showing the current track, artist, room and listener count" loading="lazy">
+                    <span class="label go">View on GitHub &rarr;</span>
+                </a>
+                <a class="block" href="https://fluted.omg.lol/wavezfm">
+                    <svg class="i" aria-hidden="true"><use href="#book" /></svg>
+                    <h3>New to Wavez.fm?</h3>
+                    <p>The guide to things not covered by the interactive welcome. What the badges mean, how the DJ queue works, what each role can do and more. Written from my own notes, not official docs.</p>
+                    <span class="label go">Read the guide &rarr;</span>
+                </a>
+            </div>
+        </section>
+
+        <section>
+            <div class="head"><h2><span class="num">07</span> &nbsp;Contributing</h2></div>
+            <p class="prose">Ideas and bug reports welcome. Open an <a href="https://github.com/fluteds/wavez/issues">issue</a> or send a <a href="https://github.com/fluteds/wavez/pulls">pull request</a>.</p>
+        </section>
     </main>
 
     <footer>
-        <p><a href="https://github.com/fluteds/wavez">Source on GitHub</a> &middot; <a href="https://github.com/fluteds/wavez/issues">Issues</a></p>
-        <p class="disclaimer">Not affiliated with <a href="https://wavez.fm">wavez.fm</a>.</p>
+        <p class="label"><a href="https://github.com/fluteds/wavez">Source on GitHub</a> &nbsp;/&nbsp; <a href="https://github.com/fluteds/wavez/issues">Issues</a></p>
+        <p class="label">Not affiliated with wavez.fm</p>
+        <p class="label">Nothing. Design</p>
+
     </footer>
 
     <script>
-        // Easter egg: double-click the wordmark for a dancing plug.dj avatar.
+        // Easter egg: double-click the wordmark for the wavez theme and a dancing plug.dj avatar.
         const plug = document.querySelector('.plug');
-        document.querySelector('.logo').addEventListener('dblclick', () => { plug.hidden = !plug.hidden; });
+        document.querySelector('.wordmark').addEventListener('dblclick', () => {
+            const on = document.documentElement.classList.toggle('wavez');
+            plug.classList.toggle('show', on);
+            plug.setAttribute('aria-hidden', String(!on));
+        });
     </script>
 
 </body>

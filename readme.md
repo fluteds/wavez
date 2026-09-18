@@ -31,7 +31,7 @@ Auto Idle and the moderation scripts below are not in the bundle yet, install th
 
 ## Moderation
 
-Room-staff tools. Same install method, listed apart because they are only useful if you moderate.
+Same install method, listed apart because they are only useful if you moderate.
 
 | Addon | What it does | |
 | --- | --- | --- |
@@ -43,6 +43,8 @@ Room-staff tools. Same install method, listed apart because they are only useful
 From the [home page](https://fluteds.github.io/wavez)
 
 - Install [Tampermonkey](https://www.tampermonkey.net) (or your userscript manager of choice), then click an addon to install it.
+- **Chrome shows Tampermonkey's "Script Installation" page and stops there** - Chrome is blocking the install. Open `chrome://extensions`, click **Details** on Tampermonkey, turn on **Allow User Scripts** (or **Developer mode** at the top right if that toggle isn't there), reload and click Install again.
+- Tampermonkey's "Try to install as script" won't help; it tries to install the install page itself and reports the script as invalid.
 
 ## Supported pages
 
