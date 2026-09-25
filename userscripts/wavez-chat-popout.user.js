@@ -15,7 +15,6 @@
 (function () {
   'use strict';
 
-  // Grab a handle to the live socket so we can send (reading is done by mirroring the rail DOM). Wraps message listeners only, never the constructor.
   let socket = null;
   let reqN = 0;
 
@@ -24,7 +23,7 @@
     let b;
     try { b = JSON.parse(e.data); } catch { return; }
     if (!b || b.version !== 'v1') return;
-    socket = e.target; // this is the wavez socket
+    socket = e.target;
   }
 
   const addEL = WebSocket.prototype.addEventListener;
@@ -66,10 +65,8 @@
     return true;
   }
 
-  // Popup window with a custom chat UI (blank same-origin window => no session).
   let popup = null;
 
-  // Copy the page's stylesheets into the popup so theme vars, font and scrollbars are the live ones; our markup just references var(--theme-*).
   function copyStyles(win) {
     for (const sheet of document.styleSheets) {
       try {
@@ -88,7 +85,6 @@
     }
   }
 
-  // Our layout, loaded after the page sheets so it wins; colors/fonts pull from the copied --theme-* vars (fallbacks cover a cold load).
   const popupCss = () => `
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
@@ -156,21 +152,20 @@
     const list = d.getElementById('wz-list');
     const input = d.getElementById('wz-input');
 
-    // Mirror the rail's message nodes verbatim; the copied stylesheets style the clones, so it's pixel-identical.
     function railList() {
       const rail = document.querySelector('[data-room-desktop-rail="true"]');
       if (!rail) return null;
-      let el = rail.querySelector('[class*="wavezfm-chat-text-size"]'); // a message body
+      let el = rail.querySelector('[class*="wavezfm-chat-text-size"]');
       while (el && el !== rail) {
         const oy = getComputedStyle(el).overflowY;
-        if (oy === 'auto' || oy === 'scroll') return el; // the scroll container
+        if (oy === 'auto' || oy === 'scroll') return el;
         el = el.parentElement;
       }
       return null;
     }
 
     function clone(node) {
-      if (node.nodeType !== 1) return; // elements only
+      if (node.nodeType !== 1) return;
       const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
       list.appendChild(d.importNode(node, true));
       if (atBottom) list.scrollTop = list.scrollHeight;
@@ -180,7 +175,7 @@
     (function attach() {
       if (!popup || popup.closed) return;
       const src = railList();
-      if (!src) { popup.setTimeout(attach, 300); return; } // wait for chat to render
+      if (!src) { popup.setTimeout(attach, 300); return; }
       for (const child of src.children) clone(child);
       list.scrollTop = list.scrollHeight;
       mo = new MutationObserver((muts) => {
@@ -210,7 +205,6 @@
     });
   }
 
-  // Pop-out button (added once the page DOM exists).
   const BTN_CSS = `
     #wavez-chat-popout-btn {
       position: fixed; right: 0; top: 50%; transform: translateY(-50%); margin-top: -64px;

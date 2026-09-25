@@ -14,23 +14,17 @@
 // @connect      clients5.google.com
 // ==/UserScript==
 
-// CONFIG Language to translate INTO (ISO code: "en", "es", "pt", "ja", ...).
 var TARGET_LANG = "en";
 
-// How translations show (WZTranslate.setMode live): "append" adds a line beneath, "replace" swaps in place, "hover" crossfades on hover.
 var DISPLAY_MODE = "append";
 
-// Only translate messages NOT already in TARGET_LANG (uses Google's detected source language). Set false to translate everything.
 var ONLY_NON_TARGET = true;
 
-// Max simultaneous translation requests (keeps the free endpoint from rate-limiting).
 var MAX_INFLIGHT = 4;
 
-// --------------------------------------------------------------------------
 (function () {
   "use strict";
 
-  // Chat bodies carry a wavez token (stable across themes). System callouts don't, so we anchor off the callout icon's class and grab the paragraph beside it.
   var MSG_SELECTOR =
     '[class*="wavezfm-chat-text-size"], .wavezfm-centered-icon + div > p';
 
@@ -41,7 +35,6 @@ var MAX_INFLIGHT = 4;
     enabled: true,
   };
 
-  // --- styling -------------------------------------------------------------
   var style = document.createElement("style");
   style.textContent =
     ".wz-translation{display:block;margin-top:2px;opacity:.6;font-style:italic;" +
@@ -52,7 +45,6 @@ var MAX_INFLIGHT = 4;
     ".wz-hover.wz-swap{opacity:0;transform:translateY(3px)}";
   (document.head || document.documentElement).appendChild(style);
 
-  // --- cross-origin GET (GM first, fetch fallback) -------------------------
   function httpGet(url) {
     return new Promise(function (resolve, reject) {
       if (typeof GM_xmlhttpRequest === "function") {
@@ -79,7 +71,6 @@ var MAX_INFLIGHT = 4;
         });
         return;
       }
-      // No GM API (e.g. raw injection): the endpoint sends CORS *, so plain fetch works in most setups.
       fetch(url)
         .then(function (r) {
           return r.text();
@@ -88,7 +79,6 @@ var MAX_INFLIGHT = 4;
     });
   }
 
-  // --- concurrency-limited queue -------------------------------------------
   var inflight = 0;
   var queue = [];
   function pump() {
@@ -111,13 +101,11 @@ var MAX_INFLIGHT = 4;
     });
   }
 
-  // translation cache: original text -> { text, src }
   var cache = Object.create(null);
 
   function translate(text) {
     if (cache[text]) return Promise.resolve(cache[text]);
     return enqueue(function () {
-      // dict-chrome-ex (Google Dictionary extension's endpoint) is far less rate-limited than client=gtx, which bot-blocks a burst of messages on room load. Shape: [["translated text","src lang"]].
       var url =
         "https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=" +
         encodeURIComponent(config.target) +
@@ -133,7 +121,6 @@ var MAX_INFLIGHT = 4;
     });
   }
 
-  // --- rendering -----------------------------------------------------------
   function clearTranslation(el) {
     if (el._wzNode && el._wzNode.parentNode) {
       el._wzNode.parentNode.removeChild(el._wzNode);
@@ -144,7 +131,6 @@ var MAX_INFLIGHT = 4;
       el._wzOriginal = null;
     }
     if (el._wzHover) {
-      // Restore the original markup if we're mid-swap, then drop hover state.
       if (el._wzHover.shown) el.innerHTML = el._wzHover.html;
       el._wzHover = null;
     }
@@ -152,13 +138,12 @@ var MAX_INFLIGHT = 4;
     el.removeAttribute("title");
   }
 
-  // Crossfade original/translation on hover; a busy flag keeps the observer from reacting to our own swaps.
   function swapHover(el, toTranslated) {
     var h = el._wzHover;
     if (!h || h.shown === toTranslated) return;
     h.shown = toTranslated;
     el._wzBusy = true;
-    el.classList.add("wz-swap"); // fade + nudge out
+    el.classList.add("wz-swap");
     window.setTimeout(function () {
       if (!el._wzHover) {
         el.classList.remove("wz-swap");
@@ -167,8 +152,7 @@ var MAX_INFLIGHT = 4;
       }
       if (toTranslated) el.textContent = h.translated;
       else el.innerHTML = h.html;
-      el.classList.remove("wz-swap"); // fade back in
-      // Clear busy after the mutation records have been delivered.
+      el.classList.remove("wz-swap");
       window.setTimeout(function () {
         el._wzBusy = false;
       }, 0);
@@ -193,8 +177,8 @@ var MAX_INFLIGHT = 4;
     clearTranslation(el);
     if (config.mode === "replace") {
       el._wzOriginal = original;
-      el.textContent = translated; // drops inline emoji <img>; use hover mode to keep them
-      el.classList.add("wz-replaced"); // leading 🌐 marks the swap
+      el.textContent = translated;
+      el.classList.add("wz-replaced");
       el.title = original;
       return;
     }
@@ -202,7 +186,6 @@ var MAX_INFLIGHT = 4;
       setupHover(el, translated);
       return;
     }
-    // append (default)
     var node = document.createElement("span");
     node.className = "wz-translation";
     node.textContent = translated;
@@ -210,20 +193,17 @@ var MAX_INFLIGHT = 4;
     el.parentNode.insertBefore(node, el.nextSibling);
   }
 
-  // At least two letters worth translating (skip pure emoji/numbers/links).
   var LETTERS = /\p{L}{2,}/u;
 
   function process(el) {
     if (!config.enabled || el._wzBusy) return;
     var original = (el.textContent || "").trim();
     if (!original || !LETTERS.test(original)) return;
-    // Skip text we've already handled: our source, or the translation swapped in on hover.
     if (original === el._wzSrc || original === el._wzTranslated) return;
     el._wzSrc = original;
 
     translate(original)
       .then(function (res) {
-        // Text changed mid-translation; bail, the observer re-fires for the new content.
         if ((el.textContent || "").trim() !== original) return;
         el._wzTranslated = res.text.trim();
         var sameLang =
@@ -242,9 +222,7 @@ var MAX_INFLIGHT = 4;
         render(el, original, res.text);
       })
       .catch(function (err) {
-        // Endpoint down (bot page / CORS / rate-limit) fails silently otherwise; warn once so it's not mistaken for a dead selector.
         if (!process._warned) { process._warned = true; console.warn("%c[wz-translate]", "color:#30C7FB;font-weight:bold", "translation request failed - the endpoint is likely blocking (bot check / CORS / rate-limit), not the selector:", err); }
-        // Network/parse error: allow a retry next time the node is seen.
         if (el._wzSrc === original) el._wzSrc = null;
       });
   }
@@ -258,31 +236,27 @@ var MAX_INFLIGHT = 4;
     for (var i = 0; i < nodes.length; i++) process(nodes[i]);
   }
 
-  // --- observe chat --------------------------------------------------------
   var observer = new MutationObserver(function (mutations) {
     for (var i = 0; i < mutations.length; i++) {
       var m = mutations[i];
       for (var j = 0; j < m.addedNodes.length; j++) scan(m.addedNodes[j]);
-      // Text swapped in place (React re-render): re-check the target element.
       if (m.type === "characterData" && m.target.parentNode) {
         var p = m.target.parentNode;
         if (p.matches && p.matches(MSG_SELECTOR)) process(p);
       }
     }
   });
-  // Wait for <body>: at document-start (the all-in-one bundle) it isn't parsed yet.
   function observeChat() {
     observer.observe(document.body, {
       childList: true,
       subtree: true,
       characterData: true,
     });
-    scan(document.body); // catch messages already on screen
+    scan(document.body);
   }
   if (document.body) observeChat();
   else document.addEventListener("DOMContentLoaded", observeChat, { once: true });
 
-  // --- live controls -------------------------------------------------------
   function retranslateAll() {
     var nodes = document.querySelectorAll(MSG_SELECTOR);
     for (var i = 0; i < nodes.length; i++) {
@@ -291,13 +265,11 @@ var MAX_INFLIGHT = 4;
     }
   }
 
-  // Expose controls on the page window (unsafeWindow) so they're reachable from the DevTools console; under a sandboxed @grant the script's own `window` isn't the page's.
   var pageWindow = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
   pageWindow.WZTranslate = {
     config: config,
     setMode: function (mode) {
       config.mode = mode;
-      // Re-render every message in the new layout.
       var nodes = document.querySelectorAll(MSG_SELECTOR);
       for (var i = 0; i < nodes.length; i++) {
         nodes[i]._wzSrc = null;

@@ -12,37 +12,30 @@
 // @run-at       document-idle
 // ==/UserScript==
 
-// Track state comes from the extension API (github.com/WavezFM/WavezFM-Extension-API), but grab isn't an exposed action, so we click the real button and pick from the picker.
 (function () {
   'use strict';
 
-  // Playlist to grab into, by name. "" = whichever the picker lists first.
   var PLAYLIST = 'Recs';
 
-  // Only set these if the heuristics below match the wrong element. Run WZGrab.debug() in the console to see what they currently find.
   var GRAB_BTN_SELECTOR = '';
   var PICKER_SELECTOR = '';
 
   var LS_KEY = 'wavez-autograb';
-  // Default off: unlike a woot, a grab writes to your playlist.
   var enabled = localStorage.getItem(LS_KEY) === 'on';
   var lastKey = null;
 
   var log = function () { console.log.apply(console, ["%c[wz-grab]", "color:#FFCA28;font-weight:bold"].concat([].slice.call(arguments))); };
   var warn = function () { console.warn.apply(console, ["%c[wz-grab]", "color:#FFCA28;font-weight:bold"].concat([].slice.call(arguments))); };
 
-  // Grab once, after you woot. playbackKey = track, clientVote = your vote (manual or auto-woot), clientGrabbed = already in a playlist.
   function shouldGrab(key, last, votes) {
     return !!key && key !== last && !!votes &&
       votes.clientVote === 'woot' && !votes.clientGrabbed;
   }
 
-  // ---------------------------------- dom ----------------------------------
   function visible(el) {
     return el.offsetParent !== null;
   }
 
-  // Vote buttons have no aria-label/id. Anchor on the --theme-vote-grab count span (survives relabels/locales), falling back to the "Grab" label span.
   function findGrabButton() {
     if (GRAB_BTN_SELECTOR) return document.querySelector(GRAB_BTN_SELECTOR);
     var btns = document.querySelectorAll('button');
@@ -50,7 +43,6 @@
     for (var i = 0; i < btns.length; i++) {
       if (btns[i].querySelector('[style*="theme-vote-grab"]')) return btns[i];
       if (byLabel) continue;
-      // Match the label span exactly: the button's own textContent reads "Grab0".
       var spans = btns[i].querySelectorAll('span');
       for (var j = 0; j < spans.length; j++) {
         if (spans[j].textContent.trim().toLowerCase() === 'grab') { byLabel = btns[i]; break; }
@@ -59,36 +51,32 @@
     return byLabel;
   }
 
-  // The picker has no role/dialog attrs, only data-wavezfm-grab-menu-root (shared with the Grab button's wrapper). It's the one NOT containing the button, and only exists while open.
   function findPicker() {
     if (PICKER_SELECTOR) return document.querySelector(PICKER_SELECTOR);
     var btn = findGrabButton();
     var roots = document.querySelectorAll('[data-wavezfm-grab-menu-root]');
     for (var i = 0; i < roots.length; i++) {
-      if (btn && roots[i].contains(btn)) continue; // that's the wrapper
+      if (btn && roots[i].contains(btn)) continue;
       if (visible(roots[i])) return roots[i];
     }
     return null;
   }
 
-  // An option's textContent runs the name into the subtitle ("RecsPlaylist - 53/300"), so read the name span instead.
   function nameOf(el) {
     var span = el.querySelector('span.truncate');
     return (span ? span.textContent : el.textContent).trim();
   }
 
-  // The second truncate span, e.g. "Active - 58/300" or "Playlist - 53/300".
   function detailOf(el) {
     var spans = el.querySelectorAll('span.truncate');
     return spans.length > 1 ? spans[1].textContent.trim() : '';
   }
 
-  // Every playlist button in the open picker. Full playlists come back too, but disabled - callers decide whether to care.
   function optionsIn(picker) {
     var items = picker.querySelectorAll('button');
     var out = [];
     for (var i = 0; i < items.length; i++) {
-      if (items[i].getAttribute('aria-label') === 'Cancel') continue; // header close
+      if (items[i].getAttribute('aria-label') === 'Cancel') continue;
       if (visible(items[i])) out.push(items[i]);
     }
     return out;
@@ -99,7 +87,6 @@
     if (cancel) cancel.click();
   }
 
-  // Open the picker if needed, pass options to cb, and report if we opened it so the caller can close it.
   function withPicker(cb) {
     var open = findPicker();
     if (open) return cb(optionsIn(open), null);
@@ -112,7 +99,6 @@
     });
   }
 
-  // Poll for fn() to go truthy, up to ms. The picker opens asynchronously.
   function waitFor(fn, ms, cb) {
     var waited = 0;
     var t = setInterval(function () {
@@ -123,7 +109,6 @@
   }
 
   function choosePlaylist(picker) {
-    // Full playlists (300/300) come through disabled, so they can't be grabbed into.
     var options = optionsIn(picker).filter(function (el) { return !el.disabled; });
     if (!options.length) { log('picker opened but listed no playlists'); return; }
 
@@ -156,13 +141,11 @@
     var state = api.room.getState();
     var pb = state && state.playback;
     if (!pb) return;
-    // Stamp lastKey only on an actual grab, else the pre-woot window dedupes the track away.
     if (!shouldGrab(pb.playbackKey, lastKey, state.votes)) return;
     lastKey = pb.playbackKey;
     doGrab();
   }
 
-  // ----------------------------------- ui ----------------------------------
   function buildUI(api) {
     var css = document.createElement('style');
     css.textContent =
@@ -194,19 +177,16 @@
     document.body.appendChild(pill);
   }
 
-  // ---------------------------------- init ---------------------------------
   function init(api) {
-    grabCurrent(api); // catch a track that's already wooted at load
-    // The woot is the trigger, so watch votes, not playback.
+    grabCurrent(api);
     api.room.subscribe('votes_changed', function () { grabCurrent(api); });
     buildUI(api);
 
     window.WZGrab = {
       on: function () { enabled = true; localStorage.setItem(LS_KEY, 'on'); grabCurrent(api); },
       off: function () { enabled = false; localStorage.setItem(LS_KEY, 'off'); },
-      now: function () { lastKey = null; doGrab(); }, // force a grab
+      now: function () { lastKey = null; doGrab(); },
       get enabled() { return enabled; },
-      // Print your playlist names for PLAYLIST. Opens/reads/closes the picker (opening doesn't grab); async, prints once rendered.
       playlists: function () {
         withPicker(function (options, opened) {
           if (options.length) {
@@ -222,7 +202,6 @@
           if (opened) closePicker(opened);
         });
       },
-      // What the heuristics currently match, for pinning the selectors.
       debug: function () {
         console.log('grab button:', findGrabButton());
         console.log('picker (open it first):', findPicker());
@@ -231,7 +210,6 @@
     log('auto grab ' + (enabled ? 'on' : 'off') + ' - toggle with the corner pill or WZGrab.on()/off()');
   }
 
-  // The bridge may arrive after document-idle, so wait for it. Logged up front so a missing bridge is distinguishable from a missing script.
   log('loaded, waiting for the WavezFM bridge...');
   var tries = 0;
   var wait = setInterval(function () {
@@ -239,7 +217,7 @@
     if (api && api.version === '1') {
       clearInterval(wait);
       init(api);
-    } else if (++tries > 40) { // ~20s
+    } else if (++tries > 40) {
       clearInterval(wait);
       warn('WavezFM bridge never appeared, so WZGrab is unavailable. Are you inside a room? window.WavezFM is currently ' + typeof window.WavezFM + '.');
     }

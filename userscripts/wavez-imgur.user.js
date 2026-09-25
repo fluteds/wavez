@@ -29,7 +29,6 @@
     );
   }
 
-  // nicewoot measures the imgur image (new Image()) to size its avatar sprites, so a region-blocked browser measures the placeholder and the geometry is wrong however we rewrite the DOM. Rewrite at the src boundary so the measurement loads Rimgo. Needs document-start.
   function patchImageSrc() {
     const proto = HTMLImageElement.prototype;
     for (const prop of ['src', 'srcset']) {
@@ -42,7 +41,6 @@
         set(v) { desc.set.call(this, rewrite(v)); }
       });
     }
-    // Also the setAttribute path.
     const setAttr = proto.setAttribute;
     proto.setAttribute = function (name, value) {
       if (name === 'src' || name === 'srcset') value = rewrite(value);
@@ -65,7 +63,6 @@
     }
   }
 
-  // Badges live in an injected <style> block (--nw-badge-img: url(...)), not an attribute, so rewrite the stylesheet text too.
   function fixStyleEl(el) {
     if (!el || el.tagName !== 'STYLE') return;
 
@@ -76,20 +73,18 @@
     if (next !== css) el.textContent = next;
   }
 
-  // insertRule() rules have no <style> text node, so rewrite them in the CSSOM. Recurse into @media/@layer/@supports.
   function fixRules(parent) {
     let rules;
     try {
       rules = parent.cssRules;
     } catch (e) {
-      return; // cross-origin sheet, not readable
+      return;
     }
     if (!rules) return;
 
     for (let i = 0; i < rules.length; i++) {
       const rule = rules[i];
 
-      // Grouping rule - descend.
       if (rule.cssRules && rule.cssRules.length) {
         fixRules(rule);
         continue;
@@ -105,14 +100,12 @@
         parent.deleteRule(i);
         parent.insertRule(next, i);
       } catch (e) {
-        // malformed rule - skip
       }
     }
   }
 
   function fixSheets(root) {
     let sheets = [];
-    // <style> + <link>, plus constructed adoptedStyleSheets.
     try {
       if (root.styleSheets) sheets = sheets.concat(Array.from(root.styleSheets));
     } catch (e) {}
@@ -128,9 +121,8 @@
     fixSheets(root);
   }
 
-  // The niceatc badge sheet is cross-origin, so the CSSOM won't read it. Refetch it, rewrite the raw CSS, inject as a local <style>, and disable the original <link>. Needs GM_xmlhttpRequest + @connect.
   const REMOTE_CSS_HOST = 'niceatc';
-  const remoteCss = new Map(); // href -> 'pending' | 'done' | 'clean' | 'failed'
+  const remoteCss = new Map();
 
   function gmFetch() {
     if (typeof GM_xmlhttpRequest !== 'undefined') return GM_xmlhttpRequest;
@@ -144,15 +136,15 @@
 
     let url;
     try { url = new URL(href, location.href); } catch (e) { return; }
-    if (url.origin === location.origin) return;          // same-origin = readable elsewhere
-    if (!url.hostname.includes(REMOTE_CSS_HOST)) return; // only the niceatc sheet
+    if (url.origin === location.origin) return;
+    if (!url.hostname.includes(REMOTE_CSS_HOST)) return;
 
     const state = remoteCss.get(href);
-    if (state === 'done') { link.disabled = true; return; } // keep replacements disabled
-    if (state) return;                                      // pending / clean / failed
+    if (state === 'done') { link.disabled = true; return; }
+    if (state) return;
 
     const fetcher = gmFetch();
-    if (!fetcher) return; // no cross-origin read available (script needs @grant)
+    if (!fetcher) return;
 
     remoteCss.set(href, 'pending');
     fetcher({
@@ -189,7 +181,6 @@
 
     root.querySelectorAll?.('style').forEach(fixStyleEl);
 
-    // Descend into shadow roots.
     root.querySelectorAll?.('*').forEach(el => {
       if (el.shadowRoot) {
         scan(el.shadowRoot);
@@ -205,7 +196,6 @@
   }
 
   function start() {
-    // Attach at document-start, before nicewoot mounts avatars, so their imgur URLs are rewritten before the browser fetches the placeholder.
     const observer = new MutationObserver(mutations => {
       for (const mutation of mutations) {
         if (mutation.type === 'childList') {
@@ -218,7 +208,6 @@
       }
     });
 
-    // Observe <html> so injected <head> <style> blocks are caught too.
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
@@ -226,7 +215,6 @@
       attributeFilter: ['href', 'src', 'srcset', 'data-src', 'poster', 'style']
     });
 
-    // Sweep now, again once the body parses, then a slow fallback.
     fullScan();
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fullScan);
     setInterval(fullScan, 1500);

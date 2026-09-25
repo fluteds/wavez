@@ -17,10 +17,8 @@
 
   var log = function () { console.log.apply(console, ["%c[wz-idle]", "color:#90A4AE;font-weight:bold"].concat([].slice.call(arguments))); };
 
-  // Minutes off the tab before you're marked away.
   var IDLE_MINUTES = 5;
 
-  // Presence values wavez accepts. If "online" is wrong, re-run wavez-status-discover to capture the right value.
   var AWAY = "away";
   var ACTIVE = "online";
   var DND = "dnd";
@@ -29,7 +27,6 @@
   var timer = null;
   var current = ACTIVE;
 
-  // Snoop the app's own Authorization header off its requests and reuse it for our PATCH, since we can't guess it.
   var authHeader = null;
   (function captureAuth() {
     var of = window.fetch;
@@ -46,7 +43,6 @@
     };
   })();
 
-  // Ask the server rather than trust `current`: you can set dnd from the app while we're idling.
   function remotePresence() {
     var headers = {};
     if (authHeader) headers["Authorization"] = authHeader;
@@ -98,12 +94,12 @@
     };
     current = ACTIVE;
     Promise.resolve()
-      .then(function () { return setPresence(ACTIVE); })                      // no-op (already active)
-      .then(function () { return setPresence(AWAY); })                        // -> away
-      .then(function () { return setPresence(AWAY); })                        // dedup, no-op
-      .then(function () { return setPresence(ACTIVE); })                      // -> online
-      .then(function () { remote = DND; return setPresence(AWAY); })          // dnd set in app, leave it
-      .then(function () { return setPresence(ACTIVE); })                      // still dnd, leave it
+      .then(function () { return setPresence(ACTIVE); })
+      .then(function () { return setPresence(AWAY); })
+      .then(function () { return setPresence(AWAY); })
+      .then(function () { return setPresence(ACTIVE); })
+      .then(function () { remote = DND; return setPresence(AWAY); })
+      .then(function () { return setPresence(ACTIVE); })
       .then(function () {
         window.fetch = realFetch;
         console.assert(calls.join(",") === "away,online", "idle dnd/dedupe broken:", calls);

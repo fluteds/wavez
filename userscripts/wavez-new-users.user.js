@@ -12,33 +12,26 @@
 // @grant        unsafeWindow
 // ==/UserScript==
 
-// CONFIG Days after the real join date that an account stays flagged.
 var NEW_DAYS = 2;
 
-// Pill text next to a new name. Empty = no pill.
 var BADGE = "NEW";
 
-// Recolour the name itself.
 var COLOR_NAME = false;
 
-// Pill and name colour.
 var COLOR = "#00E5A0";
 
-// --------------------------------------------------------------------------
 (function () {
   "use strict";
 
   var TAG = ["%c[wz-new]", "color:#00E5A0;font-weight:bold"];
   var KEY = "wavez-user-joined-v2";
   var API = "https://api.wavez.fm/users/by-username/";
-  // Chat author, user list row, hover preview card.
   var NAME_SELECTOR = '[data-wavezfm-chat-name="true"], [data-wavezfm-people-name="true"], [data-wavezfm-user-preview-name="true"]';
 
-  // { usernameLower: join ms }. 0 = looked up, no usable date, so we stop asking.
   var joined = (function () {
     try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
   })();
-  var pending = {}; // fetches in flight, so a full user list doesn't duplicate
+  var pending = {};
 
   function save() { localStorage.setItem(KEY, JSON.stringify(joined)); }
 
@@ -48,7 +41,6 @@ var COLOR = "#00E5A0";
   css.textContent = (COLOR_NAME ? ".wz-new-user { color: " + COLOR + " !important; }" : "") + (BADGE ? ".wz-new-user::after { content: '" + BADGE + "'; margin-left: 4px; padding: 0 4px; border-radius: 4px; font-size: 9px; font-weight: 700; letter-spacing: .04em; vertical-align: middle; background: " + COLOR + "; color: #000; }" : "");
   (document.head || document.documentElement).appendChild(css);
 
-  // One request per unknown name, no concurrency cap. Add a queue if a big list rate-limits.
   function lookup(name) {
     if (name in joined || pending[name]) return;
     pending[name] = true;
@@ -56,12 +48,12 @@ var COLOR = "#00E5A0";
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (u) {
         var at = u && u.createdAt ? Date.parse(u.createdAt) : 0;
-        joined[name] = at > 0 ? at : 0; // cache misses too, createdAt never changes
+        joined[name] = at > 0 ? at : 0;
         save();
         if (isNew(name, Date.now())) console.log.apply(console, TAG.concat([name + " joined " + new Date(at).toISOString().slice(0, 10)]));
         remark(name);
       })
-      .catch(function () {}) // leave unknown so the next sighting retries
+      .catch(function () {})
       .then(function () { delete pending[name]; });
   }
 
@@ -69,13 +61,12 @@ var COLOR = "#00E5A0";
 
   function mark(el) {
     var name = (el.textContent || "").trim().toLowerCase();
-    if (!name || el.dataset.wzName === name) return; // React reuses nodes, key on the name
+    if (!name || el.dataset.wzName === name) return;
     el.dataset.wzName = name;
     if (name in joined) apply(el, name);
     else lookup(name);
   }
 
-  // A resolved date lands on every node showing that name.
   function remark(name) {
     var nodes = document.querySelectorAll(NAME_SELECTOR);
     for (var i = 0; i < nodes.length; i++) if (nodes[i].dataset.wzName === name) apply(nodes[i], name);
@@ -107,7 +98,6 @@ var COLOR = "#00E5A0";
 
   console.log.apply(console, TAG.concat(["watching for accounts under " + NEW_DAYS + " days old. WZNew.list() / WZNew.forget(name) / WZNew.reset()"]));
 
-  // Newness window check: load with #wz-new-test.
   if (location.hash === "#wz-new-test") {
     var real = joined;
     var now = Date.now();

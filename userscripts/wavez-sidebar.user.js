@@ -88,7 +88,7 @@
       box-shadow: 0 0 0 2px var(--theme-room-nav);
     }
   `;
-  (document.head || document.documentElement).appendChild(css); // head may be unparsed at document-start (the bundle)
+  (document.head || document.documentElement).appendChild(css);
 
   function getRail() {
     return document.querySelector('[data-room-desktop-rail="true"]');
@@ -130,7 +130,6 @@
       rail.style.display = hidden ? 'none' : '';
       btn.classList.toggle('chat-hidden', hidden);
 
-      // Opening the chat clears the unread dot.
       if (!hidden) btn.classList.remove('has-new');
 
       if (hidden) {
@@ -138,7 +137,6 @@
       } else {
         const rect = rail.getBoundingClientRect();
 
-        // Makes the handle stick out slightly from the chat rail
         btn.style.right = `${window.innerWidth - rect.left - 1}px`;
       }
     }
@@ -151,14 +149,12 @@
 
     window.addEventListener('resize', apply);
 
-    // Flag an unread dot when a message arrives while chat is hidden.
     const markUnread = () => {
       if (localStorage.getItem(KEY) === 'true') btn.classList.add('has-new');
     };
 
     const api = window.WavezFM;
     if (api && api.version === '1') {
-      // Bridge fires only on real chat messages - no false positives from unrelated rail DOM churn.
       api.room.subscribe('chat_message', markUnread);
     } else {
       new MutationObserver((records) => {

@@ -13,7 +13,7 @@
 
 (function () {
   var API = "https://api.wavez.fm/settings";
-  var state = null; // null until first read
+  var state = null;
   var busy = false;
   var btn = null;
 
@@ -58,7 +58,6 @@
     else { btn.style.borderColor = ""; btn.style.background = ""; btn.style.color = "rgba(255,255,255,.4)"; }
   }
 
-  // State colour is inline so it renders without Tailwind JIT.
   function build() {
     var wrap = document.createElement("div");
     wrap.className = "inline-flex";
@@ -73,7 +72,6 @@
     return wrap;
   }
 
-  // The wrapper div, not the button (it also has inline-flex).
   function discordWrap() {
     var btns = document.querySelectorAll('button[aria-label="Discord"]');
     for (var i = 0; i < btns.length; i++) {
@@ -84,7 +82,6 @@
     return null;
   }
 
-  // Sit after Discord; re-add if the SPA re-renders the row away.
   function ensure() {
     if (document.getElementById("wz-scrobble-btn")) return;
     var anchor = discordWrap();

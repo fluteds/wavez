@@ -1,6 +1,4 @@
 #!/usr/bin/env sh
-# Refresh the published userscripts in ./userscripts from the source repo,
-# stamping each one with update/download URLs that point back at this repo.
 set -e
 cd "$(dirname "$0")"
 src=../userscripts/wavez
@@ -9,8 +7,6 @@ author=fluteds
 
 bundle=userscripts/wavez-all.user.js
 
-# Managers only install an update when @version goes up, so a changed script
-# always gets the next number.
 bump() { echo "$1" | awk -F. '{ $NF = $NF + 1; print }' OFS=.; }
 
 n=0
@@ -22,7 +18,6 @@ for dest in userscripts/*.user.js; do
     continue
   fi
 
-  # stamp author, and point update/download URLs at this repo
   awk -v url="$raw/$name" -v author="$author" '
     /^\/\/ @(author|updateURL|downloadURL)/ { next }
     { print }
@@ -37,12 +32,12 @@ for dest in userscripts/*.user.js; do
   dv=$(grep -m1 '^// @version' "$dest" 2>/dev/null | awk '{print $3}')
 
   if [ "$sv" != "$dv" ] && [ "$(printf '%s\n%s\n' "$sv" "$dv" | sort -V | tail -1)" = "$sv" ]; then
-    nv=$sv # bumped by hand in the source, publish that
+    nv=$sv
   elif [ -f "$dest" ] && diff -q -I '^// @version' "$dest.tmp" "$dest" >/dev/null; then
-    rm "$dest.tmp" # nothing changed, leave the published copy alone
+    rm "$dest.tmp"
     continue
   else
-    nv=$(bump "${dv:-$sv}") # body changed with no manual bump, take the next number
+    nv=$(bump "${dv:-$sv}")
   fi
   sed "s|^// @version .*|// @version      $nv|" "$dest.tmp" > "$dest"
   rm "$dest.tmp"
@@ -51,9 +46,6 @@ for dest in userscripts/*.user.js; do
 done
 echo "synced $n changed script(s) from $src"
 
-# ---- all-in-one bundle -------------------------------------------------
-# Concatenates the scripts above, each behind a toggle. Feature order is fixed
-# so the output is stable. Automation is off by default; the rest ship on.
 features="wavez-translate:translate:on
 wavez-open-in-spotify:spotify:on
 wavez-sidebar:chat-toggle:on
@@ -64,9 +56,6 @@ wavez-auto-woot:auto-woot:off
 wavez-auto-grab:auto-grab:off
 wavez-region-check:region-check:off"
 
-# Union of every feature's @grant/@connect: the bundle needs them all. Read the
-# standalone sources only - globbing the bundle back in re-feeds its own @grant
-# lines, duplicating GM_registerMenuCommand on every rebuild.
 sources=$(ls userscripts/*.user.js | grep -vF "$bundle")
 grants=$(grep -h '^// @grant' $sources | grep -v 'grant *none' | awk '{print $3}' | sort -u | grep -v '^GM_registerMenuCommand$')
 connects=$(grep -h '^// @connect' $sources | awk '{print $3}' | sort -u)
@@ -116,7 +105,6 @@ connects=$(grep -h '^// @connect' $sources | awk '{print $3}' | sort -u)
   echo "$features" | while IFS=: read -r file id dflt; do
     label=$(grep -m1 '^// @name' "userscripts/$file.user.js" | sed 's|^// @name *||')
     echo "  if (menu('$id', '$label', '$dflt')) (function (window) {"
-    # strip the metadata block, keep the body, indent it into the wrapper
     awk '/==\/UserScript==/ { body = 1; next } body' "userscripts/$file.user.js" |
       sed 's|^\(.\)|    \1|'
     echo "  })(PAGE);"
@@ -126,12 +114,10 @@ connects=$(grep -h '^// @connect' $sources | awk '{print $3}' | sort -u)
   echo "})();"
 } > "$bundle.tmp"
 
-# rebuilt output identical apart from the version? leave the bundle alone
 if [ -f "$bundle" ] && diff -q -I '^// @version' "$bundle.tmp" "$bundle" >/dev/null; then
   rm "$bundle.tmp"
   echo "unchanged $(basename "$bundle")"
 else
-  # the bundle has always been dated, and going backwards would strand installs
   bv=$(grep -m1 '^// @version' "$bundle" 2>/dev/null | awk '{print $3}')
   nv=$(date +%Y.%m.%d)
   [ "$nv" != "$bv" ] && [ "$(printf '%s\n%s\n' "$nv" "$bv" | sort -V | tail -1)" = "$nv" ] || nv=$(bump "$bv")

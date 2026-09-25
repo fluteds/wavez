@@ -20,7 +20,6 @@
 
   const ID = 'wavez-open-spotify-btn';
 
-  // Drop YouTube descriptor tags in ()/[] ("Official Video", "Lyrics", "HD"). Plain text search beats track:/artist: filters since the artist is a YT channel handle.
   const stripNoise = (s) => (s || '')
     .replace(/[([][^)\]]*\b(officials?|video|audio|lyrics?|visuali[sz]er|m\/?v|hd|4k|remaster(?:ed)?|explicit)\b[^)\]]*[)\]]/gi, '')
     .replace(/\s{2,}/g, ' ')
@@ -88,7 +87,7 @@
       ['Track (Official Music Video) [HD]', 'Track'],
       ['Title (Lyrics)', 'Title'],
       ['Da Funk (Remastered)', 'Da Funk'],
-      ['Power (feat. Dwele)', 'Power (feat. Dwele)'], // real parens kept
+      ['Power (feat. Dwele)', 'Power (feat. Dwele)'],
     ];
     cases.forEach(([raw, want]) =>
       console.assert(stripNoise(raw) === want, 'stripNoise:', raw, '->', stripNoise(raw), 'want', want));

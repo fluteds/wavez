@@ -23,14 +23,11 @@
 (function () {
   'use strict';
 
-  // Taking a @grant sandboxes us, and the page-context scripts below reach for
-  // page globals (window.WavezFM). Hand them the real window so they still work.
   var PAGE = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
 
   var KEY = "wavez-tools:";
   function on(id, dflt) { return (localStorage.getItem(KEY + id) || dflt) === "on"; }
 
-  // The manager already has a menu. Native beats a settings panel we maintain.
   function menu(id, label, dflt) {
     var isOn = on(id, dflt);
     if (typeof GM_registerMenuCommand !== "function") return isOn;
@@ -43,23 +40,17 @@
 
   if (menu('translate', 'Wavez Translate', 'on')) (function (window) {
 
-    // CONFIG Language to translate INTO (ISO code: "en", "es", "pt", "ja", ...).
     var TARGET_LANG = "en";
 
-    // How translations show (WZTranslate.setMode live): "append" adds a line beneath, "replace" swaps in place, "hover" crossfades on hover.
     var DISPLAY_MODE = "append";
 
-    // Only translate messages NOT already in TARGET_LANG (uses Google's detected source language). Set false to translate everything.
     var ONLY_NON_TARGET = true;
 
-    // Max simultaneous translation requests (keeps the free endpoint from rate-limiting).
     var MAX_INFLIGHT = 4;
 
-    // --------------------------------------------------------------------------
     (function () {
       "use strict";
 
-      // Chat bodies carry a wavez token (stable across themes). System callouts don't, so we anchor off the callout icon's class and grab the paragraph beside it.
       var MSG_SELECTOR =
         '[class*="wavezfm-chat-text-size"], .wavezfm-centered-icon + div > p';
 
@@ -70,7 +61,6 @@
         enabled: true,
       };
 
-      // --- styling -------------------------------------------------------------
       var style = document.createElement("style");
       style.textContent =
         ".wz-translation{display:block;margin-top:2px;opacity:.6;font-style:italic;" +
@@ -81,7 +71,6 @@
         ".wz-hover.wz-swap{opacity:0;transform:translateY(3px)}";
       (document.head || document.documentElement).appendChild(style);
 
-      // --- cross-origin GET (GM first, fetch fallback) -------------------------
       function httpGet(url) {
         return new Promise(function (resolve, reject) {
           if (typeof GM_xmlhttpRequest === "function") {
@@ -108,7 +97,6 @@
             });
             return;
           }
-          // No GM API (e.g. raw injection): the endpoint sends CORS *, so plain fetch works in most setups.
           fetch(url)
             .then(function (r) {
               return r.text();
@@ -117,7 +105,6 @@
         });
       }
 
-      // --- concurrency-limited queue -------------------------------------------
       var inflight = 0;
       var queue = [];
       function pump() {
@@ -140,13 +127,11 @@
         });
       }
 
-      // translation cache: original text -> { text, src }
       var cache = Object.create(null);
 
       function translate(text) {
         if (cache[text]) return Promise.resolve(cache[text]);
         return enqueue(function () {
-          // dict-chrome-ex (Google Dictionary extension's endpoint) is far less rate-limited than client=gtx, which bot-blocks a burst of messages on room load. Shape: [["translated text","src lang"]].
           var url =
             "https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=" +
             encodeURIComponent(config.target) +
@@ -162,7 +147,6 @@
         });
       }
 
-      // --- rendering -----------------------------------------------------------
       function clearTranslation(el) {
         if (el._wzNode && el._wzNode.parentNode) {
           el._wzNode.parentNode.removeChild(el._wzNode);
@@ -173,7 +157,6 @@
           el._wzOriginal = null;
         }
         if (el._wzHover) {
-          // Restore the original markup if we're mid-swap, then drop hover state.
           if (el._wzHover.shown) el.innerHTML = el._wzHover.html;
           el._wzHover = null;
         }
@@ -181,13 +164,12 @@
         el.removeAttribute("title");
       }
 
-      // Crossfade original/translation on hover; a busy flag keeps the observer from reacting to our own swaps.
       function swapHover(el, toTranslated) {
         var h = el._wzHover;
         if (!h || h.shown === toTranslated) return;
         h.shown = toTranslated;
         el._wzBusy = true;
-        el.classList.add("wz-swap"); // fade + nudge out
+        el.classList.add("wz-swap");
         window.setTimeout(function () {
           if (!el._wzHover) {
             el.classList.remove("wz-swap");
@@ -196,8 +178,7 @@
           }
           if (toTranslated) el.textContent = h.translated;
           else el.innerHTML = h.html;
-          el.classList.remove("wz-swap"); // fade back in
-          // Clear busy after the mutation records have been delivered.
+          el.classList.remove("wz-swap");
           window.setTimeout(function () {
             el._wzBusy = false;
           }, 0);
@@ -222,8 +203,8 @@
         clearTranslation(el);
         if (config.mode === "replace") {
           el._wzOriginal = original;
-          el.textContent = translated; // drops inline emoji <img>; use hover mode to keep them
-          el.classList.add("wz-replaced"); // leading 🌐 marks the swap
+          el.textContent = translated;
+          el.classList.add("wz-replaced");
           el.title = original;
           return;
         }
@@ -231,7 +212,6 @@
           setupHover(el, translated);
           return;
         }
-        // append (default)
         var node = document.createElement("span");
         node.className = "wz-translation";
         node.textContent = translated;
@@ -239,20 +219,17 @@
         el.parentNode.insertBefore(node, el.nextSibling);
       }
 
-      // At least two letters worth translating (skip pure emoji/numbers/links).
       var LETTERS = /\p{L}{2,}/u;
 
       function process(el) {
         if (!config.enabled || el._wzBusy) return;
         var original = (el.textContent || "").trim();
         if (!original || !LETTERS.test(original)) return;
-        // Skip text we've already handled: our source, or the translation swapped in on hover.
         if (original === el._wzSrc || original === el._wzTranslated) return;
         el._wzSrc = original;
 
         translate(original)
           .then(function (res) {
-            // Text changed mid-translation; bail, the observer re-fires for the new content.
             if ((el.textContent || "").trim() !== original) return;
             el._wzTranslated = res.text.trim();
             var sameLang =
@@ -271,9 +248,7 @@
             render(el, original, res.text);
           })
           .catch(function (err) {
-            // Endpoint down (bot page / CORS / rate-limit) fails silently otherwise; warn once so it's not mistaken for a dead selector.
             if (!process._warned) { process._warned = true; console.warn("%c[wz-translate]", "color:#30C7FB;font-weight:bold", "translation request failed - the endpoint is likely blocking (bot check / CORS / rate-limit), not the selector:", err); }
-            // Network/parse error: allow a retry next time the node is seen.
             if (el._wzSrc === original) el._wzSrc = null;
           });
       }
@@ -287,31 +262,27 @@
         for (var i = 0; i < nodes.length; i++) process(nodes[i]);
       }
 
-      // --- observe chat --------------------------------------------------------
       var observer = new MutationObserver(function (mutations) {
         for (var i = 0; i < mutations.length; i++) {
           var m = mutations[i];
           for (var j = 0; j < m.addedNodes.length; j++) scan(m.addedNodes[j]);
-          // Text swapped in place (React re-render): re-check the target element.
           if (m.type === "characterData" && m.target.parentNode) {
             var p = m.target.parentNode;
             if (p.matches && p.matches(MSG_SELECTOR)) process(p);
           }
         }
       });
-      // Wait for <body>: at document-start (the all-in-one bundle) it isn't parsed yet.
       function observeChat() {
         observer.observe(document.body, {
           childList: true,
           subtree: true,
           characterData: true,
         });
-        scan(document.body); // catch messages already on screen
+        scan(document.body);
       }
       if (document.body) observeChat();
       else document.addEventListener("DOMContentLoaded", observeChat, { once: true });
 
-      // --- live controls -------------------------------------------------------
       function retranslateAll() {
         var nodes = document.querySelectorAll(MSG_SELECTOR);
         for (var i = 0; i < nodes.length; i++) {
@@ -320,13 +291,11 @@
         }
       }
 
-      // Expose controls on the page window (unsafeWindow) so they're reachable from the DevTools console; under a sandboxed @grant the script's own `window` isn't the page's.
       var pageWindow = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
       pageWindow.WZTranslate = {
         config: config,
         setMode: function (mode) {
           config.mode = mode;
-          // Re-render every message in the new layout.
           var nodes = document.querySelectorAll(MSG_SELECTOR);
           for (var i = 0; i < nodes.length; i++) {
             nodes[i]._wzSrc = null;
@@ -371,7 +340,6 @@
 
       const ID = 'wavez-open-spotify-btn';
 
-      // Drop YouTube descriptor tags in ()/[] ("Official Video", "Lyrics", "HD"). Plain text search beats track:/artist: filters since the artist is a YT channel handle.
       const stripNoise = (s) => (s || '')
         .replace(/[([][^)\]]*\b(officials?|video|audio|lyrics?|visuali[sz]er|m\/?v|hd|4k|remaster(?:ed)?|explicit)\b[^)\]]*[)\]]/gi, '')
         .replace(/\s{2,}/g, ' ')
@@ -439,7 +407,7 @@
           ['Track (Official Music Video) [HD]', 'Track'],
           ['Title (Lyrics)', 'Title'],
           ['Da Funk (Remastered)', 'Da Funk'],
-          ['Power (feat. Dwele)', 'Power (feat. Dwele)'], // real parens kept
+          ['Power (feat. Dwele)', 'Power (feat. Dwele)'],
         ];
         cases.forEach(([raw, want]) =>
           console.assert(stripNoise(raw) === want, 'stripNoise:', raw, '->', stripNoise(raw), 'want', want));
@@ -526,7 +494,7 @@
           box-shadow: 0 0 0 2px var(--theme-room-nav);
         }
       `;
-      (document.head || document.documentElement).appendChild(css); // head may be unparsed at document-start (the bundle)
+      (document.head || document.documentElement).appendChild(css);
 
       function getRail() {
         return document.querySelector('[data-room-desktop-rail="true"]');
@@ -568,7 +536,6 @@
           rail.style.display = hidden ? 'none' : '';
           btn.classList.toggle('chat-hidden', hidden);
 
-          // Opening the chat clears the unread dot.
           if (!hidden) btn.classList.remove('has-new');
 
           if (hidden) {
@@ -576,7 +543,6 @@
           } else {
             const rect = rail.getBoundingClientRect();
 
-            // Makes the handle stick out slightly from the chat rail
             btn.style.right = `${window.innerWidth - rect.left - 1}px`;
           }
         }
@@ -589,14 +555,12 @@
 
         window.addEventListener('resize', apply);
 
-        // Flag an unread dot when a message arrives while chat is hidden.
         const markUnread = () => {
           if (localStorage.getItem(KEY) === 'true') btn.classList.add('has-new');
         };
 
         const api = window.WavezFM;
         if (api && api.version === '1') {
-          // Bridge fires only on real chat messages - no false positives from unrelated rail DOM churn.
           api.room.subscribe('chat_message', markUnread);
         } else {
           new MutationObserver((records) => {
@@ -621,7 +585,6 @@
     (function () {
       'use strict';
 
-      // Grab a handle to the live socket so we can send (reading is done by mirroring the rail DOM). Wraps message listeners only, never the constructor.
       let socket = null;
       let reqN = 0;
 
@@ -630,7 +593,7 @@
         let b;
         try { b = JSON.parse(e.data); } catch { return; }
         if (!b || b.version !== 'v1') return;
-        socket = e.target; // this is the wavez socket
+        socket = e.target;
       }
 
       const addEL = WebSocket.prototype.addEventListener;
@@ -672,10 +635,8 @@
         return true;
       }
 
-      // Popup window with a custom chat UI (blank same-origin window => no session).
       let popup = null;
 
-      // Copy the page's stylesheets into the popup so theme vars, font and scrollbars are the live ones; our markup just references var(--theme-*).
       function copyStyles(win) {
         for (const sheet of document.styleSheets) {
           try {
@@ -694,7 +655,6 @@
         }
       }
 
-      // Our layout, loaded after the page sheets so it wins; colors/fonts pull from the copied --theme-* vars (fallbacks cover a cold load).
       const popupCss = () => `
         :root { color-scheme: dark; }
         * { box-sizing: border-box; }
@@ -762,21 +722,20 @@
         const list = d.getElementById('wz-list');
         const input = d.getElementById('wz-input');
 
-        // Mirror the rail's message nodes verbatim; the copied stylesheets style the clones, so it's pixel-identical.
         function railList() {
           const rail = document.querySelector('[data-room-desktop-rail="true"]');
           if (!rail) return null;
-          let el = rail.querySelector('[class*="wavezfm-chat-text-size"]'); // a message body
+          let el = rail.querySelector('[class*="wavezfm-chat-text-size"]');
           while (el && el !== rail) {
             const oy = getComputedStyle(el).overflowY;
-            if (oy === 'auto' || oy === 'scroll') return el; // the scroll container
+            if (oy === 'auto' || oy === 'scroll') return el;
             el = el.parentElement;
           }
           return null;
         }
 
         function clone(node) {
-          if (node.nodeType !== 1) return; // elements only
+          if (node.nodeType !== 1) return;
           const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
           list.appendChild(d.importNode(node, true));
           if (atBottom) list.scrollTop = list.scrollHeight;
@@ -786,7 +745,7 @@
         (function attach() {
           if (!popup || popup.closed) return;
           const src = railList();
-          if (!src) { popup.setTimeout(attach, 300); return; } // wait for chat to render
+          if (!src) { popup.setTimeout(attach, 300); return; }
           for (const child of src.children) clone(child);
           list.scrollTop = list.scrollHeight;
           mo = new MutationObserver((muts) => {
@@ -816,7 +775,6 @@
         });
       }
 
-      // Pop-out button (added once the page DOM exists).
       const BTN_CSS = `
         #wavez-chat-popout-btn {
           position: fixed; right: 0; top: 50%; transform: translateY(-50%); margin-top: -64px;
@@ -878,7 +836,6 @@
         );
       }
 
-      // nicewoot measures the imgur image (new Image()) to size its avatar sprites, so a region-blocked browser measures the placeholder and the geometry is wrong however we rewrite the DOM. Rewrite at the src boundary so the measurement loads Rimgo. Needs document-start.
       function patchImageSrc() {
         const proto = HTMLImageElement.prototype;
         for (const prop of ['src', 'srcset']) {
@@ -891,7 +848,6 @@
             set(v) { desc.set.call(this, rewrite(v)); }
           });
         }
-        // Also the setAttribute path.
         const setAttr = proto.setAttribute;
         proto.setAttribute = function (name, value) {
           if (name === 'src' || name === 'srcset') value = rewrite(value);
@@ -914,7 +870,6 @@
         }
       }
 
-      // Badges live in an injected <style> block (--nw-badge-img: url(...)), not an attribute, so rewrite the stylesheet text too.
       function fixStyleEl(el) {
         if (!el || el.tagName !== 'STYLE') return;
 
@@ -925,20 +880,18 @@
         if (next !== css) el.textContent = next;
       }
 
-      // insertRule() rules have no <style> text node, so rewrite them in the CSSOM. Recurse into @media/@layer/@supports.
       function fixRules(parent) {
         let rules;
         try {
           rules = parent.cssRules;
         } catch (e) {
-          return; // cross-origin sheet, not readable
+          return;
         }
         if (!rules) return;
 
         for (let i = 0; i < rules.length; i++) {
           const rule = rules[i];
 
-          // Grouping rule - descend.
           if (rule.cssRules && rule.cssRules.length) {
             fixRules(rule);
             continue;
@@ -954,14 +907,12 @@
             parent.deleteRule(i);
             parent.insertRule(next, i);
           } catch (e) {
-            // malformed rule - skip
           }
         }
       }
 
       function fixSheets(root) {
         let sheets = [];
-        // <style> + <link>, plus constructed adoptedStyleSheets.
         try {
           if (root.styleSheets) sheets = sheets.concat(Array.from(root.styleSheets));
         } catch (e) {}
@@ -977,9 +928,8 @@
         fixSheets(root);
       }
 
-      // The niceatc badge sheet is cross-origin, so the CSSOM won't read it. Refetch it, rewrite the raw CSS, inject as a local <style>, and disable the original <link>. Needs GM_xmlhttpRequest + @connect.
       const REMOTE_CSS_HOST = 'niceatc';
-      const remoteCss = new Map(); // href -> 'pending' | 'done' | 'clean' | 'failed'
+      const remoteCss = new Map();
 
       function gmFetch() {
         if (typeof GM_xmlhttpRequest !== 'undefined') return GM_xmlhttpRequest;
@@ -993,15 +943,15 @@
 
         let url;
         try { url = new URL(href, location.href); } catch (e) { return; }
-        if (url.origin === location.origin) return;          // same-origin = readable elsewhere
-        if (!url.hostname.includes(REMOTE_CSS_HOST)) return; // only the niceatc sheet
+        if (url.origin === location.origin) return;
+        if (!url.hostname.includes(REMOTE_CSS_HOST)) return;
 
         const state = remoteCss.get(href);
-        if (state === 'done') { link.disabled = true; return; } // keep replacements disabled
-        if (state) return;                                      // pending / clean / failed
+        if (state === 'done') { link.disabled = true; return; }
+        if (state) return;
 
         const fetcher = gmFetch();
-        if (!fetcher) return; // no cross-origin read available (script needs @grant)
+        if (!fetcher) return;
 
         remoteCss.set(href, 'pending');
         fetcher({
@@ -1038,7 +988,6 @@
 
         root.querySelectorAll?.('style').forEach(fixStyleEl);
 
-        // Descend into shadow roots.
         root.querySelectorAll?.('*').forEach(el => {
           if (el.shadowRoot) {
             scan(el.shadowRoot);
@@ -1054,7 +1003,6 @@
       }
 
       function start() {
-        // Attach at document-start, before nicewoot mounts avatars, so their imgur URLs are rewritten before the browser fetches the placeholder.
         const observer = new MutationObserver(mutations => {
           for (const mutation of mutations) {
             if (mutation.type === 'childList') {
@@ -1067,7 +1015,6 @@
           }
         });
 
-        // Observe <html> so injected <head> <style> blocks are caught too.
         observer.observe(document.documentElement, {
           childList: true,
           subtree: true,
@@ -1075,7 +1022,6 @@
           attributeFilter: ['href', 'src', 'srcset', 'data-src', 'poster', 'style']
         });
 
-        // Sweep now, again once the body parses, then a slow fallback.
         fullScan();
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fullScan);
         setInterval(fullScan, 1500);
@@ -1089,7 +1035,7 @@
 
     (function () {
       var API = "https://api.wavez.fm/settings";
-      var state = null; // null until first read
+      var state = null;
       var busy = false;
       var btn = null;
 
@@ -1134,7 +1080,6 @@
         else { btn.style.borderColor = ""; btn.style.background = ""; btn.style.color = "rgba(255,255,255,.4)"; }
       }
 
-      // State colour is inline so it renders without Tailwind JIT.
       function build() {
         var wrap = document.createElement("div");
         wrap.className = "inline-flex";
@@ -1149,7 +1094,6 @@
         return wrap;
       }
 
-      // The wrapper div, not the button (it also has inline-flex).
       function discordWrap() {
         var btns = document.querySelectorAll('button[aria-label="Discord"]');
         for (var i = 0; i < btns.length; i++) {
@@ -1160,7 +1104,6 @@
         return null;
       }
 
-      // Sit after Discord; re-add if the SPA re-renders the row away.
       function ensure() {
         if (document.getElementById("wz-scrobble-btn")) return;
         var anchor = discordWrap();
@@ -1179,7 +1122,6 @@
 
   if (menu('auto-woot', 'Wavez Auto Woot', 'off')) (function (window) {
 
-    // Uses the official extension API: https://github.com/WavezFM/WavezFM-Extension-API
     (function () {
       'use strict';
 
@@ -1189,7 +1131,6 @@
       var enabled = localStorage.getItem('wavez-autowoot') !== 'off';
       var lastKey = null;
 
-      // New track, not already wooted, voting allowed. playbackKey = track-change signal, clientVote = our vote.
       function shouldVote(key, last, votes) {
         return !!key && key !== last && !!votes && votes.canVote && votes.clientVote !== 'woot';
       }
@@ -1199,7 +1140,6 @@
         var state = api.room.getState();
         var pb = state && state.playback;
         if (!pb) return;
-        // Stamp lastKey only on an actual vote, else a not-yet-votable track gets marked handled and never retried (the background-tab miss).
         if (!shouldVote(pb.playbackKey, lastKey, state.votes)) return;
         lastKey = pb.playbackKey;
         var res = api.actions.vote('woot');
@@ -1207,15 +1147,13 @@
       }
 
       function init(api) {
-        voteCurrent(api); // catch the track already playing at load
+        voteCurrent(api);
         api.room.subscribe('playback_changed', function () { voteCurrent(api); });
-        // Retry once the vote state actually arrives for the new track.
         api.room.subscribe('votes_changed', function () { voteCurrent(api); });
-        // Backstop for a hidden tab where events get missed/throttled; shouldVote gates it, so re-checking is free.
         setInterval(function () { voteCurrent(api); }, 30000);
 
         window.WZWoot = {
-          now: function () { lastKey = null; voteCurrent(api); }, // force a woot
+          now: function () { lastKey = null; voteCurrent(api); },
           on: function () { enabled = true; localStorage.setItem('wavez-autowoot', 'on'); voteCurrent(api); },
           off: function () { enabled = false; localStorage.setItem('wavez-autowoot', 'off'); },
           get enabled() { return enabled; }
@@ -1223,7 +1161,6 @@
         log('auto-woot ' + (enabled ? 'on' : 'off') + ' - toggle with WZWoot.on() / WZWoot.off()');
       }
 
-      // The bridge may be injected after document-idle, so wait for it.
       var tries = 0;
       var wait = setInterval(function () {
         var api = window.WavezFM;
@@ -1231,11 +1168,10 @@
           clearInterval(wait);
           init(api);
         } else if (++tries > 40) {
-          clearInterval(wait); // ~20s, give up quietly (not in a room, or API gone)
+          clearInterval(wait);
         }
       }, 500);
 
-      // Quick check on the vote guard: load with #wz-woot-test.
       if (location.hash === '#wz-woot-test') {
         var ok = { canVote: true, clientVote: null };
         console.assert(shouldVote('k1', null, ok) === true, 'new track, can vote');
@@ -1250,37 +1186,30 @@
 
   if (menu('auto-grab', 'Wavez Auto Grab', 'off')) (function (window) {
 
-    // Track state comes from the extension API (github.com/WavezFM/WavezFM-Extension-API), but grab isn't an exposed action, so we click the real button and pick from the picker.
     (function () {
       'use strict';
 
-      // Playlist to grab into, by name. "" = whichever the picker lists first.
       var PLAYLIST = 'Recs';
 
-      // Only set these if the heuristics below match the wrong element. Run WZGrab.debug() in the console to see what they currently find.
       var GRAB_BTN_SELECTOR = '';
       var PICKER_SELECTOR = '';
 
       var LS_KEY = 'wavez-autograb';
-      // Default off: unlike a woot, a grab writes to your playlist.
       var enabled = localStorage.getItem(LS_KEY) === 'on';
       var lastKey = null;
 
       var log = function () { console.log.apply(console, ["%c[wz-grab]", "color:#FFCA28;font-weight:bold"].concat([].slice.call(arguments))); };
       var warn = function () { console.warn.apply(console, ["%c[wz-grab]", "color:#FFCA28;font-weight:bold"].concat([].slice.call(arguments))); };
 
-      // Grab once, after you woot. playbackKey = track, clientVote = your vote (manual or auto-woot), clientGrabbed = already in a playlist.
       function shouldGrab(key, last, votes) {
         return !!key && key !== last && !!votes &&
           votes.clientVote === 'woot' && !votes.clientGrabbed;
       }
 
-      // ---------------------------------- dom ----------------------------------
       function visible(el) {
         return el.offsetParent !== null;
       }
 
-      // Vote buttons have no aria-label/id. Anchor on the --theme-vote-grab count span (survives relabels/locales), falling back to the "Grab" label span.
       function findGrabButton() {
         if (GRAB_BTN_SELECTOR) return document.querySelector(GRAB_BTN_SELECTOR);
         var btns = document.querySelectorAll('button');
@@ -1288,7 +1217,6 @@
         for (var i = 0; i < btns.length; i++) {
           if (btns[i].querySelector('[style*="theme-vote-grab"]')) return btns[i];
           if (byLabel) continue;
-          // Match the label span exactly: the button's own textContent reads "Grab0".
           var spans = btns[i].querySelectorAll('span');
           for (var j = 0; j < spans.length; j++) {
             if (spans[j].textContent.trim().toLowerCase() === 'grab') { byLabel = btns[i]; break; }
@@ -1297,36 +1225,32 @@
         return byLabel;
       }
 
-      // The picker has no role/dialog attrs, only data-wavezfm-grab-menu-root (shared with the Grab button's wrapper). It's the one NOT containing the button, and only exists while open.
       function findPicker() {
         if (PICKER_SELECTOR) return document.querySelector(PICKER_SELECTOR);
         var btn = findGrabButton();
         var roots = document.querySelectorAll('[data-wavezfm-grab-menu-root]');
         for (var i = 0; i < roots.length; i++) {
-          if (btn && roots[i].contains(btn)) continue; // that's the wrapper
+          if (btn && roots[i].contains(btn)) continue;
           if (visible(roots[i])) return roots[i];
         }
         return null;
       }
 
-      // An option's textContent runs the name into the subtitle ("RecsPlaylist - 53/300"), so read the name span instead.
       function nameOf(el) {
         var span = el.querySelector('span.truncate');
         return (span ? span.textContent : el.textContent).trim();
       }
 
-      // The second truncate span, e.g. "Active - 58/300" or "Playlist - 53/300".
       function detailOf(el) {
         var spans = el.querySelectorAll('span.truncate');
         return spans.length > 1 ? spans[1].textContent.trim() : '';
       }
 
-      // Every playlist button in the open picker. Full playlists come back too, but disabled - callers decide whether to care.
       function optionsIn(picker) {
         var items = picker.querySelectorAll('button');
         var out = [];
         for (var i = 0; i < items.length; i++) {
-          if (items[i].getAttribute('aria-label') === 'Cancel') continue; // header close
+          if (items[i].getAttribute('aria-label') === 'Cancel') continue;
           if (visible(items[i])) out.push(items[i]);
         }
         return out;
@@ -1337,7 +1261,6 @@
         if (cancel) cancel.click();
       }
 
-      // Open the picker if needed, pass options to cb, and report if we opened it so the caller can close it.
       function withPicker(cb) {
         var open = findPicker();
         if (open) return cb(optionsIn(open), null);
@@ -1350,7 +1273,6 @@
         });
       }
 
-      // Poll for fn() to go truthy, up to ms. The picker opens asynchronously.
       function waitFor(fn, ms, cb) {
         var waited = 0;
         var t = setInterval(function () {
@@ -1361,7 +1283,6 @@
       }
 
       function choosePlaylist(picker) {
-        // Full playlists (300/300) come through disabled, so they can't be grabbed into.
         var options = optionsIn(picker).filter(function (el) { return !el.disabled; });
         if (!options.length) { log('picker opened but listed no playlists'); return; }
 
@@ -1394,13 +1315,11 @@
         var state = api.room.getState();
         var pb = state && state.playback;
         if (!pb) return;
-        // Stamp lastKey only on an actual grab, else the pre-woot window dedupes the track away.
         if (!shouldGrab(pb.playbackKey, lastKey, state.votes)) return;
         lastKey = pb.playbackKey;
         doGrab();
       }
 
-      // ----------------------------------- ui ----------------------------------
       function buildUI(api) {
         var css = document.createElement('style');
         css.textContent =
@@ -1432,19 +1351,16 @@
         document.body.appendChild(pill);
       }
 
-      // ---------------------------------- init ---------------------------------
       function init(api) {
-        grabCurrent(api); // catch a track that's already wooted at load
-        // The woot is the trigger, so watch votes, not playback.
+        grabCurrent(api);
         api.room.subscribe('votes_changed', function () { grabCurrent(api); });
         buildUI(api);
 
         window.WZGrab = {
           on: function () { enabled = true; localStorage.setItem(LS_KEY, 'on'); grabCurrent(api); },
           off: function () { enabled = false; localStorage.setItem(LS_KEY, 'off'); },
-          now: function () { lastKey = null; doGrab(); }, // force a grab
+          now: function () { lastKey = null; doGrab(); },
           get enabled() { return enabled; },
-          // Print your playlist names for PLAYLIST. Opens/reads/closes the picker (opening doesn't grab); async, prints once rendered.
           playlists: function () {
             withPicker(function (options, opened) {
               if (options.length) {
@@ -1460,7 +1376,6 @@
               if (opened) closePicker(opened);
             });
           },
-          // What the heuristics currently match, for pinning the selectors.
           debug: function () {
             console.log('grab button:', findGrabButton());
             console.log('picker (open it first):', findPicker());
@@ -1469,7 +1384,6 @@
         log('auto grab ' + (enabled ? 'on' : 'off') + ' - toggle with the corner pill or WZGrab.on()/off()');
       }
 
-      // The bridge may arrive after document-idle, so wait for it. Logged up front so a missing bridge is distinguishable from a missing script.
       log('loaded, waiting for the WavezFM bridge...');
       var tries = 0;
       var wait = setInterval(function () {
@@ -1477,7 +1391,7 @@
         if (api && api.version === '1') {
           clearInterval(wait);
           init(api);
-        } else if (++tries > 40) { // ~20s
+        } else if (++tries > 40) {
           clearInterval(wait);
           warn('WavezFM bridge never appeared, so WZGrab is unavailable. Are you inside a room? window.WavezFM is currently ' + typeof window.WavezFM + '.');
         }
@@ -1501,24 +1415,20 @@
     (function () {
       'use strict';
 
-      // A track is flagged when its allowed list is a subset of these.
       var REGIONS = ['US', 'CA'];
 
-      // YouTube Data API v3 key. Leave blank to be prompted on first run (then remembered).
       var YT_API_KEY = '';
 
       var API = 'https://api.wavez.fm';
       var KEY_LS = 'wavez-region-ytkey';
-      var FLAGS_LS = 'wavez-region-flags-v1'; // persisted flags, to restore pills on load
+      var FLAGS_LS = 'wavez-region-flags-v1';
       var YT = 'https://www.googleapis.com/youtube/v3/videos';
 
-      // normTitle -> count, so rows can be tagged as the list re-renders. Title is all we can match on: rows carry no track id.
       var lockedTitles = {};
-      var lastOffenders = []; // from the last check, for the console remove helpers
+      var lastOffenders = [];
 
       var log = function () { console.log.apply(console, ["%c[wz-region]", "color:#9CCC65;font-weight:bold"].concat([].slice.call(arguments))); };
 
-      // Snoop the app's own Authorization header off its requests and reuse it, since we can't guess it.
       var authHeader = null;
       (function captureAuth() {
         var of = window.fetch;
@@ -1551,7 +1461,7 @@
           if (!res.ok) throw new Error(path + ' -> ' + res.status);
           return res.json();
         }).then(function (j) {
-          return Array.isArray(j) ? j : (j && j.data) || []; // bare array today, tolerate a data envelope
+          return Array.isArray(j) ? j : (j && j.data) || [];
         });
       }
 
@@ -1573,13 +1483,11 @@
 
       function saveFlags() { writeJSON(FLAGS_LS, { regions: REGIONS.join(','), titles: lockedTitles }); }
 
-      // Pure, so the self-check can hit it: locked when every allowed country is one of ours.
       function limitedTo(allowed, regions) {
         if (!allowed || !allowed.length) return false;
         return allowed.every(function (r) { return regions.indexOf(r) !== -1; });
       }
 
-      // videos.list, 50 ids and 1 quota unit per call. Resolves { id: { status: 'ok'|'gone', allowed } }; ids YouTube omits are deleted/private.
       function restrictions(ids) {
         var key = apiKey();
         if (!key) return Promise.reject(new Error('no API key'));
@@ -1596,7 +1504,6 @@
               .then(function (j) {
                 (j.items || []).forEach(function (item) {
                   var rr = item.contentDetails && item.contentDetails.regionRestriction;
-                  // Only the allowed whitelist; a blocked list naming all-but-two countries would slip past.
                   found[item.id] = (rr && rr.allowed) || null;
                 });
               });
@@ -1616,7 +1523,6 @@
             var locked = [], gone = [];
             yt.forEach(function (t) {
               var r = map[t.sourceId];
-              // playlistId/trackId ride along for removal later; report() trims them for the console table.
               var row = { playlistId: playlist.id, playlistName: playlist.name, trackId: t.id, title: t.title, track: t.title + (t.artist ? ' - ' + t.artist : ''), url: 'https://youtu.be/' + t.sourceId };
               if (r.status === 'gone') gone.push(row);
               else if (r.status === 'ok' && limitedTo(r.allowed, REGIONS)) {
@@ -1629,7 +1535,6 @@
         });
       }
 
-      // One playlist at a time: sequential YouTube calls, ordered log. A full scan resets flags first so a now-available track drops its pill, then persists.
       function checkAll(only) {
         if (!apiKey()) { log('no API key, cancelled'); return Promise.resolve([]); }
         return apiGet('/playlists').then(function (playlists) {
@@ -1655,7 +1560,6 @@
         return locked.length;
       }
 
-      // Flatten results into removable offenders, gone first then region-locked.
       function offendersOf(results) {
         var out = [];
         results.forEach(function (r) {
@@ -1678,11 +1582,8 @@
         });
       }
 
-      // ----------------------------------- ui ----------------------------------
-      // Tabler's world icon, matching the toolbar's own icons.
       var WORLD = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-world"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path><path d="M3.6 9h16.8"></path><path d="M3.6 15h16.8"></path><path d="M11.5 3a17 17 0 0 0 0 18"></path><path d="M12.5 3a17 17 0 0 1 0 18"></path></svg>';
 
-      // No id on the toolbar, so anchor on the Create button. Step out by parent, not closest('.inline-flex'): the button carries that class itself.
       function toolbar() {
         var create = document.querySelector('button[aria-label="Create playlist"]');
         var wrap = create && create.parentElement;
@@ -1701,7 +1602,6 @@
           btn.setAttribute('aria-label', n ? n + ' track(s) playable only in ' + REGIONS.join('/') + ' - see console' : 'No region-locked tracks');
           markRows();
           if (!toastUnavailable(results)) toast('Every track is available', 'nothing region-locked or missing');
-          // Locked but no pill placed means the row markup moved; say so rather than look clean.
           if (n && !document.querySelector('.wz-region-flag')) log('found ' + n + ' locked track(s) but could not tag any row - run WZRegion.debug()');
         }).catch(function (e) {
           log('failed: ' + e.message);
@@ -1734,7 +1634,7 @@
       function pill(count, key) {
         var el = document.createElement('span');
         el.className = 'wz-region-flag inline-flex shrink-0 items-center gap-1 rounded-md border border-rose-300/24 bg-rose-400/12 px-2 py-0.5 text-[10px] font-semibold tracking-[0.12em] text-rose-100 uppercase';
-        el.dataset.wzTitle = key; // lets removal find this track's pill(s)
+        el.dataset.wzTitle = key;
         var msg = 'YouTube only allows this track in ' + count + ' countr' + (count === 1 ? 'y' : 'ies') + ', all inside ' + REGIONS.join('/') + '.';
         el.title = msg;
         el.setAttribute('aria-label', msg);
@@ -1742,7 +1642,6 @@
         return el;
       }
 
-      // After a DELETE, dim the row and swap its pill(s); wavez won't re-render until a reload.
       function markRemoved(title) {
         var key = norm(title);
         var pills = document.querySelectorAll('.wz-region-flag');
@@ -1755,19 +1654,17 @@
         }
       }
 
-      // Normalise for matching: DOM titles carry NBSPs/doubled spaces the API title doesn't.
       function norm(s) {
         return (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
       }
 
       function tag(el, n, key) {
         var host = el.parentElement;
-        if (!host || host.querySelector('.wz-region-flag')) return false; // no parent, or already tagged
+        if (!host || host.querySelector('.wz-region-flag')) return false;
         host.appendChild(pill(n, key));
         return true;
       }
 
-      // Match rows by title text across most elements; a full scan per re-render but only a few thousand nodes.
       function markRows() {
         var titles = Object.keys(lockedTitles);
         if (!titles.length) return;
@@ -1776,14 +1673,13 @@
         var i, el, text;
         for (i = 0; i < nodes.length; i++) {
           el = nodes[i];
-          if (el.children.length > 1) continue; // a wrapper, not the title line (one child allowed for a search highlight)
+          if (el.children.length > 1) continue;
           text = norm(el.textContent);
           if (lockedTitles[text] === undefined) continue;
-          if (el.children.length === 1 && norm(el.children[0].textContent) === text) continue; // tag the inner title node instead
+          if (el.children.length === 1 && norm(el.children[0].textContent) === text) continue;
           seen[text] = true;
           tag(el, lockedTitles[text], text);
         }
-        // Fallback: title run into a duration/badge in the same leaf. Short extra text only, so it can't latch onto a row wrapper.
         var missing = titles.filter(function (t) { return !seen[t]; });
         if (!missing.length) return;
         for (i = 0; i < nodes.length; i++) {
@@ -1796,7 +1692,6 @@
         }
       }
 
-      // Render into the site's own toast stack if found (inherits its animation/placement), else a themed stack of our own. TOAST_HOST pins the selector if the guess is wrong.
       var TOAST_HOST = '';
       function toastHost() {
         var host = document.querySelector(TOAST_HOST || '[data-sonner-toaster], [data-radix-toast-viewport], .toaster, #toast-root');
@@ -1811,7 +1706,6 @@
         return { el: own, native: false };
       }
 
-      // action = { label, fn }: renders a button whose fn resolves truthy to dismiss. Action toasts linger and don't dismiss on a stray click, so the button is easy to hit.
       function toast(title, detail, action) {
         var host = toastHost();
         var el = document.createElement('div');
@@ -1845,7 +1739,6 @@
         return d.innerHTML;
       }
 
-      // One Remove toast per unavailable track, capped at 5 with a "Remove all" for the rest.
       function toastUnavailable(results) {
         var offenders = offendersOf(results);
         lastOffenders = offenders;
@@ -1859,20 +1752,17 @@
         return offenders.length;
       }
 
-      // Sequential, to stay within rate limits; resolves to how many went.
       function removeMany(list) {
         return list.reduce(function (chain, o) {
           return chain.then(function (done) { return removeOffender(o).then(function (ok) { return done + (ok ? 1 : 0); }); });
         }, Promise.resolve(0)).then(function (done) { toast('Removed ' + done + ' of ' + list.length, 'reload to refresh the list'); return done; });
       }
 
-      // Restore the last check's flags so pills come back on refresh. Ignored if REGIONS changed, since the pass/fail no longer holds.
       (function restoreFlags() {
         var f = readJSON(FLAGS_LS);
         if (f && f.regions === REGIONS.join(',') && f.titles) lockedTitles = f.titles;
       })();
 
-      // React tears down and rebuilds the toolbar and rows, so a debounced observer re-adds the button and pills.
       var pending = null;
       new MutationObserver(function () {
         clearTimeout(pending);
@@ -1882,19 +1772,16 @@
       markRows();
 
       window.WZRegion = {
-        // Check everything, or one playlist by name or id.
         check: function (only) { return checkAll(only).then(function (r) { var n = report(r); markRows(); toastUnavailable(r); return n; }); },
-        // What the anchors currently resolve to, for when the markup shifts.
         debug: function () { console.log('toolbar:', toolbar()); console.log('toast host:', toastHost()); console.log('locked titles:', lockedTitles); },
         toast: function (a, b) { toast(a || 'Test toast', b || 'from wavez-region-check'); },
-        // Log every leaf element containing the string, with its parent markup. For when a pill won't land.
         find: function (text) {
           var want = norm(text);
           var hits = [];
           var all = document.body.querySelectorAll('*');
           for (var i = 0; i < all.length; i++) {
             if (norm(all[i].textContent).indexOf(want) === -1) continue;
-            if (all[i].querySelector('#wz-region-toasts, #wz-region-btn')) continue; // skip our own furniture
+            if (all[i].querySelector('#wz-region-toasts, #wz-region-btn')) continue;
             if (!all[i].children.length) hits.push(all[i]);
           }
           hits.forEach(function (el) { console.log(el, '\nparent markup:\n' + (el.parentElement ? el.parentElement.outerHTML.slice(0, 700) : '(none)')); });
@@ -1903,11 +1790,8 @@
         },
         playlists: function () { return apiGet('/playlists').then(function (p) { console.table(p.map(function (x) { return { id: x.id, name: x.name, active: !!x.isActive }; })); return p; }); },
         setKey: function (k) { localStorage.setItem(KEY_LS, k); return 'saved'; },
-        // Forget the persisted pills; they return on the next check.
         clearFlags: function () { localStorage.removeItem(FLAGS_LS); lockedTitles = {}; return 'cleared'; },
-        // The last check's offenders, to eyeball what remove() would touch.
         unavailable: function () { console.table(lastOffenders.map(function (o) { return { playlist: o.playlistName, track: o.track, why: o.why }; })); return lastOffenders; },
-        // Delete the last check's offenders. Narrow with 'gone', 'locked', or a title substring. Confirms first.
         remove: function (filter) {
           if (!lastOffenders.length) { log('run a check first (nothing to remove)'); return Promise.resolve(0); }
           var want = lastOffenders.filter(function (o) {

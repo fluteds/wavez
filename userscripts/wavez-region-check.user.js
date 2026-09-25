@@ -15,24 +15,20 @@
 (function () {
   'use strict';
 
-  // A track is flagged when its allowed list is a subset of these.
   var REGIONS = ['US', 'CA'];
 
-  // YouTube Data API v3 key. Leave blank to be prompted on first run (then remembered).
   var YT_API_KEY = '';
 
   var API = 'https://api.wavez.fm';
   var KEY_LS = 'wavez-region-ytkey';
-  var FLAGS_LS = 'wavez-region-flags-v1'; // persisted flags, to restore pills on load
+  var FLAGS_LS = 'wavez-region-flags-v1';
   var YT = 'https://www.googleapis.com/youtube/v3/videos';
 
-  // normTitle -> count, so rows can be tagged as the list re-renders. Title is all we can match on: rows carry no track id.
   var lockedTitles = {};
-  var lastOffenders = []; // from the last check, for the console remove helpers
+  var lastOffenders = [];
 
   var log = function () { console.log.apply(console, ["%c[wz-region]", "color:#9CCC65;font-weight:bold"].concat([].slice.call(arguments))); };
 
-  // Snoop the app's own Authorization header off its requests and reuse it, since we can't guess it.
   var authHeader = null;
   (function captureAuth() {
     var of = window.fetch;
@@ -65,7 +61,7 @@
       if (!res.ok) throw new Error(path + ' -> ' + res.status);
       return res.json();
     }).then(function (j) {
-      return Array.isArray(j) ? j : (j && j.data) || []; // bare array today, tolerate a data envelope
+      return Array.isArray(j) ? j : (j && j.data) || [];
     });
   }
 
@@ -87,13 +83,11 @@
 
   function saveFlags() { writeJSON(FLAGS_LS, { regions: REGIONS.join(','), titles: lockedTitles }); }
 
-  // Pure, so the self-check can hit it: locked when every allowed country is one of ours.
   function limitedTo(allowed, regions) {
     if (!allowed || !allowed.length) return false;
     return allowed.every(function (r) { return regions.indexOf(r) !== -1; });
   }
 
-  // videos.list, 50 ids and 1 quota unit per call. Resolves { id: { status: 'ok'|'gone', allowed } }; ids YouTube omits are deleted/private.
   function restrictions(ids) {
     var key = apiKey();
     if (!key) return Promise.reject(new Error('no API key'));
@@ -110,7 +104,6 @@
           .then(function (j) {
             (j.items || []).forEach(function (item) {
               var rr = item.contentDetails && item.contentDetails.regionRestriction;
-              // Only the allowed whitelist; a blocked list naming all-but-two countries would slip past.
               found[item.id] = (rr && rr.allowed) || null;
             });
           });
@@ -130,7 +123,6 @@
         var locked = [], gone = [];
         yt.forEach(function (t) {
           var r = map[t.sourceId];
-          // playlistId/trackId ride along for removal later; report() trims them for the console table.
           var row = { playlistId: playlist.id, playlistName: playlist.name, trackId: t.id, title: t.title, track: t.title + (t.artist ? ' - ' + t.artist : ''), url: 'https://youtu.be/' + t.sourceId };
           if (r.status === 'gone') gone.push(row);
           else if (r.status === 'ok' && limitedTo(r.allowed, REGIONS)) {
@@ -143,7 +135,6 @@
     });
   }
 
-  // One playlist at a time: sequential YouTube calls, ordered log. A full scan resets flags first so a now-available track drops its pill, then persists.
   function checkAll(only) {
     if (!apiKey()) { log('no API key, cancelled'); return Promise.resolve([]); }
     return apiGet('/playlists').then(function (playlists) {
@@ -169,7 +160,6 @@
     return locked.length;
   }
 
-  // Flatten results into removable offenders, gone first then region-locked.
   function offendersOf(results) {
     var out = [];
     results.forEach(function (r) {
@@ -192,11 +182,8 @@
     });
   }
 
-  // ----------------------------------- ui ----------------------------------
-  // Tabler's world icon, matching the toolbar's own icons.
   var WORLD = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-world"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path><path d="M3.6 9h16.8"></path><path d="M3.6 15h16.8"></path><path d="M11.5 3a17 17 0 0 0 0 18"></path><path d="M12.5 3a17 17 0 0 1 0 18"></path></svg>';
 
-  // No id on the toolbar, so anchor on the Create button. Step out by parent, not closest('.inline-flex'): the button carries that class itself.
   function toolbar() {
     var create = document.querySelector('button[aria-label="Create playlist"]');
     var wrap = create && create.parentElement;
@@ -215,7 +202,6 @@
       btn.setAttribute('aria-label', n ? n + ' track(s) playable only in ' + REGIONS.join('/') + ' - see console' : 'No region-locked tracks');
       markRows();
       if (!toastUnavailable(results)) toast('Every track is available', 'nothing region-locked or missing');
-      // Locked but no pill placed means the row markup moved; say so rather than look clean.
       if (n && !document.querySelector('.wz-region-flag')) log('found ' + n + ' locked track(s) but could not tag any row - run WZRegion.debug()');
     }).catch(function (e) {
       log('failed: ' + e.message);
@@ -248,7 +234,7 @@
   function pill(count, key) {
     var el = document.createElement('span');
     el.className = 'wz-region-flag inline-flex shrink-0 items-center gap-1 rounded-md border border-rose-300/24 bg-rose-400/12 px-2 py-0.5 text-[10px] font-semibold tracking-[0.12em] text-rose-100 uppercase';
-    el.dataset.wzTitle = key; // lets removal find this track's pill(s)
+    el.dataset.wzTitle = key;
     var msg = 'YouTube only allows this track in ' + count + ' countr' + (count === 1 ? 'y' : 'ies') + ', all inside ' + REGIONS.join('/') + '.';
     el.title = msg;
     el.setAttribute('aria-label', msg);
@@ -256,7 +242,6 @@
     return el;
   }
 
-  // After a DELETE, dim the row and swap its pill(s); wavez won't re-render until a reload.
   function markRemoved(title) {
     var key = norm(title);
     var pills = document.querySelectorAll('.wz-region-flag');
@@ -269,19 +254,17 @@
     }
   }
 
-  // Normalise for matching: DOM titles carry NBSPs/doubled spaces the API title doesn't.
   function norm(s) {
     return (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
   }
 
   function tag(el, n, key) {
     var host = el.parentElement;
-    if (!host || host.querySelector('.wz-region-flag')) return false; // no parent, or already tagged
+    if (!host || host.querySelector('.wz-region-flag')) return false;
     host.appendChild(pill(n, key));
     return true;
   }
 
-  // Match rows by title text across most elements; a full scan per re-render but only a few thousand nodes.
   function markRows() {
     var titles = Object.keys(lockedTitles);
     if (!titles.length) return;
@@ -290,14 +273,13 @@
     var i, el, text;
     for (i = 0; i < nodes.length; i++) {
       el = nodes[i];
-      if (el.children.length > 1) continue; // a wrapper, not the title line (one child allowed for a search highlight)
+      if (el.children.length > 1) continue;
       text = norm(el.textContent);
       if (lockedTitles[text] === undefined) continue;
-      if (el.children.length === 1 && norm(el.children[0].textContent) === text) continue; // tag the inner title node instead
+      if (el.children.length === 1 && norm(el.children[0].textContent) === text) continue;
       seen[text] = true;
       tag(el, lockedTitles[text], text);
     }
-    // Fallback: title run into a duration/badge in the same leaf. Short extra text only, so it can't latch onto a row wrapper.
     var missing = titles.filter(function (t) { return !seen[t]; });
     if (!missing.length) return;
     for (i = 0; i < nodes.length; i++) {
@@ -310,7 +292,6 @@
     }
   }
 
-  // Render into the site's own toast stack if found (inherits its animation/placement), else a themed stack of our own. TOAST_HOST pins the selector if the guess is wrong.
   var TOAST_HOST = '';
   function toastHost() {
     var host = document.querySelector(TOAST_HOST || '[data-sonner-toaster], [data-radix-toast-viewport], .toaster, #toast-root');
@@ -325,7 +306,6 @@
     return { el: own, native: false };
   }
 
-  // action = { label, fn }: renders a button whose fn resolves truthy to dismiss. Action toasts linger and don't dismiss on a stray click, so the button is easy to hit.
   function toast(title, detail, action) {
     var host = toastHost();
     var el = document.createElement('div');
@@ -359,7 +339,6 @@
     return d.innerHTML;
   }
 
-  // One Remove toast per unavailable track, capped at 5 with a "Remove all" for the rest.
   function toastUnavailable(results) {
     var offenders = offendersOf(results);
     lastOffenders = offenders;
@@ -373,20 +352,17 @@
     return offenders.length;
   }
 
-  // Sequential, to stay within rate limits; resolves to how many went.
   function removeMany(list) {
     return list.reduce(function (chain, o) {
       return chain.then(function (done) { return removeOffender(o).then(function (ok) { return done + (ok ? 1 : 0); }); });
     }, Promise.resolve(0)).then(function (done) { toast('Removed ' + done + ' of ' + list.length, 'reload to refresh the list'); return done; });
   }
 
-  // Restore the last check's flags so pills come back on refresh. Ignored if REGIONS changed, since the pass/fail no longer holds.
   (function restoreFlags() {
     var f = readJSON(FLAGS_LS);
     if (f && f.regions === REGIONS.join(',') && f.titles) lockedTitles = f.titles;
   })();
 
-  // React tears down and rebuilds the toolbar and rows, so a debounced observer re-adds the button and pills.
   var pending = null;
   new MutationObserver(function () {
     clearTimeout(pending);
@@ -396,19 +372,16 @@
   markRows();
 
   window.WZRegion = {
-    // Check everything, or one playlist by name or id.
     check: function (only) { return checkAll(only).then(function (r) { var n = report(r); markRows(); toastUnavailable(r); return n; }); },
-    // What the anchors currently resolve to, for when the markup shifts.
     debug: function () { console.log('toolbar:', toolbar()); console.log('toast host:', toastHost()); console.log('locked titles:', lockedTitles); },
     toast: function (a, b) { toast(a || 'Test toast', b || 'from wavez-region-check'); },
-    // Log every leaf element containing the string, with its parent markup. For when a pill won't land.
     find: function (text) {
       var want = norm(text);
       var hits = [];
       var all = document.body.querySelectorAll('*');
       for (var i = 0; i < all.length; i++) {
         if (norm(all[i].textContent).indexOf(want) === -1) continue;
-        if (all[i].querySelector('#wz-region-toasts, #wz-region-btn')) continue; // skip our own furniture
+        if (all[i].querySelector('#wz-region-toasts, #wz-region-btn')) continue;
         if (!all[i].children.length) hits.push(all[i]);
       }
       hits.forEach(function (el) { console.log(el, '\nparent markup:\n' + (el.parentElement ? el.parentElement.outerHTML.slice(0, 700) : '(none)')); });
@@ -417,11 +390,8 @@
     },
     playlists: function () { return apiGet('/playlists').then(function (p) { console.table(p.map(function (x) { return { id: x.id, name: x.name, active: !!x.isActive }; })); return p; }); },
     setKey: function (k) { localStorage.setItem(KEY_LS, k); return 'saved'; },
-    // Forget the persisted pills; they return on the next check.
     clearFlags: function () { localStorage.removeItem(FLAGS_LS); lockedTitles = {}; return 'cleared'; },
-    // The last check's offenders, to eyeball what remove() would touch.
     unavailable: function () { console.table(lastOffenders.map(function (o) { return { playlist: o.playlistName, track: o.track, why: o.why }; })); return lastOffenders; },
-    // Delete the last check's offenders. Narrow with 'gone', 'locked', or a title substring. Confirms first.
     remove: function (filter) {
       if (!lastOffenders.length) { log('run a check first (nothing to remove)'); return Promise.resolve(0); }
       var want = lastOffenders.filter(function (o) {

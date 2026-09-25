@@ -63,7 +63,6 @@
 
         main, .topbar, footer { position: relative; width: min(100%, 68rem); margin-inline: auto; }
 
-        /* Theme glow lives in a fixed overlay, because background-image gradients cannot transition. Opacity can. */
         body::before {
             content: "";
             position: fixed;
@@ -75,7 +74,6 @@
             transition: opacity .5s var(--ease);
         }
 
-        /* Everything that repaints when the theme flips */
         body, .start, .note, .block, .settings li, details summary, .stat, .head, .hero, footer, .tag, code, .wordmark, .idx, .what, .val, .opts {
             transition: background-color .5s var(--ease), border-color .5s var(--ease), color .5s var(--ease), fill .5s var(--ease);
         }
@@ -520,7 +518,6 @@
             .stat { padding: 10px 0; }
         }
 
-        /* Secret theme: double-click the wordmark. Everything is tokens, so a class on <html> repaints the page. */
         :root.wavez {
             --black: #06070e;
             --surface: #12141d;
@@ -717,7 +714,6 @@
     </footer>
 
     <script>
-        // Easter egg: double-click the wordmark for the wavez theme and a dancing plug.dj avatar.
         const plug = document.querySelector('.plug');
         document.querySelector('.wordmark').addEventListener('dblclick', () => {
             const on = document.documentElement.classList.toggle('wavez');

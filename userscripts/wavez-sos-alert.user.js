@@ -12,36 +12,28 @@
 // @grant        unsafeWindow
 // ==/UserScript==
 
-// CONFIG The room-footer button to watch, by its wavez action name ("reports" is the shield-exclamation SOS button).
 var SOS_ACTION = "reports";
 
-// What the *bright* badge looks like. The resting count pill on that button is bg-(--theme-bg-elevated) and must NOT count; the alert one is the rose pill pinned to the corner.
 var BADGE_SELECTOR = '[class*="bg-rose"], [class*="bg-red"], [class*="-top-1"]';
 
-// Seconds to stay quiet after an alert, so a badge that flickers is one beep not ten.
 var COOLDOWN_SECONDS = 15;
 
-// Alert volume, 0-1.
 var VOLUME = 0.35;
 
-// Optional sound file URL. Empty = built-in morse "SOS" beep (no network, no autoplay-blocked <audio>).
 var SOUND_URL = "";
 
-// --------------------------------------------------------------------------
 (function () {
   "use strict";
 
   var TAG = ["%c[wz-sos]", "color:#FF1744;font-weight:bold"];
-  // Tried in order: the action hook, then the icon, then the label - each survives a different kind of markup churn.
   var HOST_SELECTORS = ['[data-wavezfm-room-footer-action="' + SOS_ACTION + '"]', ".tabler-icon-shield-exclamation", '[aria-label*="' + SOS_ACTION + '" i]', '[aria-label*="sos" i]'];
 
   var config = { enabled: true };
-  var host = null; // the SOS control
-  var count = 0; // last seen badge count, alert fires when it rises
+  var host = null;
+  var count = 0;
   var lastFire = 0;
   var ctx = null;
 
-  // Shared AudioContext: created lazily, resumed on a gesture (browsers start it suspended until the page has been interacted with).
   function audio() {
     if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === "suspended") ctx.resume();
@@ -63,7 +55,6 @@ var SOUND_URL = "";
     osc.stop(at + len + 0.02);
   }
 
-  // Morse "... --- ..." - three dots, three dashes, three dots.
   function alarm() {
     if (SOUND_URL) {
       var el = new Audio(SOUND_URL);
@@ -81,7 +72,6 @@ var SOUND_URL = "";
     });
   }
 
-  // --- finding the SOS control --------------------------------------------
   function findHost() {
     for (var i = 0; i < HOST_SELECTORS.length; i++) {
       var el = document.querySelector(HOST_SELECTORS[i]);
@@ -90,7 +80,6 @@ var SOUND_URL = "";
     return null;
   }
 
-  // The badge is positioned on the clickable wrapper, not the icon span, so search from there.
   function scope(el) {
     return (el.closest && el.closest('button, a, li, [role="button"], [role="tab"]')) || el.parentElement || el;
   }
@@ -100,7 +89,6 @@ var SOUND_URL = "";
     return s.display !== "none" && s.visibility !== "hidden" && s.opacity !== "0";
   }
 
-  // 0 = no badge. Only the bright pill counts; a badge with no digits reads as 1.
   function badgeCount() {
     if (!host) return 0;
     var nodes = scope(host).querySelectorAll(BADGE_SELECTOR);
@@ -112,9 +100,8 @@ var SOUND_URL = "";
     return 0;
   }
 
-  // --- watch ---------------------------------------------------------------
   function check() {
-    if (host && !document.contains(host)) host = null; // React swapped the node out
+    if (host && !document.contains(host)) host = null;
     if (!host) {
       host = findHost();
       if (!host) return;
@@ -132,7 +119,7 @@ var SOUND_URL = "";
 
   host = findHost();
   count = badgeCount();
-  setInterval(check, 1000); 
+  setInterval(check, 1000);
 
   var pageWindow = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
   pageWindow.WZSos = {
