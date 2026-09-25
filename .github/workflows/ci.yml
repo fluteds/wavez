@@ -1,0 +1,22 @@
+name: test
+on:
+  push:
+    paths:
+      - 'userscripts/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+jobs:
+  userscripts:
+    runs-on: ubuntu-latest
+    name: userscript fixtures
+    defaults:
+      run:
+        working-directory: userscripts/tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      # jsdom fixtures over the published scripts: the selectors are what wavez.fm breaks.
+      - run: npm test
