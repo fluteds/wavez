@@ -60,7 +60,7 @@ test('region-check re-adds its button after client-side navigation', async (t) =
   assert.ok(dom.window.document.getElementById('wz-region-btn'), 'button not re-added after nav, observer/anchor stale');
 });
 
-const MIRROR = read('wavez-imgur.user.js').match(/ALTSITE\s*=\s*'([^']+)'/)?.[1];
+const MIRROR = read('wavez-imgur.user.js').match(/ALTSITE[^']*'([^']+)'/)?.[1];
 test('imgur rewrites an imgur src to the rimgo mirror', (t) => {
   assert.ok(MIRROR, 'ALTSITE is gone from wavez-imgur.user.js, so this test cannot know the mirror');
   const dom = load(t, 'wavez-imgur.user.js', {
@@ -115,4 +115,154 @@ test('auto-woot woots a votable new track through the WavezFM bridge', async (t)
   });
   await tick(700);
   assert.deepEqual(voted, ['woot']);
+});
+
+test('panel auto leave quits the queue after N of your own plays and turns auto join off', async (t) => {
+  const left = [];
+  const subs = {};
+  const s = { currentUser: { id: 'me', username: 'fluted' }, room: { slug: 'r' }, users: [], permissions: { joinQueue: true }, votes: {}, playback: null, queue: { isJoined: true, isCurrentDj: false, entries: [] } };
+  const play = (key, dj) => { s.playback = { playbackKey: key, trackId: key, djUsername: dj }; s.queue.isCurrentDj = dj === 'fluted'; (subs.playback_changed || []).forEach((f) => f()); };
+  const w = load(t, 'wavez-all.user.js', {
+    before(w) {
+      w.localStorage.setItem('wavez-tools', JSON.stringify({ autoleave: true, leaveAfter: 2, autojoin: true, sound: 'none' }));
+      w.WavezFM = { version: '1', room: { subscribe: (e, f) => { (subs[e] = subs[e] || []).push(f); }, getState: () => s }, actions: { leaveQueue: () => { left.push(1); s.queue.isJoined = false; return { ok: true }; }, joinQueue: () => ({ ok: false }), vote: () => ({ ok: true }) } };
+    }
+  }).window;
+  w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
+  await tick(700);
+  const h = w.WavezTools.helpers;
+  assert.equal(h.shouldLeave(2, 2, { isJoined: true, isCurrentDj: true }), false, 'never mid-play');
+  assert.equal(h.shouldLeave(2, 2, { isJoined: false }), false, 'not queued, nothing to leave');
+  play('a', 'fluted');
+  play('b', 'kai');
+  assert.equal(left.length, 0, 'one play is not two');
+  play('c', 'fluted');
+  assert.equal(left.length, 0, 'still on the decks for play two');
+  play('d', 'nova');
+  assert.equal(left.length, 1, 'left once play two finished');
+  assert.equal(w.WavezTools.cfg.autojoin, false, 'auto join switched off so it does not rejoin');
+});
+
+test('panel alert gates: mentions, replays, booth, joins, escaping, vote delay', (t) => {
+  const w = load(t, 'wavez-all.user.js').window;
+  w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
+  const h = w.WavezTools.helpers;
+  assert.equal(h.mentionHit('hey @fluted look', [], 'fluted'), 'fluted', 'name with @');
+  assert.equal(h.mentionHit('fluted!', [], 'fluted'), 'fluted', 'bare name');
+  assert.equal(h.mentionHit('flutedsomething', [], 'fluted'), null, 'no partial name match');
+  assert.equal(h.mentionHit('any Techno here', ['techno'], 'fluted'), 'techno', 'keyword, case-insensitive');
+  assert.equal(h.mentionHit('quiet room', ['techno'], 'fluted'), null, 'no hit');
+  assert.equal(h.mentionHit('party time', ['art'], 'fluted'), 'art', 'keyword anywhere');
+  assert.equal(h.mentionHit('party time', ['art'], 'fluted', true), null, 'whole word skips partial');
+  assert.equal(h.mentionHit('nice art!', ['art'], 'fluted', true), 'art', 'whole word hit');
+  assert.equal(h.playedAgo(['a', 'b', 'c'], 'c'), 1, 'the track just before');
+  assert.equal(h.playedAgo(['a', 'b', 'c'], 'a'), 3, 'three back');
+  assert.equal(h.playedAgo(['a', 'b'], 'z'), -1, 'never played');
+  assert.equal(h.boothHit(3, 3, null), true, 'first time at threshold');
+  assert.equal(h.boothHit(3, 3, 3), false, 'same position, no repeat alert');
+  assert.equal(h.boothHit(2, 3, 3), false, 'moved closer inside threshold, no repeat');
+  assert.equal(h.boothHit(3, 3, 4), true, 'crossed into threshold');
+  assert.equal(h.boothHit(5, 3, null), false, 'still too far back');
+  assert.equal(h.joinable({ isFollowing: true }, 'following'), true, 'following mode');
+  assert.equal(h.joinable({ isFollowing: false }, 'following'), false, 'not followed');
+  assert.equal(h.joinable({}, 'everyone'), true, 'everyone mode');
+  assert.equal(h.html('<img src=x onerror="a">'), '&#60;img src=x onerror=&#34;a&#34;&#62;', 'html escaped');
+  assert.equal(h.delayFor('instant'), 0, 'instant is instant');
+  const d = h.delayFor('1-10');
+  assert.ok(d >= 1000 && d <= 10000, 'random delay in range');
+});
+
+test('bundle lists every addon in the panel and a row flips its switch', async (t) => {
+  const dom = load(t, 'wavez-all.user.js');
+  const w = dom.window;
+  w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
+  const rows = [...w.document.querySelectorAll('#wt [data-addon]')];
+  const scripts = fs.readdirSync(SCRIPTS).filter((f) => f.endsWith('.user.js') && !['wavez-all.user.js', 'wavez-auto-woot.user.js'].includes(f));
+  assert.equal(rows.length, scripts.length + 1, 'one panel row per addon script (auto woot is the panel\'s own switch), plus the panel itself');
+  assert.equal(rows.filter((r) => /Auto Woot/.test(r.textContent)).length, 0, 'no second auto woot switch');
+  const imgur = rows.find((r) => /Imgur/.test(r.textContent));
+  assert.ok(imgur, 'imgur row missing');
+  let reloaded = false;
+  w.addEventListener('beforeunload', () => { reloaded = true; });
+  imgur.click();
+  assert.equal(w.localStorage.getItem('wavez-tools:imgur'), 'on', 'clicking an off addon should save it as on');
+  assert.equal(imgur.getAttribute('aria-checked'), 'true', 'switch flips in place');
+  assert.match(w.document.querySelector('#wt .wt-notice').textContent, /reload to apply/, 'reminder shown');
+  assert.equal(reloaded, false, 'no reload');
+});
+
+test('bundle panel groups addons by category and opens settings from a cog', (t) => {
+  const w = load(t, 'wavez-all.user.js').window;
+  w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
+  const heads = [...w.document.querySelectorAll('#wt [data-addons] .wt-sec')].map((e) => e.textContent);
+  assert.deepEqual(heads, ['Automation', 'Chat', 'Music', 'Moderation', 'Panel']);
+  assert.equal(w.document.querySelector('#wt [data-group="addonset"]'), null, 'no separate addon settings section');
+  const row = [...w.document.querySelectorAll('#wt .wt-arow')].find((r) => /Translate/.test(r.textContent));
+  const cog = row.querySelector('.wt-cog');
+  const box = w.document.querySelector('#wt [data-aset-for="' + cog.dataset.cog + '"]');
+  assert.equal(box.hidden, true, 'settings start closed');
+  cog.click();
+  assert.equal(box.hidden, false, 'cog opens them');
+  assert.equal(cog.getAttribute('aria-expanded'), 'true');
+  assert.ok(box.querySelector('[data-aset$=":TARGET_LANG"]'), 'translate settings inside its own box');
+  const plain = [...w.document.querySelectorAll('#wt .wt-arow')].find((r) => /Chat Pop-out/.test(r.textContent));
+  assert.equal(plain.querySelector('button.wt-cog'), null, 'no cog when there is nothing to set');
+});
+
+test('bundle panel saves addon settings typed by their defaults', (t) => {
+  const w = load(t, 'wavez-all.user.js').window;
+  w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
+  assert.equal(w.document.querySelectorAll('#wt [data-aset]').length, 17, 'one control per addon setting');
+  const set = (name, value) => {
+    const el = [...w.document.querySelectorAll('#wt [data-aset]')].find((e) => e.dataset.aset.endsWith(':' + name));
+    el.value = value;
+    el.dispatchEvent(new w.Event('change', { bubbles: true }));
+  };
+  set('IDLE_MINUTES', '12');
+  set('REGIONS', 'GB, ie');
+  set('PLAYLIST', 'Mix');
+  assert.equal(w.localStorage.getItem('wavez-tools:auto-idle:IDLE_MINUTES'), '12');
+  assert.equal(w.localStorage.getItem('wavez-tools:region-check:REGIONS'), '["GB","ie"]');
+  assert.equal(w.localStorage.getItem('wavez-tools:auto-grab:PLAYLIST'), '"Mix"');
+  [...w.document.querySelectorAll('#wt button[data-aset]')].find((e) => e.dataset.aset.endsWith(':COLOR_NAME')).click();
+  assert.equal(w.localStorage.getItem('wavez-tools:new-users:COLOR_NAME'), 'true');
+});
+
+test('bundle addons read a saved setting over their default', (t) => {
+  const dom = load(t, 'wavez-all.user.js', {
+    html: '<!DOCTYPE html><body><img id="pic" src="https://i.imgur.com/abc.png"></body>',
+    before(w) { w.localStorage.setItem('wavez-tools:imgur', 'on'); w.localStorage.setItem('wavez-tools:imgur:ALTSITE', JSON.stringify('https://rimgo.example')); }
+  });
+  dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+  assert.equal(dom.window.document.getElementById('pic').getAttribute('src'), 'https://rimgo.example/abc.png');
+});
+
+test('bundle with the panel switched off still runs addons and keeps the menu fallback', (t) => {
+  const menu = [];
+  const w = load(t, 'wavez-all.user.js', { before(w) { w.localStorage.setItem('wavez-tools:panel', 'off'); w.localStorage.setItem('wavez-tools:imgur', 'on'); w.GM_registerMenuCommand = (label) => menu.push(label); } }).window;
+  w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
+  assert.equal(w.document.getElementById('wt'), null, 'panel is off, so no panel');
+  assert.ok(menu.includes('\u2715 Show Panel UI'), 'menu can switch the panel back on');
+  assert.ok(menu.includes('\u2713 Imgur Fix'), 'addons stay in the menu');
+  assert.ok(menu.includes('\u2713 Auto Woot'), 'auto woot has a menu entry');
+});
+
+test('bundle with the panel switched off still auto woots, and the menu entry switches it', async (t) => {
+  const menu = {};
+  const w = load(t, 'wavez-all.user.js', { before(w) { w.localStorage.setItem('wavez-tools:panel', 'off'); w.localStorage.setItem('wavez-tools', JSON.stringify({ voteDelay: 'instant' })); w.GM_registerMenuCommand = (label, fn) => { menu[label] = fn; }; } }).window;
+  const votes = [];
+  w.WavezFM = { version: '1', room: { getState: () => ({ playback: { playbackKey: 'k1', trackId: 't1' }, votes: { trackId: 't1', canVote: true, clientVote: null }, queue: { isCurrentDj: false, isJoined: false }, currentUser: { id: 'me' }, users: [] }), subscribe: () => {} }, actions: { vote: (v) => { votes.push(v); return { ok: true }; } } };
+  w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
+  await new Promise((r) => setTimeout(r, 1500));
+  assert.deepEqual(votes, ['woot'], 'wooted with no panel on screen');
+  assert.equal(w.document.getElementById('wt'), null);
+  try { menu['\u2713 Auto Woot'](); } catch (e) {}
+  assert.equal(JSON.parse(w.localStorage.getItem('wavez-tools')).autowoot, false, 'menu entry switches auto woot off');
+});
+
+test('bundle starts with every addon off apart from the panel', (t) => {
+  const w = load(t, 'wavez-all.user.js').window;
+  w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
+  const on = [...w.document.querySelectorAll('#wt [data-addon][aria-checked="true"]')].map((r) => r.textContent.trim());
+  assert.deepEqual(on, ['Show Panel UI']);
 });

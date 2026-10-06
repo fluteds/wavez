@@ -1,14 +1,13 @@
 // ==UserScript==
-// @name         Wavez Tools (all-in-one)
+// @name         Wavez Tools
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      2026.09.09
+// @version      2026.10.20
 // @updateURL    https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-all.user.js
 // @downloadURL  https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-all.user.js
-// @description  Every Wavez userscript in one install. Toggle features from the userscript manager menu.
-// @match        https://wavez.fm/*
-// @match        https://*.wavez.fm/*
+// @description  Every Wavez userscript in one install, switched on and off from the Wavez Tools panel (Alt+T) or the userscript manager menu.
+// @match        https://wavez.fm/~/*
 // @grant        GM_registerMenuCommand
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
@@ -23,31 +22,37 @@
 (function () {
   'use strict';
 
+  // Taking a @grant sandboxes us, and the page-context scripts below reach for
+  // page globals (window.WavezFM). Hand them the real window so they still work.
   var PAGE = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
 
   var KEY = "wavez-tools:";
   function on(id, dflt) { return (localStorage.getItem(KEY + id) || dflt) === "on"; }
 
-  function menu(id, label, dflt) {
+  // A saved panel value wins over the constant the script ships with.
+  function setting(id, name, dflt) { try { var v = localStorage.getItem(KEY + id + ":" + name); return v === null ? dflt : JSON.parse(v); } catch (e) { return dflt; } }
+
+  // Each addon is a row in the panel (wavez-panel reads ADDONS) and a menu entry as the fallback.
+  var ADDONS = [];
+  function menu(id, label, dflt, cat, settings) {
     var isOn = on(id, dflt);
-    if (typeof GM_registerMenuCommand !== "function") return isOn;
-    GM_registerMenuCommand((isOn ? "✓ " : "✕ ") + label, function () {
-      localStorage.setItem(KEY + id, isOn ? "off" : "on");
-      location.reload();
-    });
+    var list = settings.map(function (s) { return { name: s[0], label: s[1], dflt: s[2], opts: s[3] ? s[3].split(",") : null, value: setting(id, s[0], s[2]) }; });
+    var entry = { label: label, cat: cat, on: isOn, flip: function () { entry.on = !entry.on; localStorage.setItem(KEY + id, entry.on ? "on" : "off"); }, settings: list, save: function (name, v) { localStorage.setItem(KEY + id + ":" + name, JSON.stringify(v)); } };
+    ADDONS.push(entry);
+    // The panel shows a reload reminder; the menu has no UI, so it reloads to show the change.
+    if (typeof GM_registerMenuCommand === "function") GM_registerMenuCommand((isOn ? "✓ " : "✕ ") + label, function () { entry.flip(); location.reload(); });
     return isOn;
   }
 
-  if (menu('translate', 'Wavez Translate', 'on')) (function (window) {
+  // We start at document-start for Imgur; scripts written for document-idle wait for the DOM.
+  function ready(fn) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { fn(PAGE); }, { once: true }); else fn(PAGE); }
 
-    var TARGET_LANG = "en";
+  if (menu('translate', 'Translate', 'off', 'Chat', [["TARGET_LANG", "Language", "en", ""], ["DISPLAY_MODE", "How it shows", "append", "append,replace,hover"], ["ONLY_NON_TARGET", "Skip my language", true, ""], ["MAX_INFLIGHT", "Request limit", 4, ""]])) ready(function (window) {
 
-    var DISPLAY_MODE = "append";
-
-    var ONLY_NON_TARGET = true;
-
-    var MAX_INFLIGHT = 4;
-
+    var TARGET_LANG = setting("translate", "TARGET_LANG", "en");
+    var DISPLAY_MODE = setting("translate", "DISPLAY_MODE", "append");
+    var ONLY_NON_TARGET = setting("translate", "ONLY_NON_TARGET", true);
+    var MAX_INFLIGHT = setting("translate", "MAX_INFLIGHT", 4);
     (function () {
       "use strict";
 
@@ -329,9 +334,9 @@
         "color:#30C7FB;font-weight:bold",
       );
     })();
-  })(PAGE);
+  });
 
-  if (menu('spotify', 'Wavez Open in Spotify', 'on')) (function (window) {
+  if (menu('spotify', 'Open in Spotify', 'off', 'Music', [])) ready(function (window) {
 
     (function () {
       'use strict';
@@ -414,9 +419,9 @@
         log('self-check passed');
       }
     })();
-  })(PAGE);
+  });
 
-  if (menu('chat-toggle', 'Wavez Chat Toggle', 'on')) (function (window) {
+  if (menu('chat-toggle', 'Chat Toggle', 'off', 'Chat', [])) ready(function (window) {
 
     (function () {
       'use strict';
@@ -578,9 +583,9 @@
         }
       }, 500);
     })();
-  })(PAGE);
+  });
 
-  if (menu('chat-popout', 'Wavez Chat Pop-out', 'on')) (function (window) {
+  if (menu('chat-popout', 'Chat Pop-out', 'off', 'Chat', [])) (function (window) {
 
     (function () {
       'use strict';
@@ -820,13 +825,12 @@
     })();
   })(PAGE);
 
-  if (menu('imgur', 'Wavez Imgur -> Rimgo Safe', 'on')) (function (window) {
+  if (menu('imgur', 'Imgur Fix', 'off', 'Chat', [["ALTSITE", "Proxy", 'https://rimgo.ducks.party', ""]])) (function (window) {
 
     (function () {
       'use strict';
 
-      const ALTSITE = 'https://rimgo.ducks.party';
-
+      const ALTSITE = setting("imgur", "ALTSITE", 'https://rimgo.ducks.party');
       function rewrite(value) {
         if (!value || !value.includes('imgur.com')) return value;
 
@@ -1031,7 +1035,7 @@
     })();
   })(PAGE);
 
-  if (menu('scrobble', 'Wavez Scrobble Toggle', 'on')) (function (window) {
+  if (menu('scrobble', 'Scrobble Toggle', 'off', 'Music', [])) (function (window) {
 
     (function () {
       var API = "https://api.wavez.fm/settings";
@@ -1120,77 +1124,12 @@
     })();
   })(PAGE);
 
-  if (menu('auto-woot', 'Wavez Auto Woot', 'off')) (function (window) {
+  if (menu('auto-grab', 'Auto Grab', 'off', 'Automation', [["PLAYLIST", "Playlist", 'Recs', ""]])) ready(function (window) {
 
     (function () {
       'use strict';
 
-      var log = function () { console.log.apply(console, ["%c[wz-woot]", "color:#EF5350;font-weight:bold"].concat([].slice.call(arguments))); };
-      var warn = function () { console.warn.apply(console, ["%c[wz-woot]", "color:#EF5350;font-weight:bold"].concat([].slice.call(arguments))); };
-
-      var enabled = localStorage.getItem('wavez-autowoot') !== 'off';
-      var lastKey = null;
-
-      function shouldVote(key, last, votes) {
-        return !!key && key !== last && !!votes && votes.canVote && votes.clientVote !== 'woot';
-      }
-
-      function voteCurrent(api) {
-        if (!enabled) return;
-        var state = api.room.getState();
-        var pb = state && state.playback;
-        if (!pb) return;
-        if (!shouldVote(pb.playbackKey, lastKey, state.votes)) return;
-        lastKey = pb.playbackKey;
-        var res = api.actions.vote('woot');
-        if (!res || !res.ok) warn('vote failed:', res && res.code);
-      }
-
-      function init(api) {
-        voteCurrent(api);
-        api.room.subscribe('playback_changed', function () { voteCurrent(api); });
-        api.room.subscribe('votes_changed', function () { voteCurrent(api); });
-        setInterval(function () { voteCurrent(api); }, 30000);
-
-        window.WZWoot = {
-          now: function () { lastKey = null; voteCurrent(api); },
-          on: function () { enabled = true; localStorage.setItem('wavez-autowoot', 'on'); voteCurrent(api); },
-          off: function () { enabled = false; localStorage.setItem('wavez-autowoot', 'off'); },
-          get enabled() { return enabled; }
-        };
-        log('auto-woot ' + (enabled ? 'on' : 'off') + ' - toggle with WZWoot.on() / WZWoot.off()');
-      }
-
-      var tries = 0;
-      var wait = setInterval(function () {
-        var api = window.WavezFM;
-        if (api && api.version === '1') {
-          clearInterval(wait);
-          init(api);
-        } else if (++tries > 40) {
-          clearInterval(wait);
-        }
-      }, 500);
-
-      if (location.hash === '#wz-woot-test') {
-        var ok = { canVote: true, clientVote: null };
-        console.assert(shouldVote('k1', null, ok) === true, 'new track, can vote');
-        console.assert(shouldVote('k1', 'k1', ok) === false, 'same track, skip');
-        console.assert(shouldVote('k2', 'k1', { canVote: false, clientVote: null }) === false, 'cannot vote, skip');
-        console.assert(shouldVote('k2', 'k1', { canVote: true, clientVote: 'woot' }) === false, 'already wooted, skip');
-        console.assert(shouldVote(null, 'k1', ok) === false, 'no playbackKey, skip');
-        log('tests passed');
-      }
-    })();
-  })(PAGE);
-
-  if (menu('auto-grab', 'Wavez Auto Grab', 'off')) (function (window) {
-
-    (function () {
-      'use strict';
-
-      var PLAYLIST = 'Recs';
-
+      var PLAYLIST = setting("auto-grab", "PLAYLIST", 'Recs');
       var GRAB_BTN_SELECTOR = '';
       var PICKER_SELECTOR = '';
 
@@ -1408,17 +1347,15 @@
         log('tests passed');
       }
     })();
-  })(PAGE);
+  });
 
-  if (menu('region-check', 'Wavez Region Check', 'off')) (function (window) {
+  if (menu('region-check', 'Region Check', 'off', 'Music', [["YT_API_KEY", "API key", '', ""], ["REGIONS", "Regions", ['US', 'CA'], ""]])) ready(function (window) {
 
     (function () {
       'use strict';
 
-      var REGIONS = ['US', 'CA'];
-
-      var YT_API_KEY = '';
-
+      var REGIONS = setting("region-check", "REGIONS", ['US', 'CA']);
+      var YT_API_KEY = setting("region-check", "YT_API_KEY", '');
       var API = 'https://api.wavez.fm';
       var KEY_LS = 'wavez-region-ytkey';
       var FLAGS_LS = 'wavez-region-flags-v1';
@@ -1818,6 +1755,967 @@
         log('self-check passed');
       }
     })();
-  })(PAGE);
+  });
+
+  if (menu('auto-idle', 'Auto Idle', 'off', 'Automation', [["IDLE_MINUTES", "Idle minutes", 5, ""]])) ready(function (window) {
+
+    (function () {
+      'use strict';
+
+      var log = function () { console.log.apply(console, ["%c[wz-idle]", "color:#90A4AE;font-weight:bold"].concat([].slice.call(arguments))); };
+
+      var IDLE_MINUTES = setting("auto-idle", "IDLE_MINUTES", 5);
+      var AWAY = "away";
+      var ACTIVE = "online";
+      var DND = "dnd";
+
+      var API = "https://api.wavez.fm/settings";
+      var timer = null;
+      var current = ACTIVE;
+
+      var authHeader = null;
+      (function captureAuth() {
+        var of = window.fetch;
+        window.fetch = function (input, init) {
+          try {
+            var url = typeof input === "string" ? input : (input && input.url) || "";
+            if (url.indexOf("api.wavez.fm") !== -1) {
+              var h = new Headers((init && init.headers) || (typeof input === "object" && input.headers) || {});
+              var a = h.get("authorization");
+              if (a) authHeader = a;
+            }
+          } catch (e) {}
+          return of.apply(this, arguments);
+        };
+      })();
+
+      function remotePresence() {
+        var headers = {};
+        if (authHeader) headers["Authorization"] = authHeader;
+        return fetch(API, { credentials: "include", headers: headers }).then(function (res) { return res.json(); }).then(function (j) { return j && j.presenceStatus; }).catch(function () { return null; });
+      }
+
+      function setPresence(status) {
+        if (status === current) return Promise.resolve();
+        return remotePresence().then(function (remote) {
+          if (remote === DND) { current = DND; return; }
+          current = status;
+          var headers = { "Content-Type": "application/json" };
+          if (authHeader) headers["Authorization"] = authHeader;
+          return fetch(API, {
+            method: "PATCH",
+            credentials: "include",
+            headers: headers,
+            body: JSON.stringify({ presenceStatus: status }),
+          }).then(function (res) {
+            if (!res.ok) current = status === AWAY ? ACTIVE : AWAY;
+          }).catch(function () {
+            current = status === AWAY ? ACTIVE : AWAY;
+          });
+        });
+      }
+
+      function onHidden() {
+        clearTimeout(timer);
+        timer = setTimeout(function () { setPresence(AWAY); }, IDLE_MINUTES * 60 * 1000);
+      }
+
+      function onVisible() {
+        clearTimeout(timer);
+        setPresence(ACTIVE);
+      }
+
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) onHidden(); else onVisible();
+      });
+
+      if (location.hash === "#wz-idle-test") {
+        var calls = [];
+        var realFetch = window.fetch;
+        var remote = ACTIVE;
+        window.fetch = function (u, o) {
+          if (!o || o.method !== "PATCH") return Promise.resolve({ json: function () { return Promise.resolve({ presenceStatus: remote }); } });
+          calls.push(JSON.parse(o.body).presenceStatus);
+          return Promise.resolve({ ok: true });
+        };
+        current = ACTIVE;
+        Promise.resolve()
+          .then(function () { return setPresence(ACTIVE); })
+          .then(function () { return setPresence(AWAY); })
+          .then(function () { return setPresence(AWAY); })
+          .then(function () { return setPresence(ACTIVE); })
+          .then(function () { remote = DND; return setPresence(AWAY); })
+          .then(function () { return setPresence(ACTIVE); })
+          .then(function () {
+            window.fetch = realFetch;
+            console.assert(calls.join(",") === "away,online", "idle dnd/dedupe broken:", calls);
+            log("self-check passed");
+          });
+      }
+    })();
+  });
+
+  if (menu('new-users', 'New Users', 'off', 'Moderation', [["NEW_DAYS", "Days flagged", 2, ""], ["BADGE", "Pill text", "NEW", ""], ["COLOR_NAME", "Colour the name", false, ""], ["COLOR", "Colour", "#00E5A0", ""]])) ready(function (window) {
+
+    var NEW_DAYS = setting("new-users", "NEW_DAYS", 2);
+    var BADGE = setting("new-users", "BADGE", "NEW");
+    var COLOR_NAME = setting("new-users", "COLOR_NAME", false);
+    var COLOR = setting("new-users", "COLOR", "#00E5A0");
+    (function () {
+      "use strict";
+
+      var TAG = ["%c[wz-new]", "color:#00E5A0;font-weight:bold"];
+      var KEY = "wavez-user-joined-v2";
+      var API = "https://api.wavez.fm/users/by-username/";
+      var NAME_SELECTOR = '[data-wavezfm-chat-name="true"], [data-wavezfm-people-name="true"], [data-wavezfm-user-preview-name="true"]';
+
+      var joined = (function () {
+        try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+      })();
+      var pending = {};
+
+      function save() { localStorage.setItem(KEY, JSON.stringify(joined)); }
+
+      function isNew(name, now) { return joined[name] > 0 && now - joined[name] < NEW_DAYS * 86400000; }
+
+      var css = document.createElement("style");
+      css.textContent = (COLOR_NAME ? ".wz-new-user { color: " + COLOR + " !important; }" : "") + (BADGE ? ".wz-new-user::after { content: '" + BADGE + "'; margin-left: 4px; padding: 0 4px; border-radius: 4px; font-size: 9px; font-weight: 700; letter-spacing: .04em; vertical-align: middle; background: " + COLOR + "; color: #000; }" : "");
+      (document.head || document.documentElement).appendChild(css);
+
+      function lookup(name) {
+        if (name in joined || pending[name]) return;
+        pending[name] = true;
+        fetch(API + encodeURIComponent(name), { credentials: "include" })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (u) {
+            var at = u && u.createdAt ? Date.parse(u.createdAt) : 0;
+            joined[name] = at > 0 ? at : 0;
+            save();
+            if (isNew(name, Date.now())) console.log.apply(console, TAG.concat([name + " joined " + new Date(at).toISOString().slice(0, 10)]));
+            remark(name);
+          })
+          .catch(function () {})
+          .then(function () { delete pending[name]; });
+      }
+
+      function apply(el, name) { el.classList.toggle("wz-new-user", isNew(name, Date.now())); }
+
+      function mark(el) {
+        var name = (el.textContent || "").trim().toLowerCase();
+        if (!name || el.dataset.wzName === name) return;
+        el.dataset.wzName = name;
+        if (name in joined) apply(el, name);
+        else lookup(name);
+      }
+
+      function remark(name) {
+        var nodes = document.querySelectorAll(NAME_SELECTOR);
+        for (var i = 0; i < nodes.length; i++) if (nodes[i].dataset.wzName === name) apply(nodes[i], name);
+      }
+
+      function scan(root) {
+        if (root.nodeType !== 1) return;
+        if (root.matches && root.matches(NAME_SELECTOR)) mark(root);
+        var nodes = root.querySelectorAll(NAME_SELECTOR);
+        for (var i = 0; i < nodes.length; i++) mark(nodes[i]);
+      }
+
+      scan(document.body);
+
+      new MutationObserver(function (records) {
+        for (var i = 0; i < records.length; i++) {
+          var added = records[i].addedNodes;
+          for (var j = 0; j < added.length; j++) scan(added[j]);
+        }
+      }).observe(document.body, { childList: true, subtree: true });
+
+      var pageWindow = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+      pageWindow.WZNew = {
+        list: function () { var now = Date.now(); return Object.keys(joined).filter(function (n) { return isNew(n, now); }); },
+        joined: function () { return joined; },
+        forget: function (name) { delete joined[String(name).toLowerCase()]; save(); },
+        reset: function () { localStorage.removeItem(KEY); joined = {}; },
+      };
+
+      console.log.apply(console, TAG.concat(["watching for accounts under " + NEW_DAYS + " days old. WZNew.list() / WZNew.forget(name) / WZNew.reset()"]));
+
+      if (location.hash === "#wz-new-test") {
+        var real = joined;
+        var now = Date.now();
+        joined = { fresh: now - 1000, stale: now - (NEW_DAYS + 1) * 86400000, missing: 0 };
+        console.assert(isNew("fresh", now) === true, "joined a second ago is new");
+        console.assert(isNew("stale", now) === false, "joined before the window is not new");
+        console.assert(isNew("missing", now) === false, "no known date is never new");
+        console.assert(isNew("nobody", now) === false, "unlooked-up name is not new");
+        joined = real;
+        console.log.apply(console, TAG.concat(["tests passed"]));
+      }
+    })();
+  });
+
+  if (menu('sos-alert', 'SOS Alert', 'off', 'Moderation', [["SOS_ACTION", "Button watched", "reports", ""], ["COOLDOWN_SECONDS", "Quiet seconds", 15, ""], ["VOLUME", "Volume", 0.35, ""], ["SOUND_URL", "Sound URL", "", ""]])) ready(function (window) {
+
+    var SOS_ACTION = setting("sos-alert", "SOS_ACTION", "reports");
+    var BADGE_SELECTOR = '[class*="bg-rose"], [class*="bg-red"], [class*="-top-1"]';
+
+    var COOLDOWN_SECONDS = setting("sos-alert", "COOLDOWN_SECONDS", 15);
+    var VOLUME = setting("sos-alert", "VOLUME", 0.35);
+    var SOUND_URL = setting("sos-alert", "SOUND_URL", "");
+    (function () {
+      "use strict";
+
+      var TAG = ["%c[wz-sos]", "color:#FF1744;font-weight:bold"];
+      var HOST_SELECTORS = ['[data-wavezfm-room-footer-action="' + SOS_ACTION + '"]', ".tabler-icon-shield-exclamation", '[aria-label*="' + SOS_ACTION + '" i]', '[aria-label*="sos" i]'];
+
+      var config = { enabled: true };
+      var host = null;
+      var count = 0;
+      var lastFire = 0;
+      var ctx = null;
+
+      function audio() {
+        if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === "suspended") ctx.resume();
+        return ctx;
+      }
+      document.addEventListener("pointerdown", audio, { once: true });
+
+      function tone(ac, at, len) {
+        var osc = ac.createOscillator();
+        var gain = ac.createGain();
+        osc.type = "sine";
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0, at);
+        gain.gain.linearRampToValueAtTime(VOLUME, at + 0.01);
+        gain.gain.setValueAtTime(VOLUME, at + len - 0.01);
+        gain.gain.linearRampToValueAtTime(0, at + len);
+        osc.connect(gain).connect(ac.destination);
+        osc.start(at);
+        osc.stop(at + len + 0.02);
+      }
+
+      function alarm() {
+        if (SOUND_URL) {
+          var el = new Audio(SOUND_URL);
+          el.volume = VOLUME;
+          el.play().catch(function (err) { console.warn.apply(console, TAG.concat(["sound file blocked or missing:", err])); });
+          return;
+        }
+        var ac = audio();
+        var unit = 0.09;
+        var at = ac.currentTime + 0.05;
+        "...---...".split("").forEach(function (c, i) {
+          var len = (c === "-" ? 3 : 1) * unit;
+          tone(ac, at, len);
+          at += len + unit + (i === 2 || i === 5 ? unit * 2 : 0);
+        });
+      }
+
+      function findHost() {
+        for (var i = 0; i < HOST_SELECTORS.length; i++) {
+          var el = document.querySelector(HOST_SELECTORS[i]);
+          if (el) return el;
+        }
+        return null;
+      }
+
+      function scope(el) {
+        return (el.closest && el.closest('button, a, li, [role="button"], [role="tab"]')) || el.parentElement || el;
+      }
+
+      function visible(el) {
+        var s = el.ownerDocument.defaultView.getComputedStyle(el);
+        return s.display !== "none" && s.visibility !== "hidden" && s.opacity !== "0";
+      }
+
+      function badgeCount() {
+        if (!host) return 0;
+        var nodes = scope(host).querySelectorAll(BADGE_SELECTOR);
+        for (var i = 0; i < nodes.length; i++) {
+          if (!visible(nodes[i])) continue;
+          var n = parseInt((nodes[i].textContent || "").trim(), 10);
+          return n > 0 ? n : 1;
+        }
+        return 0;
+      }
+
+      function check() {
+        if (host && !document.contains(host)) host = null;
+        if (!host) {
+          host = findHost();
+          if (!host) return;
+          count = badgeCount();
+          return;
+        }
+        var now = badgeCount();
+        if (now > count && config.enabled && Date.now() - lastFire >= COOLDOWN_SECONDS * 1000) {
+          lastFire = Date.now();
+          console.log.apply(console, TAG.concat(["SOS badge -> " + now]));
+          alarm();
+        }
+        count = now;
+      }
+
+      host = findHost();
+      count = badgeCount();
+      setInterval(check, 1000);
+
+      var pageWindow = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+      pageWindow.WZSos = {
+        config: config,
+        test: alarm,
+        on: function () { config.enabled = true; },
+        off: function () { config.enabled = false; },
+        debug: function () {
+          var h = host || findHost();
+          console.log.apply(console, TAG.concat(["control:", h, "\nwrapper:", h ? scope(h).outerHTML : "(not found)", "\ncount now:", badgeCount()]));
+          return h;
+        },
+      };
+
+      console.log.apply(console, TAG.concat([host ? "active - watching the SOS badge (currently " + count + "). WZSos.test() / WZSos.debug() / WZSos.off()" : "no footer button matching '" + SOS_ACTION + "' on screen yet - will keep looking. WZSos.debug() once one appears."]));
+    })();
+  });
+
+  menu('panel', 'Show Panel UI', 'on', 'Panel', []); ready(function (window) {
+
+    (function () {
+      'use strict';
+
+      var TAG = ['%c[wavez-tools]', 'color:#22D3EE;font-weight:bold'];
+      var log = function () { console.log.apply(console, TAG.concat([].slice.call(arguments))); };
+
+      var KEY = 'wavez-tools';
+      var HISTORY_KEY = 'wavez-tools-history';
+      var HISTORY_MAX = 60;
+      var ACTIVITY_KEY = 'wavez-tools-activity';
+      var LASTKEY_KEY = 'wavez-tools-lastkey';
+      var MEHS_KEY = 'wavez-tools-mehs';
+      var PLAYS_KEY = 'wavez-tools-plays';
+      var TOP = 72;
+      var VOLUME = 0.25;
+
+      var ACTIVITY_MAX = 25;
+      var VERSION = '1.0';
+      var AUTHOR = 'fluteds';
+
+      var DEFAULTS = { open: true, pos: null, sections: { addons: false, addonset: false, tools: true, settings: false, actions: false, activity: false }, autowoot: true, voteDelay: '1-10', autojoin: false, booth: false, history: false, mehs: false, mentions: false, joins: false, boothAt: 3, autoleave: false, leaveAfter: 3, joinMode: 'everyone', sound: 'soft', keywords: [], kwMatch: 'anywhere' };
+      var DELAYS = { instant: [0, 0], '1-5': [1000, 5000], '1-10': [1000, 10000], '5-20': [5000, 20000] };
+      var SOUNDS = { none: [], soft: [[660, 0.09], [880, 0.12]], beep: [[880, 0.08], [880, 0.08]], chime: [[784, 0.09], [988, 0.09], [1319, 0.16]] };
+
+      var cfg = (function () {
+        try { return Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { return Object.assign({}, DEFAULTS); }
+      })();
+      function save() { localStorage.setItem(KEY, JSON.stringify(cfg)); }
+
+      function load(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch (e) { return fallback; } }
+      var recent = load(HISTORY_KEY, []);
+      var activity = load(ACTIVITY_KEY, []);
+
+
+      function esc(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+      function html(s) { return String(s).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); }
+
+      function word(w) { return new RegExp('(^|[^a-z0-9_])' + esc(w) + '([^a-z0-9_]|$)'); }
+      function mentionHit(text, keywords, username, whole) {
+        var t = String(text || '').toLowerCase();
+        if (!t) return null;
+        if (username && new RegExp('(^|[^a-z0-9_])@?' + esc(username.toLowerCase()) + '([^a-z0-9_]|$)').test(t)) return username;
+        for (var i = 0; i < keywords.length; i++) { var k = String(keywords[i]).trim().toLowerCase(); if (k && (whole ? word(k).test(t) : t.indexOf(k) !== -1)) return keywords[i]; }
+        return null;
+      }
+
+      function playedAgo(list, id) { var i = list.lastIndexOf(id); return i === -1 ? -1 : list.length - i; }
+
+      function boothHit(pos, at, last) { return pos > 0 && pos <= at && (last === null || last > at); }
+
+      function joinable(user, mode) { return mode === 'everyone' || (mode === 'following' && !!user.isFollowing) || (mode === 'superfans' && !!user.isSuperfan); }
+
+      function shouldLeave(plays, after, q) { return plays >= after && !!q && !!q.isJoined && !q.isCurrentDj; }
+
+      function delayFor(kind) { var d = DELAYS[kind] || DELAYS.instant; return d[0] + Math.random() * (d[1] - d[0]); }
+
+
+      var ctx = null;
+      function audio() {
+        if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') ctx.resume();
+        return ctx;
+      }
+      document.addEventListener('pointerdown', audio, { once: true });
+
+      function play(kind) {
+        var seq = SOUNDS[kind || cfg.sound] || [];
+        if (!seq.length) return;
+        var ac = audio();
+        var at = ac.currentTime + 0.03;
+        seq.forEach(function (step) {
+          var osc = ac.createOscillator();
+          var gain = ac.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = step[0];
+          gain.gain.setValueAtTime(0, at);
+          gain.gain.linearRampToValueAtTime(VOLUME, at + 0.01);
+          gain.gain.setValueAtTime(VOLUME, at + step[1] - 0.01);
+          gain.gain.linearRampToValueAtTime(0, at + step[1]);
+          osc.connect(gain).connect(ac.destination);
+          osc.start(at);
+          osc.stop(at + step[1] + 0.02);
+          at += step[1] + 0.03;
+        });
+      }
+
+
+      var css = document.createElement('style');
+      css.textContent = `
+        #wt { position: fixed; top: ${TOP}px; right: 16px; width: 272px; max-height: min(560px, calc(100vh - ${TOP + 16}px)); overflow-x: hidden; overflow-y: auto; z-index: 2147483647; --e: cubic-bezier(.32,.72,0,1); transition: width .5s var(--e); background: #000; color: #e8e8e8; border: 1px solid #222; border-radius: 16px; font: 400 13px/1.4 "Space Grotesk", system-ui, sans-serif; box-shadow: 0 20px 50px rgba(0,0,0,.6); scrollbar-width: thin; scrollbar-color: #333 transparent; }
+        #wt.wt-collapsed { width: var(--pill, 200px); }
+        #wt .wt-main { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .5s var(--e); }
+        #wt .wt-main > div { width: 270px; min-height: 0; overflow: hidden; transition: opacity .35s var(--e), transform .5s var(--e); }
+        #wt.wt-collapsed .wt-main { grid-template-rows: 0fr; }
+        #wt.wt-collapsed .wt-main > div { opacity: 0; transform: translateY(-8px); }
+        #wt.wt-collapsed .wt-top { border-bottom-color: transparent; }
+        #wt .wt-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 16px 12px; border-bottom: 1px solid #222; background-image: radial-gradient(circle, #2a2a2a 1px, transparent 1px); background-size: 8px 8px; transition: border-color .5s var(--e); cursor: grab; user-select: none; touch-action: none; }
+        #wt .wt-top:active { cursor: grabbing; }
+        #wt h1 { flex: none; margin: 0; padding-right: 6px; white-space: nowrap; background: #000; font: 500 20px/1 "Doto", "Space Mono", monospace; letter-spacing: .02em; text-transform: uppercase; color: #fff; }
+        #wt .wt-top button { width: 24px; height: 24px; padding: 0; border: 1px solid #333; border-radius: 999px; color: #999; background: linear-gradient(currentColor, currentColor) center / 9px 1px no-repeat, linear-gradient(currentColor, currentColor) center / 1px 0 no-repeat, #000; cursor: pointer; transition: background-size .5s var(--e), transform .5s var(--e), border-color .2s, color .2s; }
+        #wt.wt-collapsed .wt-top button { background-size: 9px 1px, 1px 9px; transform: rotate(90deg); }
+        #wt .wt-top button:hover { border-color: #e8e8e8; color: #fff; }
+        #wt .wt-label { font: 400 10px/1.2 "Space Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: #999; }
+        #wt .wt-now { padding: 14px 16px; border-bottom: 1px solid #222; }
+        #wt .wt-track { margin-top: 6px; font-size: 15px; font-weight: 500; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #wt .wt-artist { color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #wt .wt-notice { font: 400 11px/1.4 "Space Mono", monospace; color: #e8e8e8; }
+        #wt .wt-notice:not(:empty) { margin-top: 10px; }
+        #wt .wt-notice:not(:empty)::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 8px; border-radius: 50%; background: #d71921; vertical-align: 1px; }
+        #wt .wt-sw { display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 16px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+        #wt .wt-sw:hover { background: #111; }
+        #wt .wt-sw i { position: relative; flex: none; width: 30px; height: 16px; border: 1px solid #333; border-radius: 999px; transition: border-color .3s var(--e); }
+        #wt .wt-sw i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 8px; height: 8px; border-radius: 50%; background: #666; transition: transform .3s var(--e), background .3s var(--e); }
+        #wt .wt-sw[aria-checked="true"] i { border-color: #d71921; }
+        #wt .wt-sw[aria-checked="true"] i::after { background: #d71921; transform: translateX(14px); }
+        #wt .wt-line { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 6px 16px; }
+        #wt select, #wt input, #wt .wt-btn { border: 1px solid #333; border-radius: 999px; background: #111; color: #e8e8e8; font: 400 11px "Space Mono", monospace; padding: 5px 10px; }
+        #wt .wt-btn { cursor: pointer; text-transform: uppercase; letter-spacing: .06em; }
+        #wt .wt-btn:hover, #wt select:hover { border-color: #e8e8e8; }
+        #wt input:focus, #wt select:focus { outline: none; border-color: #e8e8e8; }
+        #wt .wt-group { border-top: 1px solid #222; }
+        #wt .wt-now + .wt-sw { margin-top: 4px; }
+        #wt .wt-head { display: flex; justify-content: space-between; padding: 12px 16px; cursor: pointer; user-select: none; }
+        #wt .wt-head:hover { color: #fff; }
+        #wt .wt-head::after { content: ''; align-self: center; width: 9px; height: 9px; background: linear-gradient(currentColor, currentColor) center / 9px 1px no-repeat, linear-gradient(currentColor, currentColor) center / 1px 0 no-repeat; transition: background-size .45s var(--e), transform .45s var(--e); }
+        #wt .wt-shut .wt-head::after { background-size: 9px 1px, 1px 9px; transform: rotate(90deg); }
+        #wt .wt-body { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .45s var(--e); }
+        #wt .wt-body > div { min-height: 0; overflow: hidden; transition: opacity .35s var(--e), transform .45s var(--e); }
+        #wt .wt-body > div::after { content: ''; display: block; height: 8px; }
+        #wt .wt-shut .wt-body { grid-template-rows: 0fr; }
+        #wt .wt-shut .wt-body > div { opacity: 0; transform: translateY(-6px); }
+        #wt .wt-queue { padding: 6px 16px 2px; font: 400 11px "Space Mono", monospace; color: #666; }
+        #wt .wt-sec { padding: 12px 16px 4px; }
+        #wt .wt-line input { width: 128px; }
+        #wt .wt-line input[type="number"] { width: 72px; }
+        #wt .wt-line input[type="color"] { width: 40px; height: 24px; padding: 2px; cursor: pointer; }
+        #wt .wt-field { display: flex; gap: 6px; padding: 4px 16px 8px; }
+        #wt .wt-field input { flex: 1; min-width: 0; }
+        #wt .wt-chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 16px 4px; }
+        #wt .wt-chip { padding: 2px 8px; border: 1px solid #333; border-radius: 999px; font: 400 11px "Space Mono", monospace; cursor: pointer; }
+        #wt .wt-chip:hover { border-color: #d71921; color: #d71921; }
+        #wt .wt-arow { display: flex; align-items: center; }
+        #wt .wt-arow .wt-sw { flex: 1; min-width: 0; padding-right: 8px; }
+        #wt .wt-cog { flex: none; display: grid; place-items: center; width: 26px; height: 26px; margin-right: 10px; padding: 0; border: 0; border-radius: 999px; background: none; color: #666; cursor: pointer; transition: color .2s, background .2s, transform .3s var(--e); }
+        #wt button.wt-cog:hover { color: #fff; background: #111; }
+        #wt span.wt-cog { cursor: default; }
+        #wt .wt-cog[aria-expanded="true"] { color: #d71921; transform: rotate(60deg); }
+        #wt .wt-aset { margin: 0 10px 6px; padding: 4px 0; border: 1px solid #1a1a1a; border-radius: 12px; background: #0a0a0a; }
+        #wt .wt-aset .wt-line, #wt .wt-aset .wt-sw { padding-left: 12px; padding-right: 12px; }
+        #wt .wt-log { max-height: 120px; overflow-y: auto; padding: 0 16px; font-size: 12px; }
+        #wt .wt-log div { padding: 5px 0; border-bottom: 1px solid #1a1a1a; }
+        #wt .wt-log div:last-child { border-bottom: 0; }
+        #wt .wt-log span { margin-right: 8px; font: 400 10px "Space Mono", monospace; color: #666; }
+        #wt .wt-empty { color: #666; }
+        #wt .wt-foot { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px 12px; border-top: 1px solid #222; color: #666; }
+        #wt .wt-foot button { border: 0; background: none; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; }
+        #wt .wt-foot button:hover { color: #fff; }
+        #wt.wt-still, #wt.wt-still *, #wt.wt-still *::after { transition: none !important; }
+        @media (prefers-reduced-motion: reduce) { #wt, #wt *, #wt *::after { transition: none !important; } }
+      `;
+      (document.head || document.documentElement).appendChild(css);
+      var font = document.createElement('link');
+      font.rel = 'stylesheet';
+      font.href = 'https://fonts.googleapis.com/css2?family=Doto:wght@500&family=Space+Grotesk:wght@400;500&family=Space+Mono&display=swap';
+      (document.head || document.documentElement).appendChild(font);
+      font.onload = function () { if (document.fonts) document.fonts.ready.then(pill); };
+
+      var BUNDLED = typeof ADDONS !== 'undefined';
+      var ADDON_LIST = BUNDLED ? ADDONS : [];
+      var HEADLESS = BUNDLED && localStorage.getItem('wavez-tools:panel') === 'off';
+      if (BUNDLED && typeof GM_registerMenuCommand === 'function') GM_registerMenuCommand((cfg.autowoot ? '\u2713 ' : '\u2715 ') + 'Auto Woot', function () { cfg.autowoot = !cfg.autowoot; save(); location.reload(); });
+
+      function addStandalone(spec) {
+        if (ADDON_LIST.some(function (a) { return a.id === spec.id; })) return;
+        var k = 'wavez-tools:' + spec.id;
+        var on = localStorage.getItem(k) !== 'off';
+        var stored = function (n, d) { try { var v = localStorage.getItem(k + ':' + n); return v === null ? d : JSON.parse(v); } catch (e) { return d; } };
+        var entry = { id: spec.id, label: spec.label, cat: spec.cat || 'Other', on: on, flip: function () { entry.on = !entry.on; localStorage.setItem(k, entry.on ? 'on' : 'off'); }, settings: spec.settings.map(function (s) { return { name: s[0], label: s[1], dflt: s[2], opts: s[3] ? s[3].split(',') : null, value: stored(s[0], s[2]) }; }), save: function (n, v) { localStorage.setItem(k + ':' + n, JSON.stringify(v)); } };
+        ADDON_LIST.push(entry);
+        renderAddons();
+      }
+
+      var TOGGLES = [['autojoin', 'Auto Join'], ['autoleave', 'Auto Leave'], ['booth', 'Booth Alert'], ['history', 'History Alert'], ['mehs', 'Meh Tracker'], ['mentions', 'Chat Mentions'], ['joins', 'Join Notifications']];
+
+      function row(id, label) {
+        return `<button type="button" class="wt-sw" data-toggle="${id}" role="switch" aria-checked="${!!cfg[id]}"><span>${label}</span><i></i></button>`;
+      }
+
+      function select(name, options) {
+        var opts = options.map(function (o) { return `<option value="${o[0]}"${String(cfg[name]) === String(o[0]) ? ' selected' : ''}>${o[1]}</option>`; }).join('');
+        return `<select data-set="${name}">${opts}</select>`;
+      }
+
+      function addonSettings(a, i) {
+        if (!a.settings || !a.settings.length) return '';
+        return a.settings.map(function (s) {
+          var key = i + ':' + s.name;
+          if (typeof s.dflt === 'boolean') return `<button type="button" class="wt-sw" data-aset="${key}" role="switch" aria-checked="${!!s.value}"><span>${html(s.label)}</span><i></i></button>`;
+          var type = typeof s.dflt === 'number' ? 'number' : /^#[0-9a-f]{6}$/i.test(s.dflt) ? 'color' : 'text';
+          var control = s.opts ? `<select data-aset="${key}">${s.opts.map(function (o) { return `<option${o === s.value ? ' selected' : ''}>${html(o)}</option>`; }).join('')}</select>` : `<input data-aset="${key}" type="${type}" value="${html(Array.isArray(s.value) ? s.value.join(', ') : s.value)}">`;
+          return `<label class="wt-line"><span>${html(s.label)}</span>${control}</label>`;
+        }).join('');
+      }
+
+      function setAddon(t, value) {
+        var p = t.dataset.aset.split(':');
+        var a = ADDON_LIST[p[0]];
+        var s = a.settings.filter(function (x) { return x.name === p[1]; })[0];
+        var d = s.dflt;
+        var v = typeof d === 'boolean' ? value : typeof d === 'number' ? Number(value) : Array.isArray(d) ? String(value).split(',').map(function (x) { return x.trim(); }).filter(Boolean) : String(value);
+        if (typeof d === 'number' && (value === '' || isNaN(v))) return;
+        s.value = v;
+        a.save(s.name, v);
+        notice(a.label + ': ' + s.label + ' saved, reload to apply', false, true);
+      }
+
+      function group(id, label, body) {
+        return `<div class="wt-group${cfg.sections[id] ? '' : ' wt-shut'}" data-group="${id}"><div class="wt-head wt-label" data-fold-group="${id}" role="button" tabindex="0">${label}</div><div class="wt-body"><div>${body}</div></div></div>`;
+      }
+
+      var panel = document.createElement('div');
+      panel.id = 'wt';
+      panel.innerHTML = `
+        <div class="wt-top" data-drag><h1>Wavez Tools</h1><button data-fold type="button" aria-label="Collapse"></button></div>
+        <div class="wt-main"><div>
+        <div class="wt-now"><div class="wt-label">Now playing</div><div class="wt-track"></div><div class="wt-artist"></div><div class="wt-notice"></div></div>
+        ${row('autowoot', 'Auto Woot')}
+        <div class="wt-line"><span>Vote delay</span>${select('voteDelay', [['instant', 'Instant'], ['1-5', '1–5s'], ['1-10', '1–10s'], ['5-20', '5–20s']])}</div>
+        <div data-addons></div>
+        ${group('tools', 'Room tools', TOGGLES.map(function (t) { return row(t[0], t[1]); }).join('') + '<div class="wt-queue">Queue: -</div>')}
+        ${group('settings', 'Settings', `
+          <div class="wt-line"><span>Auto leave after</span>${select('leaveAfter', [[1, '1 play'], [2, '2 plays'], [3, '3 plays'], [5, '5 plays'], [10, '10 plays']])}</div>
+          <div class="wt-line"><span>Booth alert at</span>${select('boothAt', [[1, 'Position 1'], [2, 'Position 2'], [3, 'Position 3'], [5, 'Position 5']])}</div>
+          <div class="wt-line"><span>Join notices</span>${select('joinMode', [['everyone', 'Everyone'], ['following', 'Following'], ['superfans', 'Superfans']])}</div>
+          <div class="wt-line"><span>Alert sound</span><span>${select('sound', [['soft', 'Soft'], ['beep', 'Beep'], ['chime', 'Chime'], ['none', 'None']])} <button class="wt-btn" data-test type="button">Test</button></span></div>
+          <div class="wt-line"><span>Keyword match</span>${select('kwMatch', [['anywhere', 'Anywhere'], ['word', 'Whole word']])}</div>
+          <div class="wt-sec wt-label">Mention keywords</div>
+          <div class="wt-field"><input data-kw type="text" placeholder="word, word"><button class="wt-btn" data-addkw type="button">Add</button></div>
+          <div class="wt-chips" data-chips></div>
+        `)}
+        ${group('actions', 'Commands', `
+          <div class="wt-field"><input data-cmd type="text" placeholder="/help"><button class="wt-btn" data-run type="button">Run</button></div>
+        `)}
+        ${group('activity', 'Activity', '<div class="wt-log" data-log></div><div class="wt-line"><span></span><button class="wt-btn" data-clearlog type="button">Clear</button></div>')}
+        <div class="wt-foot wt-label"><span>v${VERSION} / ${AUTHOR}</span><button data-reset type="button">Reset position</button></div>
+        </div></div>
+      `;
+      if (!HEADLESS) document.body.appendChild(panel);
+
+      var COG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/></svg>';
+      var RELOAD = '<div class="wt-line"><span class="wt-label">Applies on reload</span><button class="wt-btn" data-reload type="button">Reload</button></div>';
+
+      var CATS = ['Automation', 'Chat', 'Music', 'Moderation', 'Panel'];
+      function rank(c) { var i = CATS.indexOf(c); return i === -1 ? CATS.length : i; }
+
+      function renderAddons() {
+        var box = panel.querySelector('[data-addons]');
+        if (!box) return;
+        var cats = [];
+        ADDON_LIST.forEach(function (a) { var c = a.cat || 'Other'; if (cats.indexOf(c) === -1) cats.push(c); });
+        cats.sort(function (x, y) { return rank(x) - rank(y); });
+        box.innerHTML = ADDON_LIST.length ? group('addons', 'Addons', cats.map(function (c) {
+          return `<div class="wt-sec wt-label">${html(c)}</div>` + ADDON_LIST.map(function (a, i) {
+            if ((a.cat || 'Other') !== c) return '';
+            var cog = a.settings && a.settings.length ? `<button type="button" class="wt-cog" data-cog="${i}" aria-expanded="false" aria-label="${html(a.label)} settings">${COG}</button>` : '<span class="wt-cog" aria-hidden="true"></span>';
+            return `<div class="wt-arow"><button type="button" class="wt-sw" data-addon="${i}" role="switch" aria-checked="${a.on}"><span>${html(a.label)}</span><i></i></button>${cog}</div>` + (a.settings && a.settings.length ? `<div class="wt-aset" data-aset-for="${i}" hidden>${addonSettings(a, i)}</div>` : '');
+          }).join('');
+        }).join('') + RELOAD) : '';
+      }
+      renderAddons();
+      if (!BUNDLED) {
+        document.addEventListener('wavez-tools:addon', function (e) { try { addStandalone(JSON.parse(e.detail)); } catch (err) {} });
+        document.dispatchEvent(new CustomEvent('wavez-tools:ping'));
+      }
+
+      var el = { track: panel.querySelector('.wt-track'), artist: panel.querySelector('.wt-artist'), notice: panel.querySelector('.wt-notice'), queue: panel.querySelector('.wt-queue'), chips: panel.querySelector('[data-chips]'), kw: panel.querySelector('[data-kw]'), cmd: panel.querySelector('[data-cmd]'), log: panel.querySelector('[data-log]') };
+
+      function pill() { panel.style.setProperty('--pill', Math.ceil(panel.querySelector('h1').getBoundingClientRect().width + 74) + 'px'); }
+
+      function showPanel(open, now) {
+        cfg.open = open;
+        save();
+        if (now) { panel.classList.add('wt-still'); requestAnimationFrame(function () { requestAnimationFrame(function () { panel.classList.remove('wt-still'); }); }); }
+        pill();
+        panel.querySelector('[data-fold]').setAttribute('aria-label', open ? 'Collapse' : 'Expand');
+        panel.classList.toggle('wt-collapsed', !open);
+        place();
+      }
+
+      function mount() {
+        if (HEADLESS) return;
+        var host = document.querySelector('.wavezfm-stage-layer') || document.body;
+        if (panel.parentNode !== host) host.appendChild(panel);
+      }
+
+      function place() {
+        mount();
+        if (cfg.pos) {
+          cfg.pos = { left: clamp(cfg.pos.left, 0, Math.max(0, window.innerWidth - 80)), top: clamp(cfg.pos.top, 0, Math.max(0, window.innerHeight - 30)) };
+          panel.style.right = 'auto';
+          panel.style.left = cfg.pos.left + 'px';
+          panel.style.top = cfg.pos.top + 'px';
+          placedAt = null;
+          return;
+        }
+        panel.style.left = 'auto';
+        panel.style.top = TOP + 'px';
+        var rail = document.querySelector('[data-room-desktop-rail="true"]');
+        var box = rail && rail.offsetParent !== null ? rail.getBoundingClientRect() : null;
+        var right = box && box.width > 0 ? Math.round(window.innerWidth - box.left + 8) : 16;
+        if (right !== placedAt) { placedAt = right; panel.style.right = right + 'px'; }
+      }
+
+      function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+
+      var drag = null;
+      panel.addEventListener('pointerdown', function (e) {
+        if (!e.target.closest('[data-drag]') || e.target.closest('button')) return;
+        var box = panel.getBoundingClientRect();
+        drag = { dx: e.clientX - box.left, dy: e.clientY - box.top };
+        if (panel.setPointerCapture) panel.setPointerCapture(e.pointerId);
+        e.preventDefault();
+      });
+
+      panel.addEventListener('pointermove', function (e) {
+        if (!drag) return;
+        cfg.pos = { left: Math.round(clamp(e.clientX - drag.dx, 0, window.innerWidth - 80)), top: Math.round(clamp(e.clientY - drag.dy, 0, window.innerHeight - 30)) };
+        place();
+      });
+
+      function endDrag() { if (drag) { drag = null; save(); } }
+      panel.addEventListener('pointerup', endDrag);
+      panel.addEventListener('pointercancel', endDrag);
+
+      function paintToggle(id) {
+        panel.querySelector('[data-toggle="' + id + '"]').setAttribute('aria-checked', !!cfg[id]);
+      }
+
+      function paintChips() {
+        el.chips.innerHTML = cfg.keywords.map(function (k) { return `<span class="wt-chip" data-del="${html(k)}">${html(k)} &times;</span>`; }).join('');
+      }
+
+      function foldGroup(id, open) {
+        cfg.sections[id] = open;
+        save();
+        panel.querySelector('[data-group="' + id + '"]').classList.toggle('wt-shut', !open);
+      }
+
+      function paintLog() {
+        el.log.innerHTML = activity.length ? activity.map(function (a) { return `<div><span>${html(a.at)}</span>${html(a.text)}</div>`; }).join('') : '<div class="wt-empty">Nothing yet</div>';
+      }
+
+      function saveLog() { localStorage.setItem(ACTIVITY_KEY, JSON.stringify(activity)); }
+
+      var FLAG = '(!) ';
+      function alertAway(text) {
+        if (!document.hidden) return;
+        if (window.Notification && Notification.permission === 'granted') new Notification('Wavez Tools', { body: text, tag: 'wavez-tools' });
+        if (document.title.indexOf(FLAG) !== 0) document.title = FLAG + document.title;
+      }
+      document.addEventListener('visibilitychange', function () { if (!document.hidden && document.title.indexOf(FLAG) === 0) document.title = document.title.slice(FLAG.length); });
+
+      var noticeTimer = null;
+      function notice(text, sound, quiet) {
+        el.notice.textContent = text;
+        log(text);
+        if (sound) { play(); alertAway(text); }
+        if (!quiet) {
+          activity.unshift({ at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), text: text });
+          if (activity.length > ACTIVITY_MAX) activity.pop();
+          saveLog();
+          paintLog();
+        }
+        clearTimeout(noticeTimer);
+        noticeTimer = setTimeout(function () { el.notice.textContent = ''; }, 20000);
+      }
+
+      panel.addEventListener('click', function (e) {
+        var t = e.target.closest('[data-toggle], [data-addon], [data-cog], button[data-aset], [data-reload], [data-fold], [data-fold-group], [data-test], [data-addkw], [data-run], [data-del], [data-clearlog], [data-reset]');
+        if (!t) return;
+        if (window.Notification && Notification.permission === 'default') Notification.requestPermission();
+        if (t.dataset.cog) { var box = panel.querySelector('[data-aset-for="' + t.dataset.cog + '"]'); box.hidden = !box.hidden; t.setAttribute('aria-expanded', !box.hidden); }
+        else if (t.dataset.addon) { var a = ADDON_LIST[t.dataset.addon]; a.flip(); t.setAttribute('aria-checked', a.on); notice(a.label + (a.on ? ' on' : ' off') + ', reload to apply', false, true); }
+        else if (t.dataset.aset) { var on = t.getAttribute('aria-checked') !== 'true'; t.setAttribute('aria-checked', on); setAddon(t, on); }
+        else if (t.hasAttribute('data-reload')) location.reload();
+        else if (t.dataset.toggle) { cfg[t.dataset.toggle] = !cfg[t.dataset.toggle]; save(); paintToggle(t.dataset.toggle); tick(); }
+        else if (t.dataset.foldGroup) foldGroup(t.dataset.foldGroup, !cfg.sections[t.dataset.foldGroup]);
+        else if (t.hasAttribute('data-clearlog')) { activity = []; saveLog(); paintLog(); }
+        else if (t.hasAttribute('data-reset')) { cfg.pos = null; save(); place(); }
+        else if (t.hasAttribute('data-fold')) showPanel(!cfg.open);
+        else if (t.hasAttribute('data-test')) play();
+        else if (t.hasAttribute('data-addkw')) addKeyword();
+        else if (t.hasAttribute('data-run')) runCommand(el.cmd.value);
+        else if (t.dataset.del) { cfg.keywords = cfg.keywords.filter(function (k) { return k !== t.dataset.del; }); save(); paintChips(); }
+      });
+
+      panel.addEventListener('change', function (e) {
+        if (e.target.dataset && e.target.dataset.aset) return setAddon(e.target, e.target.value);
+        var name = e.target.dataset && e.target.dataset.set;
+        if (!name) return;
+        cfg[name] = name === 'boothAt' || name === 'leaveAfter' ? Number(e.target.value) : e.target.value;
+        save();
+      });
+
+      panel.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        if (e.target === el.kw) addKeyword();
+        if (e.target === el.cmd) runCommand(el.cmd.value);
+        if (e.target.dataset.foldGroup) foldGroup(e.target.dataset.foldGroup, !cfg.sections[e.target.dataset.foldGroup]);
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (!e.altKey || e.ctrlKey || e.metaKey || e.code !== 'KeyT') return;
+        if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+        e.preventDefault();
+        showPanel(!cfg.open);
+      });
+
+      var placedAt = null;
+      window.addEventListener('resize', place);
+      setInterval(place, 1000);
+
+      function addKeyword() {
+        var words = el.kw.value.split(',').map(function (w) { return w.trim(); }).filter(Boolean);
+        words.forEach(function (w) { if (cfg.keywords.indexOf(w) === -1) cfg.keywords.push(w); });
+        el.kw.value = '';
+        save();
+        paintChips();
+      }
+
+      paintChips();
+      paintLog();
+      showPanel(cfg.open, true);
+
+
+      var api = null;
+      var wootTimer = null;
+      var wootKey = null;
+      var wootAt = 0;
+      var wootDelay = 1000;
+      var joinAt = 0;
+      var joinDelay = 2000;
+      var myPlays = load(PLAYS_KEY, 0);
+      var playingMine = false;
+      var seenMehs = {};
+      var mehTally = load(MEHS_KEY, {});
+      var knownUsers = null;
+      var lastBooth = null;
+      var lastKey = load(LASTKEY_KEY, null);
+      var lastRoom = null;
+
+      function state() { return api && api.room.getState(); }
+
+      function pushHistory(id) {
+        recent.push(id);
+        if (recent.length > HISTORY_MAX) recent = recent.slice(-HISTORY_MAX);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(recent));
+      }
+
+      function autoWoot(s) {
+        if (!cfg.autowoot || !s || !s.playback || !s.votes || !s.queue) return;
+        var v = s.votes;
+        if (s.playback.playbackKey !== wootKey) { wootKey = s.playback.playbackKey; wootAt = 0; wootDelay = 1000; }
+        if (s.queue.isCurrentDj || v.clientVote || v.clientVotePending) return;
+        if (v.trackId !== s.playback.trackId || !v.canVote) return;
+        if (wootTimer || Date.now() < wootAt) return;
+        wootTimer = setTimeout(function () {
+          wootTimer = null;
+          var now = state();
+          if (!cfg.autowoot || !now || !now.playback || !now.votes || !now.queue || now.playback.playbackKey !== wootKey) return;
+          if (now.votes.clientVote || now.votes.clientVotePending || !now.votes.canVote || now.queue.isCurrentDj) return;
+          wootAt = Date.now() + wootDelay;
+          wootDelay = Math.min(wootDelay * 2, 15000);
+          var res = api.actions.vote('woot');
+          if (res && res.ok) notice('\u2665 Wooted!', false, true);
+          else notice('Woot failed: ' + (res && res.code));
+        }, delayFor(cfg.voteDelay));
+      }
+
+      function autoJoin(s) {
+        if (!cfg.autojoin || !s || !s.queue) return;
+        var q = s.queue;
+        if (q.isJoined || q.isCurrentDj || q.isLocked || q.isFull || !(s.permissions && s.permissions.joinQueue)) { joinDelay = 2000; return; }
+        if (Date.now() < joinAt) return;
+        var res = api.actions.joinQueue();
+        if (res && res.ok) { joinDelay = 2000; notice('Joined the queue'); return; }
+        joinAt = Date.now() + joinDelay;
+        joinDelay = Math.min(joinDelay * 2, 60000);
+      }
+
+      function countPlays(s, newTrack) {
+        var me = s.currentUser && s.currentUser.username;
+        var mine = !!(s.queue && s.queue.isCurrentDj) || !!(s.playback && me && String(s.playback.djUsername).toLowerCase() === me.toLowerCase());
+        if (newTrack) { if (playingMine) myPlays++; playingMine = mine; }
+        else playingMine = playingMine || mine;
+        if (s.queue && !s.queue.isJoined && !s.queue.isCurrentDj) myPlays = 0;
+        localStorage.setItem(PLAYS_KEY, JSON.stringify(myPlays));
+      }
+
+      function autoLeave(s) {
+        if (!cfg.autoleave || !shouldLeave(myPlays, cfg.leaveAfter, s.queue)) return;
+        var res = api.actions.leaveQueue();
+        if (!res || !res.ok) return;
+        myPlays = 0;
+        localStorage.setItem(PLAYS_KEY, '0');
+        if (cfg.autojoin) { cfg.autojoin = false; save(); paintToggle('autojoin'); }
+        notice('Left the queue after ' + cfg.leaveAfter + ' play' + (cfg.leaveAfter === 1 ? '' : 's'), true);
+      }
+
+      function boothAlert(s) {
+        if (!s || !s.queue || !s.currentUser) return;
+        var mine = (s.queue.entries || []).filter(function (e) { return e.userId === s.currentUser.id; })[0];
+        if (!mine || s.queue.isCurrentDj) { lastBooth = null; return; }
+        if (cfg.booth && boothHit(mine.position, cfg.boothAt, lastBooth)) notice('Booth alert - position ' + mine.position, true);
+        lastBooth = mine.position;
+      }
+
+      function historyAlert(s) {
+        if (!s || !s.playback) return;
+        var ago = playedAgo(recent, s.playback.trackId);
+        if (cfg.history && ago > 0) notice('Replay - played ' + ago + ' track' + (ago === 1 ? '' : 's') + ' ago', true);
+      }
+
+      function mehTracker(s) {
+        if (!cfg.mehs || !s || !s.votes) return;
+        var track = s.votes.trackId;
+        if (!seenMehs[track]) { seenMehs = {}; seenMehs[track] = {}; }
+        var names = {};
+        (s.users || []).concat((s.queue && s.queue.entries) || []).forEach(function (u) { names[u.id || u.userId] = u.displayUsername || u.username; });
+        (s.votes.mehUserIds || []).forEach(function (id) {
+          if (seenMehs[track][id]) return;
+          seenMehs[track][id] = true;
+          var name = names[id] || id;
+          mehTally[name] = (mehTally[name] || 0) + 1;
+          localStorage.setItem(MEHS_KEY, JSON.stringify(mehTally));
+          notice(name + ' mehed (' + mehTally[name] + ' total)');
+        });
+      }
+
+      function joinWatch(s) {
+        if (!s || !s.users) return;
+        var ids = {};
+        s.users.forEach(function (u) { ids[u.id] = u; });
+        if (knownUsers === null) { knownUsers = ids; return; }
+        var joined = s.users.filter(function (u) { return !knownUsers[u.id]; });
+        knownUsers = ids;
+        if (!cfg.joins) return;
+        joined.filter(function (u) { return joinable(u, cfg.joinMode); }).forEach(function (u) { notice((u.displayUsername || u.username) + ' joined'); });
+      }
+
+      function onChat(msg) {
+        if (!cfg.mentions || !msg) return;
+        var text = msg.content || msg.message || msg.text || '';
+        var u = msg.user;
+        var from = msg.username || (u && (typeof u === 'string' ? u : u.displayUsername || u.username)) || 'someone';
+        var s = state();
+        var me = s && s.currentUser && s.currentUser.username;
+        if (String(from).toLowerCase() === String(me).toLowerCase()) return;
+        var hit = mentionHit(text, cfg.keywords, me, cfg.kwMatch === 'word');
+        if (hit) notice(from + ' said "' + hit + '"', true);
+      }
+
+      function paint(s) {
+        if (!s) { el.track.textContent = 'Not in a room'; el.artist.textContent = ''; el.queue.textContent = 'Queue: -'; return; }
+        el.track.textContent = s.playback ? s.playback.title : '';
+        el.artist.textContent = s.playback ? s.playback.artist : '';
+        if (!s.room) return;
+        el.queue.textContent = 'Queue: ' + s.room.queueCount + ' \u00b7 ' + (s.room.queueLocked ? 'Locked' : 'Open');
+      }
+
+      function tick() {
+        var s = state();
+        paint(s);
+        if (!s) return;
+        var room = s.room && s.room.slug;
+        if (room !== lastRoom) { lastRoom = room; knownUsers = null; lastBooth = null; seenMehs = {}; }
+        var key = s.playback && (s.playback.playbackKey || s.playback.trackId);
+        countPlays(s, !!key && key !== lastKey);
+        if (key && key !== lastKey) {
+          lastKey = key;
+          localStorage.setItem(LASTKEY_KEY, JSON.stringify(key));
+          historyAlert(s);
+          pushHistory(s.playback.trackId);
+        }
+        autoWoot(s);
+        autoLeave(s);
+        autoJoin(s);
+        boothAlert(s);
+        mehTracker(s);
+        joinWatch(s);
+      }
+
+
+      var COMMANDS = {
+        help: function () { return 'Commands: ' + Object.keys(COMMANDS).map(function (c) { return '/' + c; }).join(' '); },
+        np: function () { var s = state(); return s && s.playback ? s.playback.title + ' - ' + s.playback.artist + ' (dj ' + s.playback.djUsername + ')' : 'Nothing playing'; },
+        queue: function () { var s = state(); return s ? 'Queue ' + s.queue.count + (s.queue.isJoined ? ', you are in it' : '') + (s.queue.isLocked ? ', locked' : '') : 'Not in a room'; },
+        mehs: function () { var names = Object.keys(mehTally); return names.length ? names.map(function (n) { return n + ': ' + mehTally[n]; }).join(', ') : 'No mehs seen yet'; },
+        users: function () { var s = state(); return s ? s.users.length + ' in the room' : 'Not in a room'; },
+        woot: function () { var r = api.actions.vote('woot'); return r.ok ? 'Wooted' : 'Failed: ' + r.code; },
+        meh: function () { var r = api.actions.vote('meh'); return r.ok ? 'Mehed' : 'Failed: ' + r.code; },
+        join: function () { var r = api.actions.joinQueue(); return r.ok ? 'Joined' : 'Failed: ' + r.code; },
+        leave: function () { var r = api.actions.leaveQueue(); return r.ok ? 'Left' : 'Failed: ' + r.code; },
+        vol: function (arg) { if (!/^\d+(\.\d+)?$/.test(arg)) return 'Usage: /vol <number>'; var r = api.actions.setVolume(Number(arg)); return r.ok ? 'Volume ' + Number(arg) : 'Failed: ' + r.code; },
+        say: function (arg) { if (!arg) return 'Usage: /say <text>'; var r = api.actions.sendChat(arg); return r.ok ? 'Sent' : 'Failed: ' + r.code; },
+        history: function () { return recent.length + ' tracks remembered'; },
+        clear: function () { recent = []; localStorage.removeItem(HISTORY_KEY); mehTally = {}; localStorage.removeItem(MEHS_KEY); activity = []; saveLog(); paintLog(); return 'History, meh tally and activity cleared'; },
+      };
+
+      function runCommand(line) {
+        var parts = String(line || '').replace(/^\//, '').trim().split(/\s+(.*)/);
+        var fn = COMMANDS[parts[0].toLowerCase()];
+        notice(!fn ? 'Unknown command - try /help' : !api ? 'Bridge not ready' : fn(parts[1] || ''));
+        el.cmd.value = '';
+      }
+
+
+      function init(bridge) {
+        api = bridge;
+        ['playback_changed', 'votes_changed', 'queue_changed', 'users_changed', 'room_changed', 'social_changed'].forEach(function (e) { api.room.subscribe(e, tick); });
+        api.room.subscribe('chat_message', onChat);
+        setInterval(tick, 5000);
+        tick();
+        log('ready - window.WavezTools for scripting');
+      }
+
+      window.WavezTools = { cfg: cfg, run: runCommand, mehs: function () { return mehTally; }, activity: function () { return activity; }, state: state, panel: showPanel, test: play, helpers: { mentionHit: mentionHit, playedAgo: playedAgo, boothHit: boothHit, joinable: joinable, shouldLeave: shouldLeave, html: html, delayFor: delayFor } };
+
+      var tries = 0;
+      var wait = setInterval(function () {
+        var bridge = window.WavezFM;
+        if (bridge && bridge.version === '1') { clearInterval(wait); init(bridge); }
+        else if (++tries > 40) { clearInterval(wait); el.track.textContent = 'Bridge not found'; }
+      }, 500);
+
+    })();
+  });
 
 })();

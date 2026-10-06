@@ -5,9 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wavez Tools</title>
-    <meta name="description" content="A collection of quality of life tools for wavez.fm.">
+    <meta name="description" content="Userscripts that fix the small things that annoy me on wavez.fm.">
     <meta property="og:title" content="Wavez Tools">
-    <meta property="og:description" content="A collection of quality of life tools for wavez.fm.">
+    <meta property="og:description" content="Userscripts that fix the small things that annoy me on wavez.fm.">
     <meta property="og:url" content="https://fluteds.github.io/wavez">
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
     <meta name="theme-color" content="#f5f5f5" media="(prefers-color-scheme: light)">
@@ -74,7 +74,7 @@
             transition: opacity .5s var(--ease);
         }
 
-        body, .start, .note, .block, .settings li, details summary, .stat, .head, .hero, footer, .tag, code, .wordmark, .idx, .what, .val, .opts {
+        body, .start, .block, .settings li, details summary, .stat, .head, .hero, footer, .tag, code, .wordmark, .idx, .what, .val, .opts {
             transition: background-color .5s var(--ease), border-color .5s var(--ease), color .5s var(--ease), fill .5s var(--ease);
         }
 
@@ -208,28 +208,6 @@
 
         .actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
-        .note {
-            margin-top: 16px;
-            padding: 20px 24px;
-            border: 1px solid var(--border);
-            border-left: 2px solid var(--brand);
-            border-radius: 8px;
-            background: var(--surface);
-        }
-
-        .note .label { margin: 0 0 10px; }
-
-        .note p {
-            max-width: 46rem;
-            margin: 0;
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
-
-        .note p + p { margin-top: 8px; }
-
-        .note b { color: var(--text-primary); font-weight: 500; }
-
         .btn {
             display: inline-flex;
             align-items: center;
@@ -269,7 +247,7 @@
 
         .head h2 {
             margin: 0;
-            font: 400 11px/1.2 var(--mono);
+            font: 400 14px/1.2 var(--mono);
             letter-spacing: .08em;
             text-transform: uppercase;
             color: var(--text-display);
@@ -405,8 +383,6 @@
 
         .hint b { color: var(--text-secondary); font-weight: 400; font-family: var(--mono); font-size: 12px; }
 
-        .row.alert .idx { color: var(--accent); }
-
         .blocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr)); gap: 16px; }
 
         .block {
@@ -428,7 +404,7 @@
 
         .block h3 {
             margin: 0;
-            font: 500 18px/1.3 var(--sans);
+            font: 500 20px/1.3 var(--sans);
             color: var(--text-display);
         }
 
@@ -444,7 +420,65 @@
 
         .block .go { margin-top: auto; padding-top: 8px; color: var(--brand); }
 
-        .prose { max-width: 38rem; margin: 0; color: var(--text-secondary); }
+        .spotlight {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 400px);
+            gap: clamp(24px, 4vw, 48px);
+            align-items: center;
+            margin-top: 16px;
+            padding: clamp(20px, 3vw, 32px);
+            border: 1px solid var(--border);
+            border-left: 2px solid var(--brand);
+            border-radius: 12px;
+            background: var(--surface);
+        }
+
+        .spotlight h3 { margin: 10px 0 8px; font: 500 32px/1.15 var(--sans); color: var(--text-display); }
+
+        .spotlight h3 .tag { margin-left: 12px; vertical-align: middle; }
+
+        .spotlight p { margin: 0; color: var(--text-secondary); }
+
+        .trouble {
+            margin-top: 16px;
+            padding: clamp(20px, 3vw, 32px);
+            border: 1px solid var(--border);
+            border-left: 2px solid var(--accent);
+            border-radius: 12px;
+            background: var(--surface);
+        }
+
+        .trouble > p:not(.label) { margin: 10px 0 18px; font-size: 17px; color: var(--text-primary); }
+
+        .trouble > p:last-child { margin: 18px 0 0; font-size: 15px; color: var(--text-secondary); }
+
+        .trouble h3 { margin: 0; font: 500 28px/1.15 var(--sans); color: var(--text-display); }
+
+        .trouble .steps li { font-size: 16px; color: var(--text-secondary); }
+
+        .trouble b { color: var(--text-primary); font-weight: 500; }
+
+        .spotlight img { display: block; width: 100%; height: auto; border: 1px solid var(--border); border-radius: 8px; }
+
+        .defaults { display: grid; gap: 20px; margin-top: 24px; }
+
+        .defaults ul { margin: 10px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .defaults li { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; font-size: 13px; color: var(--text-secondary); }
+
+        .defaults li::before { content: ''; width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--text-disabled); }
+
+        .defaults .on li { color: var(--text-primary); }
+
+        .spotlight .aside { margin-top: 20px; font-size: 14px; color: var(--text-disabled); }
+
+        .defaults .on li::before { border-color: var(--brand); background: var(--brand); }
+
+
+        @media (max-width: 52rem) {
+            .spotlight { grid-template-columns: 1fr; }
+            .spotlight img { max-width: 400px; margin: 0 auto; }
+        }
 
         .i {
             width: 20px;
@@ -513,7 +547,6 @@
             .wordmark { width: 88px; }
             .actions { width: 100%; }
             .btn { width: 100%; }
-            .note { padding: 16px; }
             .block { padding: 20px; }
             .stat { padding: 10px 0; }
         }
@@ -545,7 +578,7 @@
         @media (prefers-reduced-motion: reduce) {
             .plug { animation: none; transition: none; }
             .row, .btn, .block, .act, .row .i { transition: none; }
-            body, body::before, h1, .start, .note, .settings li, details summary, .stat, .head, .hero, footer, .tag, code, .wordmark, .idx, .what, .val, .opts { transition: none; }
+            body, body::before, h1, .start, .settings li, details summary, .stat, .head, .hero, footer, .tag, code, .wordmark, .idx, .what, .val, .opts { transition: none; }
         }
     </style>
 </head>
@@ -570,7 +603,7 @@
     </svg>
     <div class="topbar">
         <svg class="wordmark" viewBox="0 0 900 394" role="img" aria-label="WavezFM"><path d="M709.76 6.88077C732.915 18.6481 744.303 39.5255 772.393 117.721C787.576 160.235 791.752 163.272 842.997 166.309C881.335 168.587 886.27 169.346 892.723 177.697C901.074 187.946 901.833 207.305 894.621 216.795C885.131 229.321 863.874 235.015 826.674 235.015C787.956 235.015 771.634 231.219 753.413 217.174C738.989 206.546 717.732 167.448 705.964 130.627C701.409 115.823 695.336 99.1214 692.299 93.0479C687.744 83.9377 685.846 83.1786 681.67 87.3541C676.736 92.6683 659.275 149.607 647.887 197.056C614.103 339.023 602.716 371.288 581.838 386.092C557.544 403.553 529.454 391.406 511.993 356.484C506.679 345.096 491.495 299.545 478.589 255.892C465.683 211.86 453.536 174.66 451.638 172.382C446.324 167.068 444.047 172.003 417.475 242.607C389.385 318.145 384.071 328.774 368.128 344.337C352.945 359.141 336.243 362.937 318.402 355.345C296.006 345.855 283.859 319.664 247.039 200.852C231.476 150.366 223.504 132.525 217.051 132.525C215.153 132.525 206.422 147.329 197.692 165.55C188.961 184.15 177.194 208.444 171.88 219.831C160.112 244.125 143.79 263.484 128.986 271.456C115.7 278.288 91.0269 278.288 74.7045 271.456C52.6882 262.345 12.8312 234.256 6.37812 223.248C-5.76879 203.129 -0.0749455 181.493 19.2842 175.04C33.3291 169.725 47.7535 174.28 75.4637 192.501L95.2024 205.786L104.313 197.435C109.627 192.501 115.7 183.391 118.357 176.938C137.717 127.97 159.733 87.7336 174.157 74.8275C203.386 48.6357 234.892 47.8766 261.463 73.3091C279.684 90.0111 288.794 110.129 313.467 186.427C325.614 223.627 336.622 253.994 338.52 253.994C342.316 253.994 348.01 241.468 372.304 177.697C406.087 89.252 418.994 71.7908 451.638 71.7908C466.442 71.7908 471.377 73.6886 481.626 83.558C500.606 102.158 511.614 131.766 543.499 253.235C548.434 271.835 553.369 283.982 556.026 283.223C560.201 281.705 565.516 263.105 588.671 167.068C615.242 56.9868 631.185 21.3051 660.793 6.5011C677.875 -2.22949 691.919 -2.22941 709.76 6.88077Z" /></svg>
-        <p class="label">Unofficial<br>Open source</p>
+        <p class="label">Unofficial<br>Open source<br>Nothing Design</p>
     </div>
 
     <main>
@@ -583,19 +616,13 @@
                     </div>
                     <p class="lede">Small things that I was annoyed with, fixed one script at a time.</p>
                 </div>
-
-                <dl class="stats">
-                    <div class="stat"><dt class="label">Scripts</dt><dd><b>12</b></dd></div>
-                    <div class="stat"><dt class="label">Install</dt><dd><b>1 CLICK</b></dd></div>
-                    <div class="stat"><dt class="label">Updates</dt><dd><b>AUTO</b></dd></div>
-                </dl>
             </div>
         </div>
 
         <div class="start">
             <ol class="steps">
                 <li>Install <a href="https://www.tampermonkey.net" target="_blank" rel="noopener">Tampermonkey</a>, or any userscript manager.</li>
-                <li>Take the bundle, or pick scripts below.</li>
+                <li>Take the bundle, or pick individual scripts below.</li>
             </ol>
             <div class="actions">
                 <a class="btn btn-primary" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-all.user.js">Install the bundle</a>
@@ -603,37 +630,74 @@
             </div>
         </div>
 
-        <div class="note">
-            <p class="label">About the bundle</p>
-            <p>One install that carries most scripts inside it. Each feature gets a switch in your userscript manager's menu, and the page reloads when you flip one.</p>
-            <p><b>Auto Woot</b>, <b>Auto Grab</b> and <b>Region Check</b> start switched off. The other six start on.</p>
-            <p class="hint">A <b>red</b> tag means a script needs setting up before it does anything. Every config option is in <a href="#settings">05 Settings</a>.</p>
+        <div class="spotlight">
+            <div>
+                <p class="label">The panel &middot; Alt+T</p>
+                <h3>Wavez Tools<em class="tag pop">New</em></h3>
+                <p>Every script, alert and command in one panel beside the chat.</p>
+                <div class="defaults">
+                    <div class="on">
+                        <p class="label">On from the start &middot; 1</p>
+                        <ul>
+                            <li>Auto Woot</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="label">Off until you switch it on &middot; 18</p>
+                        <ul>
+                            <li>Auto Join</li>
+                            <li>Auto Leave</li>
+                            <li>Booth Alert</li>
+                            <li>History Alert</li>
+                            <li>Meh Tracker</li>
+                            <li>Chat Mentions</li>
+                            <li>Join Notifications</li>
+                            <li>Translate</li>
+                            <li>Open in Spotify</li>
+                            <li>Chat Toggle</li>
+                            <li>Chat Pop-out</li>
+                            <li>Imgur Fix</li>
+                            <li>Scrobble Toggle</li>
+                            <li>Auto Grab</li>
+                            <li>Auto Idle</li>
+                            <li>Region Check</li>
+                            <li>New Users</li>
+                            <li>SOS Alert</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="aside">Rather not have the panel? Switch Show Panel UI off and use the &#10003;/&#10005; entries in Tampermonkey's menu instead. Auto Woot and your other switches keep running.</p>
+            </div>
+            <img src="assets/wavez-panel.gif" alt="The Wavez Tools panel opening, turning on Auto Woot, opening Translate's settings from its cog, switching Imgur Fix off, turning on Auto Leave and Booth Alert, catching a chat mention, running /np and showing the activity log" width="520" height="640" loading="lazy">
         </div>
 
-        <div class="note">
-            <p class="label">Install not working?</p>
-            <p>If clicking Install lands you on Tampermonkey's Script Installation page and nothing else happens, Chrome is blocking the install, not the script.</p>
-            <p>Open <b>chrome://extensions</b>, click <b>Details</b> on Tampermonkey and turn on <b>Allow User Scripts</b>.</p>
-            <p>No such toggle? Turn on <b>Developer mode</b> at the top right instead.</p>
-            <p>Reload the page and click Install again. Don't use Tampermonkey's "Try to install as script", that installs the install page itself and fails.</p>
+        <div class="trouble">
+            <h3>Install not working?</h3>
+            <p>If Install only opens Tampermonkey's page and stops, Chrome is blocking the install, not the script.</p>
+            <ol class="steps">
+                <li>Open <b>chrome://extensions</b> and click <b>Details</b> on Tampermonkey.</li>
+                <li>Turn on <b>Allow User Scripts</b>, or <b>Developer mode</b> if that's missing.</li>
+                <li>Reload and click Install again. Skip Tampermonkey's "Try to install as script".</li>
+            </ol>
+            <p>Still stuck? <a href="https://github.com/fluteds/wavez/issues">Open an issue</a>.</p>
         </div>
 
         <section>
             <div class="head"><h2><span class="num">01</span> &nbsp;Automation</h2><span class="label count">3 scripts</span></div>
             <ul class="rows">
                 <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-woot.user.js"><span class="idx">01</span><svg class="i" aria-hidden="true"><use href="#thumb-up" /></svg><span class="name">Auto Woot</span><span class="desc">Woot every track<em class="tag pop">Popular</em></span><span class="act">Install</span></a></li>
-                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-grab.user.js"><span class="idx">02</span><svg class="i" aria-hidden="true"><use href="#playlist-add" /></svg><span class="name">Auto Grab</span><span class="desc">Grab what you woot to a playlist<em class="tag req">needs a playlist defined in config</em><em class="tag">Config: playlist</em></span><span class="act">Install</span></a></li>
-                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-idle.user.js"><span class="idx">03</span><svg class="i" aria-hidden="true"><use href="#moon" /></svg><span class="name">Auto Idle</span><span class="desc">Go idle when you leave the tab for X minutes<em class="tag">Config: idle time</em></span><span class="act">Install</span></a></li>
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-grab.user.js"><span class="idx">02</span><svg class="i" aria-hidden="true"><use href="#playlist-add" /></svg><span class="name">Auto Grab</span><span class="desc">Grab what you woot to a playlist<em class="tag req">Needs a playlist</em></span><span class="act">Install</span></a></li>
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-auto-idle.user.js"><span class="idx">03</span><svg class="i" aria-hidden="true"><use href="#moon" /></svg><span class="name">Auto Idle</span><span class="desc">Go idle after X minutes away</span><span class="act">Install</span></a></li>
             </ul>
         </section>
 
         <section>
             <div class="head"><h2><span class="num">02</span> &nbsp;Chat</h2><span class="label count">4 scripts</span></div>
             <ul class="rows">
-                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-translate.user.js"><span class="idx">04</span><svg class="i" aria-hidden="true"><use href="#language" /></svg><span class="name">Translate</span><span class="desc">Inline chat translation<em class="tag">Config: language</em></span><span class="act">Install</span></a></li>
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-translate.user.js"><span class="idx">04</span><svg class="i" aria-hidden="true"><use href="#language" /></svg><span class="name">Translate</span><span class="desc">Inline chat translation</span><span class="act">Install</span></a></li>
                 <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-sidebar.user.js"><span class="idx">05</span><svg class="i" aria-hidden="true"><use href="#sidebar" /></svg><span class="name">Chat Toggle</span><span class="desc">Hide and show chat</span><span class="act">Install</span></a></li>
                 <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-chat-popout.user.js"><span class="idx">06</span><svg class="i" aria-hidden="true"><use href="#external" /></svg><span class="name">Chat Pop-out</span><span class="desc">Chat in its own window</span><span class="act">Install</span></a></li>
-                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-imgur.user.js"><span class="idx">07</span><svg class="i" aria-hidden="true"><use href="#photo" /></svg><span class="name">Imgur Fix</span><span class="desc">Load Imgur through a proxy<em class="tag">Config: proxy</em></span><span class="act">Install</span></a></li>
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-imgur.user.js"><span class="idx">07</span><svg class="i" aria-hidden="true"><use href="#photo" /></svg><span class="name">Imgur Fix</span><span class="desc">Load Imgur through a proxy</span><span class="act">Install</span></a></li>
             </ul>
         </section>
 
@@ -641,22 +705,22 @@
             <div class="head"><h2><span class="num">03</span> &nbsp;Music</h2><span class="label count">3 scripts</span></div>
             <ul class="rows">
                 <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-open-in-spotify.user.js"><span class="idx">08</span><svg class="i" aria-hidden="true"><use href="#spotify" /></svg><span class="name">Open in Spotify</span><span class="desc">Search the current song on Spotify</span><span class="act">Install</span></a></li>
-                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-scrobble.user.js"><span class="idx">09</span><svg class="i" aria-hidden="true"><use href="#radio" /></svg><span class="name">Scrobble Toggle</span><span class="desc">Toggles Last.fm scrobbling on and off from the room view</span><span class="act">Install</span></a></li>
-                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-region-check.user.js"><span class="idx">10</span><svg class="i" aria-hidden="true"><use href="#world" /></svg><span class="name">Region Check</span><span class="desc">Flag tracks blocked outside US/CA<em class="tag req">needs a YouTube API key</em><em class="tag">Config: regions</em></span><span class="act">Install</span></a></li>
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-scrobble.user.js"><span class="idx">09</span><svg class="i" aria-hidden="true"><use href="#radio" /></svg><span class="name">Scrobble Toggle</span><span class="desc">Last.fm scrobbling on or off from the room</span><span class="act">Install</span></a></li>
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-region-check.user.js"><span class="idx">10</span><svg class="i" aria-hidden="true"><use href="#world" /></svg><span class="name">Region Check</span><span class="desc">Flag tracks blocked outside US/CA<em class="tag req">Needs a YT API key</em></span><span class="act">Install</span></a></li>
             </ul>
         </section>
 
         <section>
-            <div class="head"><h2><span class="num">04</span> &nbsp;Moderation</h2></div>
+            <div class="head"><h2><span class="num">04</span> &nbsp;Moderation</h2><span class="label count">2 scripts</span></div>
             <ul class="rows">
-                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-new-users.user.js"><span class="idx">11</span><svg class="i" aria-hidden="true"><use href="#user-plus" /></svg><span class="name">New Users</span><span class="desc">Mark recently joined accounts<em class="tag">Config: badge and days</em></span><span class="act">Install</span></a></li>
-                <li><a class="row alert" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-sos-alert.user.js"><span class="idx">12</span><svg class="i" aria-hidden="true"><use href="#alert-triangle" /></svg><span class="name">SOS Alert</span><span class="desc">Beep when the SOS badge lights up<em class="tag req">Role: Ambassador+</em><em class="tag">Config: sound and volume</em></span><span class="act">Install</span></a></li>
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-new-users.user.js"><span class="idx">11</span><svg class="i" aria-hidden="true"><use href="#user-plus" /></svg><span class="name">New Users</span><span class="desc">Mark recently joined accounts</span><span class="act">Install</span></a></li>
+                <li><a class="row" href="https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-sos-alert.user.js"><span class="idx">12</span><svg class="i" aria-hidden="true"><use href="#alert-triangle" /></svg><span class="name">SOS Alert</span><span class="desc">Beep when the SOS badge lights up<em class="tag req">Ambassador+</em></span><span class="act">Install</span></a></li>
             </ul>
         </section>
 
         <section id="settings">
-            <div class="head"><h2><span class="num">05</span> &nbsp;Settings</h2><span class="label count">7 scripts</span></div>
-            <p class="hint">Open a script in your userscript manager and change the value after the <b>=</b>. Anything marked red does nothing until you fill it in.</p>
+            <div class="head"><h2><span class="num">05</span> &nbsp;Settings</h2></div>
+            <p class="hint">Bundle: the cog next to an addon in the panel. Single script: the value after <b>=</b> in your userscript manager. <b>Red</b> needs filling in.</p>
             <details>
                 <summary>17 settings across 7 scripts</summary>
                 <ul class="settings">
@@ -693,24 +757,17 @@
                 </a>
                 <a class="block" href="https://fluted.omg.lol/wavezfm">
                     <svg class="i" aria-hidden="true"><use href="#book" /></svg>
-                    <h3>New to Wavez.fm?</h3>
-                    <p>The guide to things not covered by the interactive welcome. What the badges mean, how the DJ queue works, what each role can do and more. Written from my own notes, not official docs.</p>
+                    <h3>New to wavez.fm?</h3>
+                    <p>Badges, the DJ queue and roles explained. From my notes, not official docs.</p>
                     <span class="label go">Read the guide &rarr;</span>
                 </a>
             </div>
-        </section>
-
-        <section>
-            <div class="head"><h2><span class="num">07</span> &nbsp;Contributing</h2></div>
-            <p class="prose">Ideas and bug reports welcome. Open an <a href="https://github.com/fluteds/wavez/issues">issue</a> or send a <a href="https://github.com/fluteds/wavez/pulls">pull request</a>.</p>
         </section>
     </main>
 
     <footer>
         <p class="label"><a href="https://github.com/fluteds/wavez">Source on GitHub</a> &nbsp;/&nbsp; <a href="https://github.com/fluteds/wavez/issues">Issues</a></p>
         <p class="label">Not affiliated with wavez.fm</p>
-        <p class="label">Nothing. Design</p>
-
     </footer>
 
     <script>
