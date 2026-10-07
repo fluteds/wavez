@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      2026.10.20
+// @version      2026.10.21
 // @updateURL    https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-all.user.js
 // @downloadURL  https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-all.user.js
 // @description  Every Wavez userscript in one install, switched on and off from the Wavez Tools panel (Alt+T) or the userscript manager menu.
@@ -2572,11 +2572,12 @@
 
       function countPlays(s, newTrack) {
         var me = s.currentUser && s.currentUser.username;
+        var before = myPlays;
         var mine = !!(s.queue && s.queue.isCurrentDj) || !!(s.playback && me && String(s.playback.djUsername).toLowerCase() === me.toLowerCase());
         if (newTrack) { if (playingMine) myPlays++; playingMine = mine; }
         else playingMine = playingMine || mine;
         if (s.queue && !s.queue.isJoined && !s.queue.isCurrentDj) myPlays = 0;
-        localStorage.setItem(PLAYS_KEY, JSON.stringify(myPlays));
+        if (myPlays !== before) localStorage.setItem(PLAYS_KEY, JSON.stringify(myPlays));
       }
 
       function autoLeave(s) {
@@ -2642,12 +2643,14 @@
         if (hit) notice(from + ' said "' + hit + '"', true);
       }
 
+      function text(node, t) { t = t == null ? '' : String(t); if (node.textContent !== t) node.textContent = t; }
+
       function paint(s) {
-        if (!s) { el.track.textContent = 'Not in a room'; el.artist.textContent = ''; el.queue.textContent = 'Queue: -'; return; }
-        el.track.textContent = s.playback ? s.playback.title : '';
-        el.artist.textContent = s.playback ? s.playback.artist : '';
+        if (!s) { text(el.track, 'Not in a room'); text(el.artist, ''); text(el.queue, 'Queue: -'); return; }
+        text(el.track, s.playback ? s.playback.title : '');
+        text(el.artist, s.playback ? s.playback.artist : '');
         if (!s.room) return;
-        el.queue.textContent = 'Queue: ' + s.room.queueCount + ' \u00b7 ' + (s.room.queueLocked ? 'Locked' : 'Open');
+        text(el.queue, 'Queue: ' + s.room.queueCount + ' \u00b7 ' + (s.room.queueLocked ? 'Locked' : 'Open'));
       }
 
       function tick() {
