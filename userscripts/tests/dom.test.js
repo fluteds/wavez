@@ -35,7 +35,7 @@ for (const [file, hash] of [
 
 test('region-check adds its button next to the Create playlist button', (t) => {
   const dom = load(t, 'wavez-region-check.user.js', {
-    html: '<!DOCTYPE html><body><div class="flex"><div><button aria-label="Create playlist"></button></div></div></body>'
+    html: '<!DOCTYPE html><body><div class="flex"><div><button aria-label="Create Playlist"></button></div></div></body>'
   });
   assert.ok(dom.window.document.getElementById('wz-region-btn'), 'no globe button, toolbar() anchor stale');
 });
@@ -55,7 +55,7 @@ test('region-check pills a playlist row whose title matches a saved flag', (t) =
 test('region-check re-adds its button after client-side navigation', async (t) => {
   const dom = load(t, 'wavez-region-check.user.js');
   assert.equal(dom.window.document.getElementById('wz-region-btn'), null, 'button should not exist before the toolbar renders');
-  dom.window.document.body.innerHTML = '<div class="flex"><div><button aria-label="Create playlist"></button></div></div>';
+  dom.window.document.body.innerHTML = '<div class="flex"><div><button aria-label="Create Playlist"></button></div></div>';
   await tick(300);
   assert.ok(dom.window.document.getElementById('wz-region-btn'), 'button not re-added after nav, observer/anchor stale');
 });
