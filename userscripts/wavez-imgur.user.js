@@ -3,7 +3,7 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      1.12
+// @version      1.13
 // @updateURL    https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-imgur.user.js
 // @downloadURL  https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-imgur.user.js
 // @description  Replace Imgur links, backgrounds and CSS url() badges (e.g. niceatc/nicewoot) with Rimgo safely. Avoids "Content not viewable in your region" placeholders.
@@ -17,7 +17,7 @@
 
 (function () {
   var KEY = 'wavez-tools:';
-  var SPEC = { id: 'imgur', label: 'Imgur Fix', cat: 'Chat', settings: [["ALTSITE", "Proxy", 'https://rimgo.ducks.party', ""]] };
+  var SPEC = { id: 'imgur', label: 'Imgur Fix', cat: 'Chat', settings: [["ALTSITE", "Proxy", 'https://imgur.artemislena.eu', "https://imgur.artemislena.eu,https://rimgo.4o1x5.dev,https://rimgo.manerakai.com,https://ri.nadeko.net,https://rimgo.ducks.party"]] };
   function setting(id, name, dflt) { try { var v = localStorage.getItem(KEY + id + ":" + name); return v === null ? dflt : JSON.parse(v); } catch (e) { return dflt; } }
   function announce() { document.dispatchEvent(new CustomEvent('wavez-tools:addon', { detail: JSON.stringify(SPEC) })); }
   document.addEventListener('wavez-tools:ping', announce);
@@ -27,7 +27,7 @@
   (function () {
     'use strict';
 
-    const ALTSITE = setting("imgur", "ALTSITE", 'https://rimgo.ducks.party');
+    const ALTSITE = setting("imgur", "ALTSITE", 'https://imgur.artemislena.eu');
     function rewrite(value) {
       if (!value || !value.includes('imgur.com')) return value;
 

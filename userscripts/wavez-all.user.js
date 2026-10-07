@@ -825,12 +825,12 @@
     })();
   })(PAGE);
 
-  if (menu('imgur', 'Imgur Fix', 'off', 'Chat', [["ALTSITE", "Proxy", 'https://rimgo.ducks.party', ""]])) (function (window) {
+  if (menu('imgur', 'Imgur Fix', 'off', 'Chat', [["ALTSITE", "Proxy", 'https://imgur.artemislena.eu', "https://imgur.artemislena.eu,https://rimgo.4o1x5.dev,https://rimgo.manerakai.com,https://ri.nadeko.net,https://rimgo.ducks.party"]])) (function (window) {
 
     (function () {
       'use strict';
 
-      const ALTSITE = setting("imgur", "ALTSITE", 'https://rimgo.ducks.party');
+      const ALTSITE = setting("imgur", "ALTSITE", 'https://imgur.artemislena.eu');
       function rewrite(value) {
         if (!value || !value.includes('imgur.com')) return value;
 

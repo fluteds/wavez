@@ -26,7 +26,7 @@ settings="wavez-translate:TARGET_LANG:Language
 wavez-translate:DISPLAY_MODE:How it shows:append,replace,hover
 wavez-translate:ONLY_NON_TARGET:Skip my language
 wavez-translate:MAX_INFLIGHT:Request limit
-wavez-imgur:ALTSITE:Proxy
+wavez-imgur:ALTSITE:Proxy:https://imgur.artemislena.eu,https://rimgo.4o1x5.dev,https://rimgo.manerakai.com,https://ri.nadeko.net,https://rimgo.ducks.party
 wavez-auto-grab:PLAYLIST:Playlist
 wavez-region-check:YT_API_KEY:API key
 wavez-region-check:REGIONS:Regions
