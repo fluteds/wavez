@@ -60,6 +60,21 @@ test('region-check re-adds its button after client-side navigation', async (t) =
   assert.ok(dom.window.document.getElementById('wz-region-btn'), 'button not re-added after nav, observer/anchor stale');
 });
 
+test('scrobble sits after the last footer action in the visible footer row', (t) => {
+  const row = (id) => `<div id="${id}" class="flex"><div class="inline-flex"><button data-wavezfm-room-footer-action="donation-goal"></button></div><div class="inline-flex"><button data-wavezfm-room-footer-action="whispers"></button></div></div>`;
+  const dom = load(t, 'wavez-scrobble.user.js', {
+    html: `<!DOCTYPE html><body><div hidden>${row('mobile')}</div>${row('desktop')}</body>`,
+    before(w) {
+      w.fetch = () => Promise.reject(new Error('offline'));
+      Object.defineProperty(w.HTMLElement.prototype, 'offsetParent', { get() { return this.closest('[hidden]') ? null : this.parentElement; } });
+    }
+  });
+  const btn = dom.window.document.getElementById('wz-scrobble-btn');
+  assert.ok(btn, 'no scrobble button, footer anchor stale');
+  assert.equal(btn.closest('.flex').id, 'desktop', 'landed in the hidden mobile footer');
+  assert.equal(btn.parentElement.previousElementSibling.firstChild.dataset.wavezfmRoomFooterAction, 'whispers', 'not after the last footer action');
+});
+
 const MIRROR = read('wavez-imgur.user.js').match(/ALTSITE[^']*'([^']+)'/)?.[1];
 test('imgur rewrites an imgur src to the rimgo mirror', (t) => {
   assert.ok(MIRROR, 'ALTSITE is gone from wavez-imgur.user.js, so this test cannot know the mirror');

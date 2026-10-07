@@ -2,7 +2,7 @@
 // @name         Wavez Scrobble Toggle
 // @namespace    https://wavez.fm/
 // @author       fluteds
-// @version      1.2
+// @version      1.3
 // @updateURL    https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-scrobble.user.js
 // @downloadURL  https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-scrobble.user.js
 // @description  Flip wavez's Last.fm scrobbling on/off from a room-footer button, no digging through settings.
@@ -71,7 +71,7 @@
       var wrap = document.createElement("div");
       wrap.className = "inline-flex";
       wrap.innerHTML =
-        '<button id="wz-scrobble-btn" type="button" data-wavezfm-room-footer-action="scrobble" class="relative inline-flex h-8 w-8 items-center justify-center rounded-md border leading-none transition xl:h-9 xl:w-9 hover:border-(--theme-field-border-focus) hover:bg-(--theme-button-neutral-hover)">' +
+        '<button id="wz-scrobble-btn" type="button" data-wavezfm-room-footer-action="scrobble" class="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-(--theme-border) bg-(--theme-button-neutral-bg) leading-none transition hover:border-(--theme-field-border-focus) hover:bg-(--theme-button-neutral-hover)">' +
         '<span class="pointer-events-none relative z-10 inline-flex h-full w-full items-center justify-center leading-none [&>svg]:block [&>svg]:shrink-0">' +
         '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-radio">' +
         '<path d="M14 3l-9.371 3.749a1 1 0 0 0 -.629 .928v11.323a1 1 0 0 0 1 1h14a1 1 0 0 0 1 -1v-11a1 1 0 0 0 -1 -1h-14.5"></path><path d="M4 12h16"></path><path d="M7 12v-2"></path><path d="M17 16v.01"></path><path d="M13 16v.01"></path>' +
@@ -81,9 +81,9 @@
       return wrap;
     }
 
-    function discordWrap() {
-      var btns = document.querySelectorAll('button[aria-label="Discord"]');
-      for (var i = 0; i < btns.length; i++) {
+    function footerWrap() {
+      var btns = document.querySelectorAll('[data-wavezfm-room-footer-action]');
+      for (var i = btns.length - 1; i >= 0; i--) {
         if (btns[i].offsetParent === null) continue;
         var w = btns[i].closest("div.inline-flex");
         if (w && w.parentElement) return w;
@@ -93,7 +93,7 @@
 
     function ensure() {
       if (document.getElementById("wz-scrobble-btn")) return;
-      var anchor = discordWrap();
+      var anchor = footerWrap();
       if (!anchor) return;
       anchor.after(build());
       render();
