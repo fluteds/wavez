@@ -227,7 +227,7 @@ test('bundle panel groups addons by category and opens settings from a cog', (t)
 test('bundle panel saves addon settings typed by their defaults', (t) => {
   const w = load(t, 'wavez-all.user.js').window;
   w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
-  assert.equal(w.document.querySelectorAll('#wt [data-aset]').length, 17, 'one control per addon setting');
+  assert.equal(w.document.querySelectorAll('#wt [data-aset]').length, 18, 'one control per addon setting');
   const set = (name, value) => {
     const el = [...w.document.querySelectorAll('#wt [data-aset]')].find((e) => e.dataset.aset.endsWith(':' + name));
     el.value = value;
