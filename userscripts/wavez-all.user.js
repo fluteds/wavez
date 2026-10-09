@@ -3,11 +3,11 @@
 // @namespace    https://wavez.fm/
 // @author       fluteds
 // @icon         https://wavez.fm/favicon.ico
-// @version      2026.10.31
+// @version      2026.10.32
 // @updateURL    https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-all.user.js
 // @downloadURL  https://raw.githubusercontent.com/fluteds/wavez/main/userscripts/wavez-all.user.js
 // @description  Every Wavez userscript in one install, switched on and off from the Wavez Tools panel (Alt+T) or the userscript manager menu.
-// @match        https://wavez.fm/~/*
+// @match        https://wavez.fm/*
 // @grant        GM_registerMenuCommand
 // @grant        GM_notification
 // @grant        GM_xmlhttpRequest
@@ -2394,6 +2394,7 @@
 
       function mount() {
         if (HEADLESS) return;
+        panel.style.display = location.pathname.startsWith('/~/') ? '' : 'none';
         var host = document.querySelector('.wavezfm-stage-layer') || document.body;
         if (panel.parentNode !== host) host.appendChild(panel);
       }

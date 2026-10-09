@@ -130,7 +130,7 @@ connects=$(grep -h '^// @connect' $sources | awk '{print $3}' | sort -u)
   echo "// @updateURL    $raw/$(basename "$bundle")"
   echo "// @downloadURL  $raw/$(basename "$bundle")"
   echo '// @description  Every Wavez userscript in one install, switched on and off from the Wavez Tools panel (Alt+T) or the userscript manager menu.'
-  echo '// @match        https://wavez.fm/~/*'
+  echo '// @match        https://wavez.fm/*'
   echo '// @grant        GM_registerMenuCommand'
   echo "$grants" | sed 's|^|// @grant        |'
   echo "$connects" | sed 's|^|// @connect      |'
